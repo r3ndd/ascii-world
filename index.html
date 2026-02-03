@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII World - Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #ccc;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin: 0 0 10px 0;
+        }
+        #game-container {
+            border: 2px solid #444;
+            margin: 10px 0;
+        }
+        #info {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .controls {
+            margin: 10px 0;
+            padding: 10px;
+            background: #111;
+            border: 1px solid #333;
+        }
+        kbd {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ASCII World Test</h1>
+    <div id="game-container"></div>
+    <div class="controls">
+        <strong>Controls:</strong>
+        <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> or 
+        <kbd>w</kbd> <kbd>s</kbd> <kbd>a</kbd> <kbd>d</kbd> - Move
+        <kbd>Space</kbd> - Wait
+    </div>
+    <div id="info">Loading...</div>
+
+    <script type="module">
+        // Simple test of the engine
+        import { 
+            DisplayManager, 
+            Camera, 
+            Renderer,
+            ECSWorld,
+            createPosition,
+            createRenderable,
+            createActor,
+            createHealth,
+            createSpeed,
+            TurnManager,
+            SpeedSystem,
+            Action,
+            ActionType,
+            PhysicsSystem,
+            FOVSystem,
+            MapManager,
+            TERRAIN,
+            globalEventBus
+        } from './dist/bundle.js';
+
+        const info = document.getElementById('info');
+        const container = document.getElementById('game-container');
+
+        try {
+            // Initialize display (80x24 viewport)
+            const displayConfig = {
+                width: 80,
+                height: 24,
+                fontSize: 16,
+                fontFamily: 'monospace',
+                forceSquareRatio: true
+            };
+
+            const displayManager = new DisplayManager(displayConfig);
+            const displayElement = displayManager.getContainer();
+            container.appendChild(displayElement);
+
+            // Setup ECS
+            const ecsWorld = new ECSWorld(globalEventBus);
+
+            // Create world
+            const mapManager = new MapManager(ecsWorld);
+            const world = mapManager.createDefaultWorld();
+
+            // Create player entity
+            const player = ecsWorld.createEntity()
+                .addComponent(createPosition(500, 500))
+                .addComponent(createRenderable('@', '#ffff00'))
+                .addComponent(createActor(true))
+                .addComponent(createHealth(100, 100))
+                .addComponent(createSpeed(100));
+
+            // Create a simple NPC
+            const npc = ecsWorld.createEntity()
+                .addComponent(createPosition(505, 505))
+                .addComponent(createRenderable('n', '#ff0000'))
+                .addComponent(createActor(false))
+                .addComponent(createHealth(50, 50))
+                .addComponent(createSpeed(80));
+
+            // Setup physics and FOV
+            const physics = new PhysicsSystem(world, ecsWorld, globalEventBus);
+            const fov = new FOVSystem(world);
+
+            // Setup camera following player
+            const camera = new Camera(
+                { width: 80, height: 24 },
+                { width: world.getWidth(), height: world.getHeight() }
+            );
+
+            const renderer = new Renderer(displayManager, camera);
+
+            // Make renderable wrapper for entities
+            class EntityRenderable {
+                constructor(entity, getPosition) {
+                    this.entity = entity;
+                    this.getPositionFn = getPosition;
+                }
+                getChar() {
+                    const r = this.entity.getComponent('renderable');
+                    return r ? r.char : '?';
+                }
+                getForeground() {
+                    const r = this.entity.getComponent('renderable');
+                    return r ? r.fg : '#fff';
+                }
+                getBackground() {
+                    const r = this.entity.getComponent('renderable');
+                    return r ? r.bg : '#000';
+                }
+                getPosition() {
+                    return this.getPositionFn();
+                }
+                isVisible() {
+                    const pos = this.getPosition();
+                    return fov.isVisible(pos.x, pos.y);
+                }
+            }
+
+            // Add entities to renderer
+            renderer.addRenderable(new EntityRenderable(player, () => {
+                const pos = player.getComponent('position');
+                return { x: pos.x, y: pos.y };
+            }));
+
+            renderer.addRenderable(new EntityRenderable(npc, () => {
+                const pos = npc.getComponent('position');
+                return { x: pos.x, y: pos.y };
+            }));
+
+            // Turn system setup
+            const speedSystem = new SpeedSystem();
+            const turnManager = new TurnManager(ecsWorld, globalEventBus, speedSystem);
+
+            // Create actor for player
+            const playerActor = {
+                entityId: player.id,
+                getSpeed: () => {
+                    const speed = player.getComponent('speed');
+                    return speed ? speed.value : 100;
+                },
+                act: () => {
+                    // Player action - handled by input
+                    return new Promise(resolve => {
+                        // Wait for player input
+                        const handler = (e) => {
+                            const pos = player.getComponent('position');
+                            let moved = false;
+                            let action = null;
+
+                            switch(e.key) {
+                                case 'ArrowUp':
+                                case 'w':
+                                case 'W':
+                                    moved = physics.moveEntity(player, 'north');
+                                    action = Action.createMoveAction(playerActor.getSpeed());
+                                    break;
+                                case 'ArrowDown':
+                                case 's':
+                                case 'S':
+                                    moved = physics.moveEntity(player, 'south');
+                                    action = Action.createMoveAction(playerActor.getSpeed());
+                                    break;
+                                case 'ArrowLeft':
+                                case 'a':
+                                case 'A':
+                                    moved = physics.moveEntity(player, 'west');
+                                    action = Action.createMoveAction(playerActor.getSpeed());
+                                    break;
+                                case 'ArrowRight':
+                                case 'd':
+                                case 'D':
+                                    moved = physics.moveEntity(player, 'east');
+                                    action = Action.createMoveAction(playerActor.getSpeed());
+                                    break;
+                                case ' ':
+                                    action = Action.createWaitAction(playerActor.getSpeed());
+                                    break;
+                            }
+
+                            if (action) {
+                                document.removeEventListener('keydown', handler);
+                                e.preventDefault();
+                                render();
+                                resolve();
+                            }
+                        };
+
+                        document.addEventListener('keydown', handler);
+                    });
+                }
+            };
+
+            // NPC actor
+            const npcActor = {
+                entityId: npc.id,
+                getSpeed: () => {
+                    const speed = npc.getComponent('speed');
+                    return speed ? speed.value : 100;
+                },
+                act: async () => {
+                    // Simple random movement for NPC
+                    const directions = ['north', 'south', 'east', 'west'];
+                    const dir = directions[Math.floor(Math.random() * directions.length)];
+                    physics.moveEntity(npc, dir);
+                }
+            };
+
+            turnManager.registerActor(playerActor, true);
+            turnManager.registerActor(npcActor, false);
+
+            // Render function
+            function render() {
+                // Update camera to follow player
+                const playerPos = player.getComponent('position');
+                camera.setPosition(playerPos.x, playerPos.y);
+
+                // Update FOV
+                fov.reset();
+                fov.computeFOV(playerPos.x, playerPos.y, 15);
+
+                // Clear and render
+                displayManager.clear();
+
+                // Render visible terrain
+                const camPos = camera.getPosition();
+                const viewport = camera.getViewportSize();
+
+                for (let y = 0; y < viewport.height; y++) {
+                    for (let x = 0; x < viewport.width; x++) {
+                        const worldPos = camera.screenToWorld(x, y);
+                        if (fov.isVisible(worldPos.x, worldPos.y)) {
+                            const tile = world.getTileAt(worldPos.x, worldPos.y);
+                            if (tile) {
+                                displayManager.draw(x, y, tile.char, tile.fg, tile.bg);
+                            }
+                        } else if (fov.isExplored(worldPos.x, worldPos.y)) {
+                            // Show explored but darker
+                            const tile = world.getTileAt(worldPos.x, worldPos.y);
+                            if (tile) {
+                                displayManager.draw(x, y, tile.char, '#444', '#000');
+                            }
+                        }
+                    }
+                }
+
+                // Render entities
+                renderer.render();
+
+                // Render UI
+                displayManager.drawText(1, 0, `Turn: ${turnManager.getCurrentTurn()} | Pos: (${playerPos.x}, ${playerPos.y})`);
+                const health = player.getComponent('health');
+                displayManager.drawText(1, 23, `HP: ${health.current}/${health.max}`);
+            }
+
+            // Initial render
+            render();
+            info.textContent = 'Engine initialized. Use arrow keys or WASD to move.';
+
+            // Start turn processing
+            turnManager.start();
+
+        } catch (error) {
+            console.error('Engine initialization error:', error);
+            info.textContent = `Error: ${error.message}`;
+        }
+    </script>
+</body>
+</html>
