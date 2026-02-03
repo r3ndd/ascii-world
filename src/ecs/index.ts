@@ -205,7 +205,7 @@ export class ECSWorld {
     return parts.join('|');
   }
 
-  private invalidateCache(): void {
+  invalidateCache(): void {
     this.entityQueryCache.clear();
   }
 }
