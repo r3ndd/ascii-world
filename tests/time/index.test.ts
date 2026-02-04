@@ -469,6 +469,7 @@ describe('TurnManager', () => {
 
     it('should handle errors during actor turn', async () => {
       const handler = jest.fn();
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       eventBus.on('turn:error', handler);
 
       const actor: Actor = {
@@ -484,6 +485,7 @@ describe('TurnManager', () => {
         entityId: 1,
         error: expect.any(Error)
       }));
+      consoleSpy.mockRestore();
     });
 
     it('should warn when no actors available', async () => {
