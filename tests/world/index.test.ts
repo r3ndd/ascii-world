@@ -345,6 +345,9 @@ describe('World', () => {
     ecsWorld = new ECSWorld();
     world = new World(100, 100, 16, ecsWorld);
     world.initialize();
+    
+    // Ensure test positions have floor tiles to avoid random terrain generation issues
+    world.setTileAt(50, 50, TERRAIN.floor);
   });
 
   describe('creation', () => {

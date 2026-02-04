@@ -21,6 +21,18 @@ describe('PhysicsSystem', () => {
     world.initialize();
     eventBus = new EventBus();
     physicsSystem = new PhysicsSystem(world, ecsWorld, eventBus);
+    
+    // Ensure test positions have floor tiles to avoid random terrain generation issues
+    // Position (25, 25) is used in most tests
+    world.setTileAt(25, 25, TERRAIN.floor);
+    world.setTileAt(25, 24, TERRAIN.floor); // north
+    world.setTileAt(25, 26, TERRAIN.floor); // south
+    world.setTileAt(26, 25, TERRAIN.floor); // east
+    world.setTileAt(24, 25, TERRAIN.floor); // west
+    world.setTileAt(26, 24, TERRAIN.floor); // northeast
+    world.setTileAt(24, 24, TERRAIN.floor); // northwest
+    world.setTileAt(26, 26, TERRAIN.floor); // southeast
+    world.setTileAt(24, 26, TERRAIN.floor); // southwest
   });
 
   describe('movement validation', () => {
