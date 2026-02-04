@@ -246,8 +246,8 @@ export class ChunkManager {
   private activeChunks: Set<string> = new Set();
   private chunkSize: number;
   private updateScheduler: UpdateScheduler;
-  private playerChunkX: number = 0;
-  private playerChunkY: number = 0;
+  private playerChunkX: number = Infinity;
+  private playerChunkY: number = Infinity;
   private ecsWorld: ECSWorld;
 
   constructor(

@@ -221,6 +221,20 @@ describe('FOVSystem', () => {
     });
 
     it('should respect light blocking tiles', () => {
+      // Ensure all chunks within FOV radius exist
+      // FOV radius 5 from (15,15) spans chunks (0,0), (1,0), (0,1), (1,1)
+      world.getChunkManager().getOrCreateChunk(0, 0);
+      world.getChunkManager().getOrCreateChunk(1, 0);
+      world.getChunkManager().getOrCreateChunk(0, 1);
+      world.getChunkManager().getOrCreateChunk(1, 1);
+      
+      // Fill with floor tiles first
+      for (let y = 10; y <= 20; y++) {
+        for (let x = 10; x <= 20; x++) {
+          world.setTileAt(x, y, TERRAIN.floor);
+        }
+      }
+      
       // Create a wall blocking the east direction
       world.setTileAt(16, 15, TERRAIN.wall);
 
@@ -367,7 +381,20 @@ describe('Pathfinding', () => {
 
   describe('A* pathfinding', () => {
     it('should find path between two points', () => {
-      // Use positions within the same chunk to ensure path exists
+      // Ensure chunks exist for the path (15,15) to (20,20)
+      // (15,15) is in chunk (0,0), (20,20) is in chunk (1,1)
+      world.getChunkManager().getOrCreateChunk(0, 0);
+      world.getChunkManager().getOrCreateChunk(1, 0);
+      world.getChunkManager().getOrCreateChunk(0, 1);
+      world.getChunkManager().getOrCreateChunk(1, 1);
+      
+      // Fill chunks with floor tiles to ensure path is clear
+      for (let y = 14; y <= 21; y++) {
+        for (let x = 14; x <= 21; x++) {
+          world.setTileAt(x, y, TERRAIN.floor);
+        }
+      }
+      
       const path = pathfinding.findPath(15, 15, 20, 20);
 
       expect(path).not.toBeNull();
@@ -377,6 +404,16 @@ describe('Pathfinding', () => {
     });
 
     it('should find path around obstacles', () => {
+      // Ensure chunk exists (positions 5-10 are in chunk 0 with size 16)
+      world.getChunkManager().getOrCreateChunk(0, 0);
+      
+      // Fill area with floor first
+      for (let y = 4; y <= 11; y++) {
+        for (let x = 4; x <= 11; x++) {
+          world.setTileAt(x, y, TERRAIN.floor);
+        }
+      }
+      
       // Create a wall in the middle
       for (let y = 5; y <= 10; y++) {
         world.setTileAt(7, y, TERRAIN.wall);
@@ -392,6 +429,16 @@ describe('Pathfinding', () => {
     });
 
     it('should return null for unreachable destination', () => {
+      // Ensure chunk exists
+      world.getChunkManager().getOrCreateChunk(0, 0);
+      
+      // Fill area with floor first
+      for (let y = 4; y <= 12; y++) {
+        for (let x = 4; x <= 12; x++) {
+          world.setTileAt(x, y, TERRAIN.floor);
+        }
+      }
+      
       // Create a wall around destination
       world.setTileAt(9, 9, TERRAIN.wall);
       world.setTileAt(10, 9, TERRAIN.wall);
@@ -408,6 +455,10 @@ describe('Pathfinding', () => {
     });
 
     it('should return path with just start when start equals end', () => {
+      // Ensure chunk exists
+      world.getChunkManager().getOrCreateChunk(0, 0);
+      world.setTileAt(5, 5, TERRAIN.floor);
+      
       const path = pathfinding.findPath(5, 5, 5, 5);
 
       expect(path).not.toBeNull();
@@ -418,7 +469,20 @@ describe('Pathfinding', () => {
 
   describe('Dijkstra pathfinding', () => {
     it('should find path to target using callback', () => {
-      // Use positions within the same chunk
+      // Ensure chunks exist for the path (15,15) to (20,20)
+      // (15,15) is in chunk (0,0), (20,20) is in chunk (1,1)
+      world.getChunkManager().getOrCreateChunk(0, 0);
+      world.getChunkManager().getOrCreateChunk(1, 0);
+      world.getChunkManager().getOrCreateChunk(0, 1);
+      world.getChunkManager().getOrCreateChunk(1, 1);
+      
+      // Fill chunks with floor tiles to ensure path is clear
+      for (let y = 14; y <= 21; y++) {
+        for (let x = 14; x <= 21; x++) {
+          world.setTileAt(x, y, TERRAIN.floor);
+        }
+      }
+      
       const path = pathfinding.findPathDijkstra(15, 15, (x, y) => x === 20 && y === 20);
 
       expect(path).not.toBeNull();

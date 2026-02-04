@@ -263,9 +263,9 @@ npm run test:coverage -- --coverageReporters=text-summary
 
 ## Phase 2: Core Game Systems ✅ Complete
 
-**Status**: Implemented (2026-02-03)  
-**Test Coverage**: 6/8 test suites passing (98.6% of tests passing)  
-**Tests**: 353 passing, 5 failing
+**Status**: All Tests Passing (2026-02-03)  
+**Test Coverage**: 8/8 test suites passing (100% of tests passing)  
+**Tests**: 358 passing, 0 failing
 
 ### Implemented Test Modules
 
@@ -278,9 +278,7 @@ npm run test:coverage -- --coverageReporters=text-summary
 - Map manager (registration, loading)
 - TERRAIN definitions validation
 
-**Known Issues**: 
-- 3 tests failing related to chunk activation and catch-up processing
-- Tests need adjustment to work with lazy chunk loading
+**Status**: All tests passing ✅
 
 #### 2. Time/Turn System (`tests/time/index.test.ts`)
 - Action factory methods with speed-based costs
@@ -313,9 +311,7 @@ npm run test:coverage -- --coverageReporters=text-summary
 - LightingSystem with dynamic sources
 - Pathfinding (A* and Dijkstra)
 
-**Known Issues**:
-- 5 tests failing due to world initialization and coordinate system
-- Tests need positions within initialized chunks
+**Status**: All tests passing ✅
 
 #### 5. Save/Load System (`tests/save/index.test.ts`)
 - LocalStorageProvider operations
@@ -328,29 +324,27 @@ npm run test:coverage -- --coverageReporters=text-summary
 
 **Status**: All tests passing ✅
 
-### Remaining Issues to Fix
+### Phase 2 Fixes Applied (2026-02-03)
 
-The following tests need adjustment to work correctly with the implementation:
+All previously failing tests have been fixed. Here's what was changed:
 
-1. **Physics System** (5 failing tests):
-   - `should allow movement to valid position` - Position out of initialized chunk bounds
-   - `should move entity in direction` - Same issue
-   - `should move entity to specific position` - Position validation failing
-   - `should respect light blocking tiles` - FOV computation edge case
-   - `should find path between two points` - Pathfinding returns null for diagonal paths
-   - `should find path to target using callback` - Dijkstra pathfinding issue
+#### 1. Chunk Activation Fix (src/world/index.ts)
+- Changed initial player chunk position from `(0, 0)` to `(Infinity, Infinity)`
+- This ensures the first call to `setPlayerPosition()` always triggers chunk activation
 
-2. **World System** (3 failing tests):
-   - `should activate nearby chunks when player moves` - Chunk activation logic needs adjustment
-   - `should process catch-up for reactivated chunks` - Catch-up flag not being cleared
+#### 2. Physics System Test Fixes (tests/physics/index.test.ts)
+- **FOV Test**: Added chunk creation for all chunks within FOV radius before testing
+- **Pathfinding Tests**: Added chunk creation and floor tile initialization for test positions
+- **Dijkstra Implementation**: Fixed `findPathDijkstra()` method which had incorrect rot.js API usage
+  - The Dijkstra constructor takes the TARGET position, not the start
+  - `compute(fromX, fromY)` returns the path from that position back to the target
+  - Previous implementation was passing the start position to both constructor and compute()
 
-### Recommended Fixes
-
-For Physics and World tests:
-- Ensure test positions are within initialized chunk boundaries
-- Use `world.getChunkManager().getOrCreateChunk()` before accessing tiles
-- Initialize world at test positions before testing movement/pathfinding
-- Consider using the fixture functions for consistent test world setup
+#### Root Cause
+Tests were failing because:
+1. Lazy chunk loading - chunks must exist before accessing tiles
+2. `getTileAt()` returns null for non-existent chunks, which FOV/pathfinding treat as blocking
+3. Test positions need explicit chunk initialization using `getOrCreateChunk()`
 
 ### Phase 3: Content Systems
 
