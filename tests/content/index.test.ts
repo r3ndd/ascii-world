@@ -269,15 +269,19 @@ describe('Content Module', () => {
           transparent: true,
         };
 
+        // Store original values to restore after test
         const originalChar = TERRAIN.floor.char;
+        const originalFg = TERRAIN.floor.fg;
+
         contentLoader.registerTerrain(customFloor);
         contentLoader.applyTerrainOverrides();
 
         expect(TERRAIN.floor.char).toBe('.');
         expect(TERRAIN.floor.fg).toBe('#00ff00');
 
-        // Restore original
+        // Restore original values
         TERRAIN.floor.char = originalChar;
+        TERRAIN.floor.fg = originalFg;
       });
 
       it('should apply multiple terrain overrides', () => {
@@ -290,12 +294,22 @@ describe('Content Module', () => {
           foreground: '#00ff00',
         });
 
+        // Store original values to restore after test
+        const originalFloorChar = TERRAIN.floor.char;
+        const originalFloorFg = TERRAIN.floor.fg;
+        const originalWallFg = TERRAIN.wall.fg;
+
         contentLoader.registerTerrain(floor);
         contentLoader.registerTerrain(wall);
         contentLoader.applyTerrainOverrides();
 
         expect(TERRAIN.floor.char).toBe('*');
         expect(TERRAIN.wall.fg).toBe('#00ff00');
+
+        // Restore original values
+        TERRAIN.floor.char = originalFloorChar;
+        TERRAIN.floor.fg = originalFloorFg;
+        TERRAIN.wall.fg = originalWallFg;
       });
     });
 

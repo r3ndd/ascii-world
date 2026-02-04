@@ -286,14 +286,22 @@ export class ChunkManager {
   }
 
   private generateTerrain(chunk: Chunk): void {
+    // Use a deterministic RNG seeded by chunk coordinates
+    // This ensures the same chunk always generates the same terrain
+    let seed = chunk.chunkX * 374761 + chunk.chunkY * 668265; // Large primes for better distribution
+    const rng = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+
     // Simple placeholder generation - mostly floor with some walls
     for (let y = 0; y < chunk.size; y++) {
       for (let x = 0; x < chunk.size; x++) {
         // Border walls
         if (x === 0 || x === chunk.size - 1 || y === 0 || y === chunk.size - 1) {
           chunk.setTile(x, y, TERRAIN.wall);
-        } else if (Math.random() < 0.05) {
-          // Random trees
+        } else if (rng() < 0.05) {
+          // Random trees (deterministic based on chunk position)
           chunk.setTile(x, y, TERRAIN.tree);
         }
       }

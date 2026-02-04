@@ -474,7 +474,8 @@ export class WorldGenerator {
     }
 
     // Simple RNG (could be replaced with rot.js RNG)
-    let seed = (params.seed as number) || Date.now();
+    // Use a deterministic default seed for reproducibility
+    let seed = (params.seed as number) || 12345;
     const rng = () => {
       seed = (seed * 9301 + 49297) % 233280;
       return seed / 233280;
