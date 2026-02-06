@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Module - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <style>
         :root { --bg-primary: #1a1a2e; --bg-secondary: #16213e; --bg-tertiary: #0f3460; --text-primary: #eaeaea; --text-secondary: #a0a0a0; --accent: #e94560; --accent-hover: #ff6b6b; --code-bg: #0d1117; --border: #30363d; --success: #238636; --warning: #f0883e; --info: #58a6ff; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -86,7 +92,7 @@
 
             <h2>ContentPack</h2>
             <p>A JSON bundle containing items, creatures, recipes, and terrain definitions. Content packs are the primary way to add game content.</p>
-            <pre><code>interface ContentPack {
+            <pre><code class="language-typescript">interface ContentPack {
     id: string;                    // Unique pack identifier
     name: string;                  // Display name
     version: string;               // Semantic version
@@ -101,7 +107,7 @@
 
             <h2>CreatureTemplate</h2>
             <p>Template for spawning creature entities.</p>
-            <pre><code>interface CreatureTemplate {
+            <pre><code class="language-typescript">interface CreatureTemplate {
     id: string;
     name: string;
     description: string;
@@ -122,7 +128,7 @@
 
             <h2>Recipe</h2>
             <p>Crafting recipe definition.</p>
-            <pre><code>interface Recipe {
+            <pre><code class="language-typescript">interface Recipe {
     id: string;
     name: string;
     description: string;
@@ -142,7 +148,7 @@ interface RecipeIngredient {
 
             <h2>MapDefinition</h2>
             <p>Defines a complete game world with size, generator, and spawn points.</p>
-            <pre><code>interface MapDefinition {
+            <pre><code class="language-typescript">interface MapDefinition {
     id: string;
     name: string;
     description: string;
@@ -163,7 +169,7 @@ interface RecipeIngredient {
                     <div class="method-name">new ContentLoader()</div>
                     <div class="method-signature">constructor(eventBus: EventBus)</div>
                 </div>
-                <pre><code>const contentLoader = new ContentLoader(eventBus);</code></pre>
+                <pre><code class="language-typescript">const contentLoader = new ContentLoader(eventBus);</code></pre>
             </div>
 
             <div class="method">
@@ -172,7 +178,7 @@ interface RecipeIngredient {
                     <div class="method-signature">loadContentPack(pack: ContentPack): void</div>
                 </div>
                 <div class="method-description">Load a content pack. Validates dependencies. Emits <code>content:packLoaded</code> event.</div>
-                <pre><code>contentLoader.loadContentPack({
+                <pre><code class="language-typescript">contentLoader.loadContentPack({
     id: 'fantasy_weapons',
     name: 'Fantasy Weapons Pack',
     version: '1.0.0',
@@ -195,7 +201,7 @@ interface RecipeIngredient {
                     <div class="method-name">loadContentPackFromJSON()</div>
                     <div class="method-signature">loadContentPackFromJSON(json: string): void</div>
                 </div>
-                <pre><code>const json = await fetch('content/weapons.json').then(r => r.text());
+                <pre><code class="language-typescript">const json = await fetch('content/weapons.json').then(r => r.text());
 contentLoader.loadContentPackFromJSON(json);</code></pre>
             </div>
 
@@ -204,7 +210,7 @@ contentLoader.loadContentPackFromJSON(json);</code></pre>
                     <div class="method-name">getAllItemTemplates()</div>
                     <div class="method-signature">getAllItemTemplates(): ItemTemplate[]</div>
                 </div>
-                <pre><code>const allItems = contentLoader.getAllItemTemplates();
+                <pre><code class="language-typescript">const allItems = contentLoader.getAllItemTemplates();
 console.log(`Loaded ${allItems.length} item types`);</code></pre>
             </div>
 
@@ -227,7 +233,7 @@ console.log(`Loaded ${allItems.length} item types`);</code></pre>
                     <div class="method-name">registerTerrain()</div>
                     <div class="method-signature">registerTerrain(definition: TerrainDefinition): void</div>
                 </div>
-                <pre><code>contentLoader.registerTerrain({
+                <pre><code class="language-typescript">contentLoader.registerTerrain({
     id: 'lava',
     name: 'Lava',
     character: '~',
@@ -247,7 +253,7 @@ console.log(`Loaded ${allItems.length} item types`);</code></pre>
                     <div class="method-name">new MapLoader()</div>
                     <div class="method-signature">constructor(contentLoader: ContentLoader, eventBus: EventBus)</div>
                 </div>
-                <pre><code>const mapLoader = new MapLoader(contentLoader, eventBus);</code></pre>
+                <pre><code class="language-typescript">const mapLoader = new MapLoader(contentLoader, eventBus);</code></pre>
             </div>
 
             <div class="method">
@@ -255,7 +261,7 @@ console.log(`Loaded ${allItems.length} item types`);</code></pre>
                     <div class="method-name">loadMapDefinition()</div>
                     <div class="method-signature">loadMapDefinition(definition: MapDefinition): void</div>
                 </div>
-                <pre><code>mapLoader.loadMapDefinition({
+                <pre><code class="language-typescript">mapLoader.loadMapDefinition({
     id: 'dungeon_level_1',
     name: 'Level 1 - The Entrance',
     description: 'The upper level of the ancient dungeon',
@@ -276,7 +282,7 @@ console.log(`Loaded ${allItems.length} item types`);</code></pre>
                     <div class="method-signature">createWorldFromDefinition(mapId: string, ecsWorld: ECSWorld, generatorOverrides?: Record&lt;string, unknown&gt;): World</div>
                 </div>
                 <div class="method-description">Generate a complete game world from a map definition. Applies predefined chunks, runs generator, and places spawn points.</div>
-                <pre><code>const world = mapLoader.createWorldFromDefinition('dungeon_level_1', ecsWorld);
+                <pre><code class="language-typescript">const world = mapLoader.createWorldFromDefinition('dungeon_level_1', ecsWorld);
 // World is ready with terrain and spawn points defined</code></pre>
             </div>
 
@@ -286,7 +292,7 @@ console.log(`Loaded ${allItems.length} item types`);</code></pre>
                     <div class="method-signature">getMapMetadataList(): MapMetadata[]</div>
                 </div>
                 <div class="method-description">Get metadata for all loaded maps. Useful for map selection UI.</div>
-                <pre><code>const maps = mapLoader.getMapMetadataList();
+                <pre><code class="language-typescript">const maps = mapLoader.getMapMetadataList();
 for (const map of maps) {
     console.log(`${map.name}: ${map.size.width}x${map.size.height}`);
 }</code></pre>
@@ -301,7 +307,7 @@ for (const map of maps) {
                     <div class="method-signature">registerGenerator(name: string, generator: ChunkGenerator): void</div>
                 </div>
                 <div class="method-description">Register a custom chunk generator function.</div>
-                <pre><code>mapLoader.worldGenerator.registerGenerator('maze', (chunk, context) => {
+                <pre><code class="language-typescript">mapLoader.worldGenerator.registerGenerator('maze', (chunk, context) => {
     // Generate maze-like terrain in this chunk
     for (let y = 0; y < chunk.size; y++) {
         for (let x = 0; x < chunk.size; x++) {
@@ -318,7 +324,7 @@ for (const map of maps) {
                     <div class="method-signature">generateWorld(world: World, generatorName: string, params?: Record&lt;string, unknown&gt;): void</div>
                 </div>
                 <div class="method-description">Apply a generator to a world. Generator runs lazily as chunks are accessed.</div>
-                <pre><code>mapLoader.worldGenerator.generateWorld(world, 'cave', {
+                <pre><code class="language-typescript">mapLoader.worldGenerator.generateWorld(world, 'cave', {
     fillPercent: 0.45,
     iterations: 5,
     seed: 12345
@@ -356,7 +362,7 @@ for (const map of maps) {
 
             <h3>GeneratorContext</h3>
             <p>Passed to generator functions.</p>
-            <pre><code>interface GeneratorContext {
+            <pre><code class="language-typescript">interface GeneratorContext {
     world: World;                  // The world being generated
     rng: () => number;            // Seeded random number generator (0-1)
     params: Record<string, unknown>;  // Generator parameters
@@ -368,7 +374,7 @@ type ChunkGenerator = (chunk: Chunk, context: GeneratorContext) => void;</code><
             <p>JavaScript-based modding with full API access.</p>
 
             <h3>Mod Interface</h3>
-            <pre><code>interface Mod {
+            <pre><code class="language-typescript">interface Mod {
     id: string;
     name: string;
     version: string;
@@ -381,7 +387,7 @@ type ChunkGenerator = (chunk: Chunk, context: GeneratorContext) => void;</code><
 
             <h3>ModAPI</h3>
             <p>API provided to mods for content registration.</p>
-            <pre><code>interface ModAPI {
+            <pre><code class="language-typescript">interface ModAPI {
     eventBus: EventBus;
     contentLoader: ContentLoader;
     mapLoader: MapLoader;
@@ -404,7 +410,7 @@ type ChunkGenerator = (chunk: Chunk, context: GeneratorContext) => void;</code><
                     <div class="method-signature">loadMod(mod: Mod): void</div>
                 </div>
                 <div class="method-description">Load a mod with dependency checking. Emits <code>mod:loaded</code> event.</div>
-                <pre><code>const myMod: Mod = {
+                <pre><code class="language-typescript">const myMod: Mod = {
     id: 'super_creatures',
     name: 'Super Creatures Mod',
     version: '1.0.0',
@@ -438,7 +444,7 @@ modLoader.loadMod(myMod);</code></pre>
                     <div class="method-signature">initializeMods(itemManager?: any): void</div>
                 </div>
                 <div class="method-description">Initialize all loaded mods in dependency order. Must be called after loading mods.</div>
-                <pre><code>modLoader.initializeMods(itemManager);</code></pre>
+                <pre><code class="language-typescript">modLoader.initializeMods(itemManager);</code></pre>
             </div>
 
             <h2>ContentManager</h2>
@@ -449,7 +455,7 @@ modLoader.loadMod(myMod);</code></pre>
                     <div class="method-name">new ContentManager()</div>
                     <div class="method-signature">constructor(eventBus: EventBus)</div>
                 </div>
-                <pre><code>const contentManager = new ContentManager(eventBus);
+                <pre><code class="language-typescript">const contentManager = new ContentManager(eventBus);
 // Provides access to contentLoader, mapLoader, and modLoader</code></pre>
             </div>
 
@@ -458,7 +464,7 @@ modLoader.loadMod(myMod);</code></pre>
                     <div class="method-name">loadContentPack()</div>
                     <div class="method-signature">loadContentPack(json: string): void</div>
                 </div>
-                <pre><code>const json = await fetch('content/pack.json').then(r => r.text());
+                <pre><code class="language-typescript">const json = await fetch('content/pack.json').then(r => r.text());
 contentManager.loadContentPack(json);</code></pre>
             </div>
 
@@ -467,7 +473,7 @@ contentManager.loadContentPack(json);</code></pre>
                     <div class="method-name">loadMap()</div>
                     <div class="method-signature">loadMap(json: string): void</div>
                 </div>
-                <pre><code>const mapJson = await fetch('maps/dungeon.json').then(r => r.text());
+                <pre><code class="language-typescript">const mapJson = await fetch('maps/dungeon.json').then(r => r.text());
 contentManager.loadMap(mapJson);</code></pre>
             </div>
 
@@ -476,7 +482,7 @@ contentManager.loadMap(mapJson);</code></pre>
                     <div class="method-name">createWorld()</div>
                     <div class="method-signature">createWorld(mapId: string, ecsWorld: ECSWorld): World</div>
                 </div>
-                <pre><code>const world = contentManager.createWorld('dungeon_level_1', ecsWorld);</code></pre>
+                <pre><code class="language-typescript">const world = contentManager.createWorld('dungeon_level_1', ecsWorld);</code></pre>
             </div>
 
             <div class="method">
@@ -484,12 +490,12 @@ contentManager.loadMap(mapJson);</code></pre>
                     <div class="method-name">getAvailableMaps()</div>
                     <div class="method-signature">getAvailableMaps(): MapMetadata[]</div>
                 </div>
-                <pre><code>const maps = contentManager.getAvailableMaps();
+                <pre><code class="language-typescript">const maps = contentManager.getAvailableMaps();
 // Returns list for map selection UI</code></pre>
             </div>
 
             <h2>Complete Example</h2>
-            <pre><code>import { ContentManager } from 'ascii-world';
+            <pre><code class="language-json">import { ContentManager } from 'ascii-world';
 
 // Create content manager
 const content = new ContentManager(eventBus);

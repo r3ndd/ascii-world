@@ -4,6 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Configuration - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
         <style>
             :root {
                 --bg-primary: #1a1a2e;
@@ -306,7 +312,7 @@
                     <div class="method-description">
                         Get the singleton Config instance.
                     </div>
-                    <pre><code>import { Config } from 'ascii-world';
+                    <pre><code class="language-json">import { Config } from 'ascii-world';
 
 const config = Config.getInstance();
 console.log(config.world.width);  // 1000</code></pre>
@@ -322,7 +328,7 @@ console.log(config.world.width);  // 1000</code></pre>
                     <div class="method-description">
                         Access world configuration defaults.
                     </div>
-                    <pre><code>const config = Config.getInstance();
+                    <pre><code class="language-typescript">const config = Config.getInstance();
 console.log(`World size: ${config.world.width}x${config.world.height}`);
 console.log(`Chunk size: ${config.world.chunkSize}`);
 console.log(`Max active chunks: ${config.world.maxActiveChunks}`);</code></pre>
@@ -338,7 +344,7 @@ console.log(`Max active chunks: ${config.world.maxActiveChunks}`);</code></pre>
                     <div class="method-description">
                         Access action cost definitions.
                     </div>
-                    <pre><code>const config = Config.getInstance();
+                    <pre><code class="language-typescript">const config = Config.getInstance();
 console.log(`Move cost: ${config.actions.MOVE}`);
 console.log(`Attack cost: ${config.actions.ATTACK}`);</code></pre>
                 </div>
@@ -353,7 +359,7 @@ console.log(`Attack cost: ${config.actions.ATTACK}`);</code></pre>
                     <div class="method-description">
                         Enable or disable debug mode for verbose logging.
                     </div>
-                    <pre><code>// Enable debug mode
+                    <pre><code class="language-typescript">// Enable debug mode
 Config.getInstance().debug = true;
 
 // Check debug status
@@ -420,7 +426,7 @@ if (Config.getInstance().debug) {
                     Defines how often distant chunks are updated to save
                     performance.
                 </p>
-                <pre><code>interface CourseUpdateLevel {
+                <pre><code class="language-typescript">interface CourseUpdateLevel {
     minDist: number;      // Minimum chunk distance
     maxDist: number;      // Maximum chunk distance
     interval: number;     // Turns between updates
@@ -504,7 +510,7 @@ if (Config.getInstance().debug) {
 
                 <h3>Action Cost Calculation</h3>
                 <p>Final action cost is adjusted by actor speed:</p>
-                <pre><code>// Formula: cost = baseCost / (speed / 100)
+                <pre><code class="language-typescript">// Formula: cost = baseCost / (speed / 100)
 const baseCost = ACTION_COSTS.MOVE;  // 100
 
 // Speed 100 (normal): 100 / 1 = 100 ticks
@@ -522,7 +528,7 @@ function calculateCost(baseCost: number, speed: number): number {
                 </p>
 
                 <h3>Custom World Settings</h3>
-                <pre><code>// Create a smaller world for testing
+                <pre><code class="language-typescript">// Create a smaller world for testing
 import { Config } from 'ascii-world';
 
 const config = Config.getInstance();
@@ -538,7 +544,7 @@ const config = Config.getInstance();
 };</code></pre>
 
                 <h3>Custom Action Costs</h3>
-                <pre><code>// Make combat faster
+                <pre><code class="language-typescript">// Make combat faster
 const config = Config.getInstance();
 (config as any)._config.actions = {
     ...config.actions,
@@ -549,7 +555,7 @@ const config = Config.getInstance();
 
                 <h2>GameConfig Interface</h2>
                 <p>Complete configuration structure:</p>
-                <pre><code>interface GameConfig {
+                <pre><code class="language-typescript">interface GameConfig {
     world: {
         width: number;
         height: number;
@@ -590,7 +596,7 @@ const config = Config.getInstance();
                 </ul>
 
                 <h2>Complete Example</h2>
-                <pre><code>import { Config, Engine, World, ECSWorld } from 'ascii-world';
+                <pre><code class="language-json">import { Config, Engine, World, ECSWorld } from 'ascii-world';
 import { WORLD_DEFAULTS } from 'ascii-world/config';
 
 // Customize configuration before game initialization

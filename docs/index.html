@@ -4,6 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>ASCII World Engine Documentation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
         <style>
             :root {
                 --bg-primary: #1a1a2e;
@@ -542,7 +548,7 @@
 
                 <h2>Quick Example</h2>
 
-                <pre><code>import { Engine, ECSWorld, World, DisplayManager, Camera, Renderer } from 'ascii-world';
+                <pre><code class="language-typescript">import { Engine, ECSWorld, World, DisplayManager, Camera, Renderer } from 'ascii-world';
 
 // Initialize the engine
 const engine = new Engine();

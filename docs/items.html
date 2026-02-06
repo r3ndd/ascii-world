@@ -4,6 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Items Module - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
         <style>
             :root {
                 --bg-primary: #1a1a2e;
@@ -337,7 +343,7 @@
                     Blueprint for creating item instances. Templates define the
                     base properties of an item type.
                 </p>
-                <pre><code>interface ItemTemplate {
+                <pre><code class="language-typescript">interface ItemTemplate {
     id: string;                    // Unique template identifier
     name: string;                  // Display name
     description: string;           // Flavor text
@@ -422,7 +428,7 @@
                     <div class="method-description">
                         Unique instance identifier.
                     </div>
-                    <pre><code>console.log(item.id);  // "item_1"</code></pre>
+                    <pre><code class="language-typescript">console.log(item.id);  // "item_1"</code></pre>
                 </div>
 
                 <div class="method">
@@ -430,7 +436,7 @@
                         <div class="method-name">name</div>
                         <div class="method-signature">get name(): string</div>
                     </div>
-                    <pre><code>console.log(item.name);  // "Iron Sword"</code></pre>
+                    <pre><code class="language-typescript">console.log(item.name);  // "Iron Sword"</code></pre>
                 </div>
 
                 <div class="method">
@@ -445,7 +451,7 @@
                         Number of items in this stack. Emits
                         <code>item:quantityChanged</code> event on change.
                     </div>
-                    <pre><code>item.quantity += 5;  // Add 5 to stack</code></pre>
+                    <pre><code class="language-typescript">item.quantity += 5;  // Add 5 to stack</code></pre>
                 </div>
 
                 <div class="method">
@@ -456,7 +462,7 @@
                     <div class="method-description">
                         Total weight including quantity (weight * quantity).
                     </div>
-                    <pre><code>console.log(item.weight);  // 3.0 kg for 2 swords at 1.5kg each</code></pre>
+                    <pre><code class="language-typescript">console.log(item.weight);  // 3.0 kg for 2 swords at 1.5kg each</code></pre>
                 </div>
 
                 <div class="method">
@@ -481,7 +487,7 @@
                         <code>item:damaged</code> or
                         <code>item:broken</code> events.
                     </div>
-                    <pre><code>item.damage(10);  // Reduce durability by 10
+                    <pre><code class="language-typescript">item.damage(10);  // Reduce durability by 10
 if (item.durability <= 0) {
     console.log('Item broke!');
 }</code></pre>
@@ -498,7 +504,7 @@ if (item.durability <= 0) {
                         Repair item durability. Cannot exceed maxDurability.
                         Emits <code>item:repaired</code> event.
                     </div>
-                    <pre><code>item.repair(25);  // Restore 25 durability</code></pre>
+                    <pre><code class="language-typescript">item.repair(25);  // Restore 25 durability</code></pre>
                 </div>
 
                 <div class="method">
@@ -508,7 +514,7 @@ if (item.durability <= 0) {
                             isStackable(): boolean
                         </div>
                     </div>
-                    <pre><code>if (item.isStackable()) {
+                    <pre><code class="language-typescript">if (item.isStackable()) {
     // Can stack with other items
 }</code></pre>
                 </div>
@@ -520,7 +526,7 @@ if (item.durability <= 0) {
                             isEquipped(): boolean
                         </div>
                     </div>
-                    <pre><code>if (item.isEquipped()) {
+                    <pre><code class="language-typescript">if (item.isEquipped()) {
     console.log(`${item.name} is equipped`);
 }</code></pre>
                 </div>
@@ -536,7 +542,7 @@ if (item.durability <= 0) {
                         Set equipped status. Emits
                         <code>item:equippedChanged</code> event.
                     </div>
-                    <pre><code>item.setEquipped(true);  // Equip item</code></pre>
+                    <pre><code class="language-typescript">item.setEquipped(true);  // Equip item</code></pre>
                 </div>
 
                 <div class="method">
@@ -550,7 +556,7 @@ if (item.durability <= 0) {
                         Check if this item can stack with another (same
                         template, quality).
                     </div>
-                    <pre><code>if (itemA.canStackWith(itemB)) {
+                    <pre><code class="language-typescript">if (itemA.canStackWith(itemB)) {
     itemA.quantity += itemB.quantity;
 }</code></pre>
                 </div>
@@ -568,7 +574,7 @@ if (item.durability <= 0) {
                             constructor(eventBus: EventBus)
                         </div>
                     </div>
-                    <pre><code>const itemManager = new ItemManager(eventBus);
+                    <pre><code class="language-typescript">const itemManager = new ItemManager(eventBus);
 // Auto-registers default templates (sword_iron, potion_health, etc.)</code></pre>
                 </div>
 
@@ -583,7 +589,7 @@ if (item.durability <= 0) {
                         Register a new item template. Emits
                         <code>item:templateRegistered</code> event.
                     </div>
-                    <pre><code>itemManager.registerTemplate({
+                    <pre><code class="language-typescript">itemManager.registerTemplate({
     id: 'excalibur',
     name: 'Excalibur',
     description: 'Legendary sword of the king',
@@ -607,7 +613,7 @@ if (item.durability <= 0) {
                             getTemplate(id: string): ItemTemplate | undefined
                         </div>
                     </div>
-                    <pre><code>const template = itemManager.getTemplate('sword_iron');</code></pre>
+                    <pre><code class="language-typescript">const template = itemManager.getTemplate('sword_iron');</code></pre>
                 </div>
 
                 <div class="method">
@@ -622,7 +628,7 @@ if (item.durability <= 0) {
                         Create a new item instance from a template. Emits
                         <code>item:spawned</code> event.
                     </div>
-                    <pre><code>// Spawn a sword on the ground at position
+                    <pre><code class="language-typescript">// Spawn a sword on the ground at position
 const sword = itemManager.spawnItem('sword_iron', 1, { x: 100, y: 200 });
 
 // Spawn a stack of potions
@@ -636,7 +642,7 @@ const potions = itemManager.spawnItem('potion_health', 5);</code></pre>
                             getItem(id: string): Item | undefined
                         </div>
                     </div>
-                    <pre><code>const item = itemManager.getItem('item_1');</code></pre>
+                    <pre><code class="language-typescript">const item = itemManager.getItem('item_1');</code></pre>
                 </div>
 
                 <div class="method">
@@ -650,7 +656,7 @@ const potions = itemManager.spawnItem('potion_health', 5);</code></pre>
                         Remove an item instance. Emits
                         <code>item:removed</code> event.
                     </div>
-                    <pre><code>itemManager.removeItem('item_1');</code></pre>
+                    <pre><code class="language-typescript">itemManager.removeItem('item_1');</code></pre>
                 </div>
 
                 <div class="method">
@@ -660,7 +666,7 @@ const potions = itemManager.spawnItem('potion_health', 5);</code></pre>
                             getItemsAt(location: Position): Item[]
                         </div>
                     </div>
-                    <pre><code>const items = itemManager.getItemsAt({ x: 100, y: 200 });
+                    <pre><code class="language-typescript">const items = itemManager.getItemsAt({ x: 100, y: 200 });
 for (const item of items) {
     console.log(`Found ${item.name} on ground`);
 }</code></pre>
@@ -681,7 +687,7 @@ for (const item of items) {
                             eventBus: EventBus)
                         </div>
                     </div>
-                    <pre><code>const inventory = new Inventory(
+                    <pre><code class="language-typescript">const inventory = new Inventory(
     playerEntity.id,
     50,     // 50kg weight limit
     30,     // 30L volume limit
@@ -697,7 +703,7 @@ for (const item of items) {
                             get currentWeight(): number
                         </div>
                     </div>
-                    <pre><code>console.log(`${inventory.currentWeight} / ${inventory.weightCapacity} kg`);</code></pre>
+                    <pre><code class="language-typescript">console.log(`${inventory.currentWeight} / ${inventory.weightCapacity} kg`);</code></pre>
                 </div>
 
                 <div class="method">
@@ -728,7 +734,7 @@ for (const item of items) {
                     <div class="method-description">
                         Check if item can fit in inventory (weight and volume).
                     </div>
-                    <pre><code>if (inventory.canAddItem(heavyItem)) {
+                    <pre><code class="language-typescript">if (inventory.canAddItem(heavyItem)) {
     inventory.addItem(heavyItem);
 } else {
     console.log('Too heavy!');
@@ -747,7 +753,7 @@ for (const item of items) {
                         Emits <code>inventory:itemAdded</code> or
                         <code>inventory:stacked</code> events.
                     </div>
-                    <pre><code>if (inventory.addItem(sword)) {
+                    <pre><code class="language-typescript">if (inventory.addItem(sword)) {
     console.log('Item added to inventory');
 } else {
     console.log('Inventory full!');
@@ -765,7 +771,7 @@ for (const item of items) {
                         Remove item from inventory. Emits
                         <code>inventory:itemRemoved</code> event.
                     </div>
-                    <pre><code>const item = inventory.removeItem('item_1');</code></pre>
+                    <pre><code class="language-typescript">const item = inventory.removeItem('item_1');</code></pre>
                 </div>
 
                 <div class="method">
@@ -780,7 +786,7 @@ for (const item of items) {
                         Remove item from inventory and place on ground. Emits
                         <code>inventory:itemDropped</code> event.
                     </div>
-                    <pre><code>const droppedItem = inventory.dropItem('item_1', { x: 100, y: 200 });</code></pre>
+                    <pre><code class="language-typescript">const droppedItem = inventory.dropItem('item_1', { x: 100, y: 200 });</code></pre>
                 </div>
 
                 <div class="method">
@@ -795,7 +801,7 @@ for (const item of items) {
                         Move item to another inventory. Emits
                         <code>inventory:itemTransferred</code> event.
                     </div>
-                    <pre><code>// Give item to another entity
+                    <pre><code class="language-typescript">// Give item to another entity
 inventory.transferItem('item_1', otherInventory);</code></pre>
                 </div>
 
@@ -806,7 +812,7 @@ inventory.transferItem('item_1', otherInventory);</code></pre>
                             equipItem(itemId: string): boolean
                         </div>
                     </div>
-                    <pre><code>inventory.equipItem('item_1');  // Mark item as equipped</code></pre>
+                    <pre><code class="language-typescript">inventory.equipItem('item_1');  // Mark item as equipped</code></pre>
                 </div>
 
                 <div class="method">
@@ -816,7 +822,7 @@ inventory.transferItem('item_1', otherInventory);</code></pre>
                             unequipItem(itemId: string): boolean
                         </div>
                     </div>
-                    <pre><code>inventory.unequipItem('item_1');  // Mark item as unequipped</code></pre>
+                    <pre><code class="language-typescript">inventory.unequipItem('item_1');  // Mark item as unequipped</code></pre>
                 </div>
 
                 <div class="method">
@@ -826,7 +832,7 @@ inventory.transferItem('item_1', otherInventory);</code></pre>
                             getEquippedItems(): Item[]
                         </div>
                     </div>
-                    <pre><code>const equipped = inventory.getEquippedItems();
+                    <pre><code class="language-typescript">const equipped = inventory.getEquippedItems();
 console.log(`Equipped ${equipped.length} items`);</code></pre>
                 </div>
 
@@ -837,7 +843,7 @@ console.log(`Equipped ${equipped.length} items`);</code></pre>
                             getItemsByCategory(category: ItemCategory): Item[]
                         </div>
                     </div>
-                    <pre><code>const weapons = inventory.getItemsByCategory(ItemCategory.WEAPON);</code></pre>
+                    <pre><code class="language-typescript">const weapons = inventory.getItemsByCategory(ItemCategory.WEAPON);</code></pre>
                 </div>
 
                 <h2>InventoryManager</h2>
@@ -851,7 +857,7 @@ console.log(`Equipped ${equipped.length} items`);</code></pre>
                             volumeCapacity: number): Inventory
                         </div>
                     </div>
-                    <pre><code>const inv = inventoryManager.createInventory(entity.id, 50, 30);</code></pre>
+                    <pre><code class="language-typescript">const inv = inventoryManager.createInventory(entity.id, 50, 30);</code></pre>
                 </div>
 
                 <div class="method">
@@ -862,7 +868,7 @@ console.log(`Equipped ${equipped.length} items`);</code></pre>
                             undefined
                         </div>
                     </div>
-                    <pre><code>const playerInv = inventoryManager.getInventory(playerEntity.id);</code></pre>
+                    <pre><code class="language-typescript">const playerInv = inventoryManager.getInventory(playerEntity.id);</code></pre>
                 </div>
 
                 <div class="method">
@@ -872,7 +878,7 @@ console.log(`Equipped ${equipped.length} items`);</code></pre>
                             removeInventory(ownerId: EntityId): boolean
                         </div>
                     </div>
-                    <pre><code>inventoryManager.removeInventory(entity.id);  // Drop all items</code></pre>
+                    <pre><code class="language-typescript">inventoryManager.removeInventory(entity.id);  // Drop all items</code></pre>
                 </div>
 
                 <div class="method">
@@ -883,12 +889,12 @@ console.log(`Equipped ${equipped.length} items`);</code></pre>
                             EntityId, itemId: string): boolean
                         </div>
                     </div>
-                    <pre><code>// Transfer between entities by ID
+                    <pre><code class="language-typescript">// Transfer between entities by ID
 inventoryManager.transferItem(player.id, chest.id, 'item_1');</code></pre>
                 </div>
 
                 <h2>Complete Example</h2>
-                <pre><code>import { ItemManager, InventoryManager, ItemCategory } from 'ascii-world';
+                <pre><code class="language-typescript">import { ItemManager, InventoryManager, ItemCategory } from 'ascii-world';
 
 // Create managers
 const itemManager = new ItemManager(eventBus);

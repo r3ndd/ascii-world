@@ -4,6 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>World Module - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
         <style>
             :root {
                 --bg-primary: #1a1a2e;
@@ -302,7 +308,7 @@
                             chunkSize: number, ecsWorld: ECSWorld)
                         </div>
                     </div>
-                    <pre><code>const world = new World(1000, 1000, 64, ecsWorld);
+                    <pre><code class="language-typescript">const world = new World(1000, 1000, 64, ecsWorld);
 world.initialize();</code></pre>
                 </div>
 
@@ -313,7 +319,7 @@ world.initialize();</code></pre>
                             getTileAt(x: number, y: number): Tile | null
                         </div>
                     </div>
-                    <pre><code>const tile = world.getTileAt(100, 200);
+                    <pre><code class="language-typescript">const tile = world.getTileAt(100, 200);
 if (tile && tile.blocksMovement) {
     console.log('Cannot move here!');
 }</code></pre>
@@ -326,7 +332,7 @@ if (tile && tile.blocksMovement) {
                             setTileAt(x: number, y: number, tile: Tile): boolean
                         </div>
                     </div>
-                    <pre><code>world.setTileAt(100, 200, TERRAIN.wall);</code></pre>
+                    <pre><code class="language-typescript">world.setTileAt(100, 200, TERRAIN.wall);</code></pre>
                 </div>
 
                 <div class="method">
@@ -336,7 +342,7 @@ if (tile && tile.blocksMovement) {
                             isValidPosition(x: number, y: number): boolean
                         </div>
                     </div>
-                    <pre><code>if (world.isValidPosition(newX, newY)) {
+                    <pre><code class="language-typescript">if (world.isValidPosition(newX, newY)) {
     // Can move here
 }</code></pre>
                 </div>
@@ -352,7 +358,7 @@ if (tile && tile.blocksMovement) {
                         Updates player position and activates/deactivates chunks
                         accordingly.
                     </div>
-                    <pre><code>world.setPlayerPosition(playerX, playerY);</code></pre>
+                    <pre><code class="language-typescript">world.setPlayerPosition(playerX, playerY);</code></pre>
                 </div>
 
                 <div class="method">
@@ -362,7 +368,7 @@ if (tile && tile.blocksMovement) {
                             getEntitiesAt(x: number, y: number): Entity[]
                         </div>
                     </div>
-                    <pre><code>const entities = world.getEntitiesAt(100, 200);
+                    <pre><code class="language-typescript">const entities = world.getEntitiesAt(100, 200);
 for (const entity of entities) {
     console.log(`Entity ${entity.id} is here`);
 }</code></pre>
@@ -378,7 +384,7 @@ for (const entity of entities) {
                             getTile(localX: number, localY: number): Tile | null
                         </div>
                     </div>
-                    <pre><code>const tile = chunk.getTile(10, 15);</code></pre>
+                    <pre><code class="language-typescript">const tile = chunk.getTile(10, 15);</code></pre>
                 </div>
 
                 <div class="method">
@@ -389,7 +395,7 @@ for (const entity of entities) {
                             boolean
                         </div>
                     </div>
-                    <pre><code>chunk.setTile(10, 15, TERRAIN.floor);</code></pre>
+                    <pre><code class="language-typescript">chunk.setTile(10, 15, TERRAIN.floor);</code></pre>
                 </div>
 
                 <div class="method">
@@ -400,7 +406,7 @@ for (const entity of entities) {
                             Position
                         </div>
                     </div>
-                    <pre><code>const worldPos = chunk.toWorldPosition(10, 15);
+                    <pre><code class="language-typescript">const worldPos = chunk.toWorldPosition(10, 15);
 // Returns { x: chunkX * 64 + 10, y: chunkY * 64 + 15 }</code></pre>
                 </div>
 
@@ -412,7 +418,7 @@ for (const entity of entities) {
                             Position
                         </div>
                     </div>
-                    <pre><code>const localPos = chunk.toLocalPosition(500, 500);</code></pre>
+                    <pre><code class="language-typescript">const localPos = chunk.toLocalPosition(500, 500);</code></pre>
                 </div>
 
                 <h2>ChunkManager</h2>
@@ -429,7 +435,7 @@ for (const entity of entities) {
                             Chunk
                         </div>
                     </div>
-                    <pre><code>const chunk = chunkManager.getOrCreateChunk(5, 5);</code></pre>
+                    <pre><code class="language-typescript">const chunk = chunkManager.getOrCreateChunk(5, 5);</code></pre>
                 </div>
 
                 <div class="method">
@@ -440,7 +446,7 @@ for (const entity of entities) {
                             ChunkCoord
                         </div>
                     </div>
-                    <pre><code>const coord = chunkManager.worldToChunk(500, 500);
+                    <pre><code class="language-typescript">const coord = chunkManager.worldToChunk(500, 500);
 // Returns { chunkX: 7, chunkY: 7 } for 64x64 chunks</code></pre>
                 </div>
 
@@ -451,7 +457,7 @@ for (const entity of entities) {
                             getActiveChunks(): Chunk[]
                         </div>
                     </div>
-                    <pre><code>const activeChunks = chunkManager.getActiveChunks();
+                    <pre><code class="language-typescript">const activeChunks = chunkManager.getActiveChunks();
 // Returns 9 chunks (3x3 grid around player)</code></pre>
                 </div>
 
@@ -515,7 +521,7 @@ for (const entity of entities) {
                 </table>
 
                 <h3>Tile Interface</h3>
-                <pre><code>interface Tile {
+                <pre><code class="language-typescript">interface Tile {
     terrain: TerrainType;
     blocksMovement: boolean;
     blocksLight: boolean;
@@ -574,7 +580,7 @@ for (const entity of entities) {
                             registerMap(metadata: MapMetadata): void
                         </div>
                     </div>
-                    <pre><code>mapManager.registerMap({
+                    <pre><code class="language-typescript">mapManager.registerMap({
     id: 'dungeon_level_1',
     name: 'Level 1 - The Entrance',
     description: 'The upper level of the ancient dungeon',
@@ -590,7 +596,7 @@ for (const entity of entities) {
                             number): World
                         </div>
                     </div>
-                    <pre><code>const world = mapManager.loadMap('dungeon_level_1');</code></pre>
+                    <pre><code class="language-typescript">const world = mapManager.loadMap('dungeon_level_1');</code></pre>
                 </div>
 
                 <div class="method">
@@ -600,12 +606,12 @@ for (const entity of entities) {
                             createDefaultWorld(): World
                         </div>
                     </div>
-                    <pre><code>const world = mapManager.createDefaultWorld();
+                    <pre><code class="language-typescript">const world = mapManager.createDefaultWorld();
 // Creates 1000x1000 world with default settings</code></pre>
                 </div>
 
                 <h2>Complete Example</h2>
-                <pre><code>import { World, TERRAIN } from 'ascii-world';
+                <pre><code class="language-json">import { World, TERRAIN } from 'ascii-world';
 
 // Create world
 const world = new World(1000, 1000, 64, ecsWorld);

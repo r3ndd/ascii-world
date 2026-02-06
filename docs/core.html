@@ -4,6 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Core Module - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
         <style>
             :root {
                 --bg-primary: #1a1a2e;
@@ -305,7 +311,7 @@
                         Creates a new Engine instance. Uses the global event bus
                         and loads configuration automatically.
                     </div>
-                    <pre><code>const engine = new Engine();</code></pre>
+                    <pre><code class="language-typescript">const engine = new Engine();</code></pre>
                 </div>
 
                 <div class="method">
@@ -319,7 +325,7 @@
                         Initializes the engine, loading configuration and
                         emitting initialization events.
                     </div>
-                    <pre><code>await engine.initialize();</code></pre>
+                    <pre><code class="language-typescript">await engine.initialize();</code></pre>
                 </div>
 
                 <div class="method">
@@ -330,7 +336,7 @@
                     <div class="method-description">
                         Starts the engine and emits the 'engine:started' event.
                     </div>
-                    <pre><code>engine.start();</code></pre>
+                    <pre><code class="language-typescript">engine.start();</code></pre>
                 </div>
 
                 <div class="method">
@@ -341,7 +347,7 @@
                     <div class="method-description">
                         Stops the engine and emits the 'engine:stopped' event.
                     </div>
-                    <pre><code>engine.stop();</code></pre>
+                    <pre><code class="language-typescript">engine.stop();</code></pre>
                 </div>
 
                 <h2>EventBus</h2>
@@ -378,7 +384,7 @@
                         <h4>Returns</h4>
                         <p>Function to unsubscribe from the event</p>
                     </div>
-                    <pre><code>const unsubscribe = eventBus.on('entity:moved', (data) => {
+                    <pre><code class="language-typescript">const unsubscribe = eventBus.on('entity:moved', (data) => {
     console.log(`Entity ${data.entityId} moved to (${data.x}, ${data.y})`);
 });
 
@@ -396,7 +402,7 @@ unsubscribe();</code></pre>
                     <div class="method-description">
                         Emits an event to all registered handlers.
                     </div>
-                    <pre><code>eventBus.emit('player:joined', { playerId: 1, name: 'Hero' });</code></pre>
+                    <pre><code class="language-typescript">eventBus.emit('player:joined', { playerId: 1, name: 'Hero' });</code></pre>
                 </div>
 
                 <h3>Global Event Bus</h3>
@@ -404,7 +410,7 @@ unsubscribe();</code></pre>
                     A singleton event bus is available for application-wide
                     events:
                 </p>
-                <pre><code>import { globalEventBus } from 'ascii-world';
+                <pre><code class="language-json">import { globalEventBus } from 'ascii-world';
 
 globalEventBus.on('game:started', () => {
     console.log('Game started!');
@@ -426,7 +432,7 @@ globalEventBus.on('game:started', () => {
                     <div class="method-description">
                         Returns the singleton Config instance.
                     </div>
-                    <pre><code>const config = Config.getInstance();
+                    <pre><code class="language-typescript">const config = Config.getInstance();
 console.log(config.world.width);  // 1000</code></pre>
                 </div>
 
@@ -472,29 +478,29 @@ console.log(config.world.width);  // 1000</code></pre>
                 <p>Common type definitions used throughout the engine.</p>
 
                 <h3>Position</h3>
-                <pre><code>interface Position {
+                <pre><code class="language-typescript">interface Position {
     x: number;
     y: number;
 }</code></pre>
 
                 <h3>Size</h3>
-                <pre><code>interface Size {
+                <pre><code class="language-typescript">interface Size {
     width: number;
     height: number;
 }</code></pre>
 
                 <h3>Direction</h3>
-                <pre><code>type Direction = 'north' | 'south' | 'east' | 'west' |
+                <pre><code class="language-typescript">type Direction = 'north' | 'south' | 'east' | 'west' |
                  'northeast' | 'northwest' | 'southeast' | 'southwest';</code></pre>
 
                 <h3>ChunkCoord</h3>
-                <pre><code>interface ChunkCoord {
+                <pre><code class="language-typescript">interface ChunkCoord {
     chunkX: number;
     chunkY: number;
 }</code></pre>
 
                 <h3>Bounds</h3>
-                <pre><code>interface Bounds {
+                <pre><code class="language-typescript">interface Bounds {
     minX: number;
     minY: number;
     maxX: number;

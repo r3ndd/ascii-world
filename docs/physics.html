@@ -4,6 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Physics Module - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
         <style>
             :root {
                 --bg-primary: #1a1a2e;
@@ -302,7 +308,7 @@
                             eventBus: EventBus)
                         </div>
                     </div>
-                    <pre><code>const physics = new PhysicsSystem(gameWorld, ecsWorld, eventBus);</code></pre>
+                    <pre><code class="language-typescript">const physics = new PhysicsSystem(gameWorld, ecsWorld, eventBus);</code></pre>
                 </div>
 
                 <div class="method">
@@ -312,7 +318,7 @@
                             canMoveTo(x: number, y: number): boolean
                         </div>
                     </div>
-                    <pre><code>if (physics.canMoveTo(newX, newY)) {
+                    <pre><code class="language-typescript">if (physics.canMoveTo(newX, newY)) {
     // Safe to move
 }</code></pre>
                 </div>
@@ -329,7 +335,7 @@
                         Moves entity in a direction (8-way). Returns true if
                         successful.
                     </div>
-                    <pre><code>// Move in cardinal directions
+                    <pre><code class="language-typescript">// Move in cardinal directions
 physics.moveEntity(player, 'north');
 physics.moveEntity(player, 'south');
 physics.moveEntity(player, 'east');
@@ -348,7 +354,7 @@ physics.moveEntity(player, 'southwest');</code></pre>
                             boolean
                         </div>
                     </div>
-                    <pre><code>physics.moveEntityTo(player, 100, 200);</code></pre>
+                    <pre><code class="language-typescript">physics.moveEntityTo(player, 100, 200);</code></pre>
                 </div>
 
                 <h2>FOVSystem</h2>
@@ -364,7 +370,7 @@ physics.moveEntity(player, 'southwest');</code></pre>
                             constructor(world: World)
                         </div>
                     </div>
-                    <pre><code>const fov = new FOVSystem(gameWorld);</code></pre>
+                    <pre><code class="language-typescript">const fov = new FOVSystem(gameWorld);</code></pre>
                 </div>
 
                 <div class="method">
@@ -375,7 +381,7 @@ physics.moveEntity(player, 'southwest');</code></pre>
                             number): Position[]
                         </div>
                     </div>
-                    <pre><code>// Compute FOV from player position
+                    <pre><code class="language-typescript">// Compute FOV from player position
 const visibleTiles = fov.computeFOV(playerX, playerY, 10);
 
 for (const pos of visibleTiles) {
@@ -390,7 +396,7 @@ for (const pos of visibleTiles) {
                             isVisible(x: number, y: number): boolean
                         </div>
                     </div>
-                    <pre><code>if (fov.isVisible(enemyX, enemyY)) {
+                    <pre><code class="language-typescript">if (fov.isVisible(enemyX, enemyY)) {
     // Enemy is visible to player
 }</code></pre>
                 </div>
@@ -402,14 +408,14 @@ for (const pos of visibleTiles) {
                             isExplored(x: number, y: number): boolean
                         </div>
                     </div>
-                    <pre><code>// Check if tile was ever visible
+                    <pre><code class="language-typescript">// Check if tile was ever visible
 if (fov.isExplored(x, y)) {
     // Show terrain (but not entities) in "fog of war"
 }</code></pre>
                 </div>
 
                 <h3>FOV with Rendering</h3>
-                <pre><code>// In your render loop
+                <pre><code class="language-typescript">// In your render loop
 fov.computeFOV(playerX, playerY, 10);
 
 // Only render visible tiles
@@ -439,7 +445,7 @@ for (let y = 0; y &lt; mapHeight; y++) {
                             constructor(world: World)
                         </div>
                     </div>
-                    <pre><code>const lighting = new LightingSystem(gameWorld);</code></pre>
+                    <pre><code class="language-typescript">const lighting = new LightingSystem(gameWorld);</code></pre>
                 </div>
 
                 <div class="method">
@@ -451,7 +457,7 @@ for (let y = 0; y &lt; mapHeight; y++) {
                             void
                         </div>
                     </div>
-                    <pre><code>// Add a torch
+                    <pre><code class="language-typescript">// Add a torch
 lighting.addLightSource(
     'torch_1',      // unique ID
     100, 100,       // position
@@ -476,7 +482,7 @@ lighting.addLightSource(
                             void
                         </div>
                     </div>
-                    <pre><code>// Move torch with player
+                    <pre><code class="language-typescript">// Move torch with player
 lighting.moveLightSource('player_torch', playerX, playerY);</code></pre>
                 </div>
 
@@ -487,7 +493,7 @@ lighting.moveLightSource('player_torch', playerX, playerY);</code></pre>
                             removeLightSource(id: string): void
                         </div>
                     </div>
-                    <pre><code>// Remove extinguished torch
+                    <pre><code class="language-typescript">// Remove extinguished torch
 lighting.removeLightSource('torch_1');</code></pre>
                 </div>
 
@@ -499,7 +505,7 @@ lighting.removeLightSource('torch_1');</code></pre>
                             number] | null
                         </div>
                     </div>
-                    <pre><code>const light = lighting.getLightAt(100, 100);
+                    <pre><code class="language-typescript">const light = lighting.getLightAt(100, 100);
 if (light) {
     const [r, g, b] = light;
     // Apply lighting to tile color
@@ -516,7 +522,7 @@ if (light) {
                             constructor(world: World)
                         </div>
                     </div>
-                    <pre><code>const pathfinding = new Pathfinding(gameWorld);</code></pre>
+                    <pre><code class="language-typescript">const pathfinding = new Pathfinding(gameWorld);</code></pre>
                 </div>
 
                 <div class="method">
@@ -530,7 +536,7 @@ if (light) {
                     <div class="method-description">
                         A* pathfinding to a specific destination.
                     </div>
-                    <pre><code>const path = pathfinding.findPath(100, 100, 150, 150);
+                    <pre><code class="language-typescript">const path = pathfinding.findPath(100, 100, 150, 150);
 
 if (path) {
     for (const pos of path) {
@@ -554,7 +560,7 @@ if (path) {
                         Dijkstra pathfinding to find a target matching a
                         condition.
                     </div>
-                    <pre><code>// Find path to nearest water tile
+                    <pre><code class="language-typescript">// Find path to nearest water tile
 const path = pathfinding.findPathDijkstra(
     playerX,
     playerY,
@@ -593,7 +599,7 @@ if (path) {
                 </table>
 
                 <h2>Complete Example</h2>
-                <pre><code>import {
+                <pre><code class="language-typescript">import {
     PhysicsSystem,
     FOVSystem,
     LightingSystem,

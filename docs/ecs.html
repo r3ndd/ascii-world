@@ -4,6 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>ECS Module - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
         <style>
             :root {
                 --bg-primary: #1a1a2e;
@@ -303,7 +309,7 @@
                             constructor(eventBus?: EventBus)
                         </div>
                     </div>
-                    <pre><code>import { ECSWorld } from 'ascii-world';
+                    <pre><code class="language-json">import { ECSWorld } from 'ascii-world';
 
 const ecsWorld = new ECSWorld();
 // Or with custom event bus:
@@ -320,7 +326,7 @@ const ecsWorld = new ECSWorld(customEventBus);</code></pre>
                     <div class="method-description">
                         Creates a new entity with a unique auto-incrementing ID.
                     </div>
-                    <pre><code>const player = ecsWorld.createEntity();</code></pre>
+                    <pre><code class="language-typescript">const player = ecsWorld.createEntity();</code></pre>
                 </div>
 
                 <div class="method">
@@ -334,7 +340,7 @@ const ecsWorld = new ECSWorld(customEventBus);</code></pre>
                         Removes an entity and notifies all systems. Returns true
                         if successful.
                     </div>
-                    <pre><code>ecsWorld.removeEntity(player.id);</code></pre>
+                    <pre><code class="language-typescript">ecsWorld.removeEntity(player.id);</code></pre>
                 </div>
 
                 <div class="method">
@@ -365,7 +371,7 @@ const ecsWorld = new ECSWorld(customEventBus);</code></pre>
                             </li>
                         </ul>
                     </div>
-                    <pre><code>// Find all entities with position and health
+                    <pre><code class="language-typescript">// Find all entities with position and health
 const combatants = ecsWorld.queryEntities({
     all: ['position', 'health']
 });
@@ -388,7 +394,7 @@ const visible = ecsWorld.queryEntities({
                         Adds a system to the world. Systems are sorted by
                         priority (lower = earlier).
                     </div>
-                    <pre><code>ecsWorld.addSystem(new MovementSystem());
+                    <pre><code class="language-typescript">ecsWorld.addSystem(new MovementSystem());
 ecsWorld.addSystem(new CombatSystem());</code></pre>
                 </div>
 
@@ -411,7 +417,7 @@ ecsWorld.addSystem(new CombatSystem());</code></pre>
                         chaining. Overwrites existing components of the same
                         type.
                     </div>
-                    <pre><code>entity
+                    <pre><code class="language-typescript">entity
     .addComponent(createPosition(10, 20))
     .addComponent(createHealth(100, 100))
     .addComponent(createRenderable('@', '#ffffff'));</code></pre>
@@ -424,7 +430,7 @@ ecsWorld.addSystem(new CombatSystem());</code></pre>
                             getComponent&lt;T&gt;(type: string): T | undefined
                         </div>
                     </div>
-                    <pre><code>const position = entity.getComponent&lt;PositionComponent&gt;('position');
+                    <pre><code class="language-typescript">const position = entity.getComponent&lt;PositionComponent&gt;('position');
 if (position) {
     console.log(`Entity is at (${position.x}, ${position.y})`);
 }</code></pre>
@@ -437,7 +443,7 @@ if (position) {
                             hasComponent(type: string): boolean
                         </div>
                     </div>
-                    <pre><code>if (entity.hasComponent('health')) {
+                    <pre><code class="language-typescript">if (entity.hasComponent('health')) {
     // Entity has health component
 }</code></pre>
                 </div>
@@ -449,7 +455,7 @@ if (position) {
                             removeComponent(type: string): boolean
                         </div>
                     </div>
-                    <pre><code>entity.removeComponent('buff');</code></pre>
+                    <pre><code class="language-typescript">entity.removeComponent('buff');</code></pre>
                 </div>
 
                 <h2>System</h2>
@@ -459,7 +465,7 @@ if (position) {
                     BaseSystem.
                 </p>
 
-                <pre><code>import { System, Entity } from 'ascii-world';
+                <pre><code class="language-json">import { System, Entity } from 'ascii-world';
 
 class MovementSystem implements System {
     readonly name = 'MovementSystem';
@@ -492,7 +498,7 @@ class MovementSystem implements System {
 
                 <h3>BaseSystem</h3>
                 <p>Convenience abstract class for creating systems:</p>
-                <pre><code>import { BaseSystem, Entity } from 'ascii-world';
+                <pre><code class="language-json">import { BaseSystem, Entity } from 'ascii-world';
 
 class HealthSystem extends BaseSystem {
     readonly name = 'HealthSystem';
@@ -512,7 +518,7 @@ class HealthSystem extends BaseSystem {
                 <h2>Built-in Components</h2>
 
                 <h3>Position Component</h3>
-                <pre><code>interface PositionComponent extends Component {
+                <pre><code class="language-typescript">interface PositionComponent extends Component {
     type: 'position';
     x: number;
     y: number;
@@ -523,7 +529,7 @@ const pos = createPosition(10, 20);
 entity.addComponent(pos);</code></pre>
 
                 <h3>Health Component</h3>
-                <pre><code>interface HealthComponent extends Component {
+                <pre><code class="language-typescript">interface HealthComponent extends Component {
     type: 'health';
     current: number;
     max: number;
@@ -533,7 +539,7 @@ const health = createHealth(100, 100);
 entity.addComponent(health);</code></pre>
 
                 <h3>Speed Component</h3>
-                <pre><code>interface SpeedComponent extends Component {
+                <pre><code class="language-typescript">interface SpeedComponent extends Component {
     type: 'speed';
     value: number;  // 100 = normal speed
 }
@@ -541,7 +547,7 @@ entity.addComponent(health);</code></pre>
 const speed = createSpeed(150);  // 50% faster than normal</code></pre>
 
                 <h3>Actor Component</h3>
-                <pre><code>interface ActorComponent extends Component {
+                <pre><code class="language-typescript">interface ActorComponent extends Component {
     type: 'actor';
     isPlayer: boolean;
     energy: number;
@@ -551,7 +557,7 @@ const speed = createSpeed(150);  // 50% faster than normal</code></pre>
 const actor = createActor(true);  // true = is player</code></pre>
 
                 <h3>Renderable Component</h3>
-                <pre><code>interface RenderableComponent extends Component {
+                <pre><code class="language-typescript">interface RenderableComponent extends Component {
     type: 'renderable';
     char: string;
     fg: string;

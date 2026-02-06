@@ -4,6 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Time Module - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
         <style>
             :root {
                 --bg-primary: #1a1a2e;
@@ -302,7 +308,7 @@
                             speedSystem: SpeedSystem)
                         </div>
                     </div>
-                    <pre><code>const turnManager = new TurnManager(ecsWorld, eventBus, new SpeedSystem());</code></pre>
+                    <pre><code class="language-typescript">const turnManager = new TurnManager(ecsWorld, eventBus, new SpeedSystem());</code></pre>
                 </div>
 
                 <div class="method">
@@ -313,7 +319,7 @@
                             void
                         </div>
                     </div>
-                    <pre><code>turnManager.registerActor(playerActor, true);  // Player
+                    <pre><code class="language-typescript">turnManager.registerActor(playerActor, true);  // Player
 turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
                 </div>
 
@@ -328,7 +334,7 @@ turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
                         Starts the turn loop. Runs continuously until stop() is
                         called.
                     </div>
-                    <pre><code>await turnManager.start();</code></pre>
+                    <pre><code class="language-typescript">await turnManager.start();</code></pre>
                 </div>
 
                 <div class="method">
@@ -336,7 +342,7 @@ turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
                         <div class="method-name">stop()</div>
                         <div class="method-signature">stop(): void</div>
                     </div>
-                    <pre><code>turnManager.stop();</code></pre>
+                    <pre><code class="language-typescript">turnManager.stop();</code></pre>
                 </div>
 
                 <div class="method">
@@ -351,7 +357,7 @@ turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
                         Sets the callback function called when it's the player's
                         turn.
                     </div>
-                    <pre><code>turnManager.setPlayerActionCallback(async () => {
+                    <pre><code class="language-typescript">turnManager.setPlayerActionCallback(async () => {
     await waitForPlayerInput();
 });</code></pre>
                 </div>
@@ -363,7 +369,7 @@ turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
                             getCurrentTurn(): number
                         </div>
                     </div>
-                    <pre><code>console.log(`Turn ${turnManager.getCurrentTurn()}`);</code></pre>
+                    <pre><code class="language-typescript">console.log(`Turn ${turnManager.getCurrentTurn()}`);</code></pre>
                 </div>
 
                 <h2>Actor Interface</h2>
@@ -371,14 +377,14 @@ turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
                     Actors participate in the turn system. Implement this
                     interface for any entity that takes turns.
                 </p>
-                <pre><code>interface Actor {
+                <pre><code class="language-typescript">interface Actor {
     entityId: EntityId;
     getSpeed(): number;
     act(): Promise&lt;void&gt; | void;
 }</code></pre>
 
                 <h3>Example Actor Implementation</h3>
-                <pre><code>class EntityActor implements Actor {
+                <pre><code class="language-typescript">class EntityActor implements Actor {
     entityId: EntityId;
     private entity: Entity;
     private ai: AISystem;
@@ -440,7 +446,7 @@ turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
                             number): number
                         </div>
                     </div>
-                    <pre><code>const cost = speedSystem.calculateActionCost(100, 150);
+                    <pre><code class="language-typescript">const cost = speedSystem.calculateActionCost(100, 150);
 // Returns 67 (100 * 100 / 150)</code></pre>
                 </div>
 
@@ -512,7 +518,7 @@ turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
                 </p>
 
                 <h3>DeferredUpdateSystem</h3>
-                <pre><code>const deferredSystem = new DeferredUpdateSystem(ecsWorld, eventBus);
+                <pre><code class="language-typescript">const deferredSystem = new DeferredUpdateSystem(ecsWorld, eventBus);
 
 // Queue an entity for catch-up
 deferredSystem.queueCatchUp(entityId, missedTurns);
@@ -525,7 +531,7 @@ deferredSystem.processAll();</code></pre>
                     Calculates accumulated effects over missed turns (hunger,
                     regeneration, etc.).
                 </p>
-                <pre><code>const results = CatchUpCalculator.calculate(entity, 50, 100);
+                <pre><code class="language-typescript">const results = CatchUpCalculator.calculate(entity, 50, 100);
 console.log(results.healthDelta);   // Health regenerated
 console.log(results.hungerDelta);   // Hunger accumulated
 console.log(results.events);        // Summary events</code></pre>
@@ -581,7 +587,7 @@ console.log(results.events);        // Summary events</code></pre>
                 </table>
 
                 <h2>Complete Example</h2>
-                <pre><code>import {
+                <pre><code class="language-typescript">import {
     TurnManager,
     SpeedSystem,
     Action,

@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Getting Started - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <style>
         :root {
             --bg-primary: #1a1a2e;
@@ -336,9 +342,9 @@
                     <div class="step-title">Installation</div>
                 </div>
                 <p>Install the ASCII World Engine via npm:</p>
-                <pre><code>npm install ascii-world</code></pre>
+                <pre><code class="language-typescript">npm install ascii-world</code></pre>
                 <p>Or if you're building from the source repository:</p>
-                <pre><code>git clone https://github.com/yourusername/ascii-world.git
+                <pre><code class="language-typescript">git clone https://github.com/yourusername/ascii-world.git
 cd ascii-world
 npm install
 npm run build</code></pre>
@@ -350,7 +356,7 @@ npm run build</code></pre>
                     <div class="step-title">Project Setup</div>
                 </div>
                 <p>Create your project structure:</p>
-                <pre><code>my-game/
+                <pre><code class="language-typescript">my-game/
 ├── src/
 │   └── main.ts
 ├── index.html
@@ -358,7 +364,7 @@ npm run build</code></pre>
 └── tsconfig.json</code></pre>
 
                 <p>Configure your <code>tsconfig.json</code>:</p>
-                <pre><code>{
+                <pre><code class="language-json">{
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
@@ -380,7 +386,7 @@ npm run build</code></pre>
                     <div class="step-title">Your First Game</div>
                 </div>
                 <p>Create <code>src/main.ts</code> with this minimal game:</p>
-                <pre><code>import {
+                <pre><code class="language-typescript">import {
     Engine,
     ECSWorld,
     World,
@@ -521,7 +527,7 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
                     <div class="step-title">HTML Setup</div>
                 </div>
                 <p>Create <code>index.html</code>:</p>
-                <pre><code>&lt;!DOCTYPE html&gt;
+                <pre><code class="language-typescript">&lt;!DOCTYPE html&gt;
 &lt;html lang="en"&gt;
 &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
@@ -554,9 +560,9 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
                     <div class="step-title">Build and Run</div>
                 </div>
                 <p>Build your project:</p>
-                <pre><code>npm run build</code></pre>
+                <pre><code class="language-typescript">npm run build</code></pre>
                 <p>Or use a bundler like Vite for development:</p>
-                <pre><code>npx vite</code></pre>
+                <pre><code class="language-typescript">npx vite</code></pre>
                 <p>Open your browser and navigate to the development server. You should see your game running with:</p>
                 <ul>
                     <li>A black background with ASCII tiles</li>
