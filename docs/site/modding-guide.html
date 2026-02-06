@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modding Guide - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-twilight.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --accent: #e94560;
+            --accent-hover: #ff6b6b;
+            --code-bg: #0d1117;
+            --border: #30363d;
+            --success: #238636;
+            --warning: #f0883e;
+            --info: #58a6ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header .version {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-section {
+            margin-bottom: 15px;
+        }
+
+        .nav-section-title {
+            padding: 10px 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 8px 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-link:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--accent-hover);
+        }
+
+        .nav-link.active {
+            background-color: var(--bg-tertiary);
+            border-left: 3px solid var(--accent);
+        }
+
+        .content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+            max-width: 900px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin: 30px 0 15px;
+            color: var(--accent);
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            margin: 25px 0 10px;
+            color: var(--text-primary);
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        a {
+            color: var(--info);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        code {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+        }
+
+        code.inline {
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .method {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .method-header {
+            margin-bottom: 15px;
+        }
+
+        .method-name {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.2rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .method-signature {
+            font-family: 'Fira Code', monospace;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .method-description {
+            margin-bottom: 15px;
+        }
+
+        .parameters, .returns {
+            margin: 15px 0;
+        }
+
+        .parameters h4, .returns h4 {
+            color: var(--info);
+            margin-bottom: 10px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background-color: rgba(88, 166, 255, 0.1);
+            border-color: var(--info);
+        }
+
+        .alert-warning {
+            background-color: rgba(240, 136, 62, 0.1);
+            border-color: var(--warning);
+        }
+
+        .alert-success {
+            background-color: rgba(35, 134, 54, 0.1);
+            border-color: var(--success);
+        }
+
+        .step {
+            margin: 30px 0;
+            padding-left: 30px;
+            border-left: 2px solid var(--border);
+            position: relative;
+        }
+
+        .step::before {
+            content: attr(data-step);
+            position: absolute;
+            left: -15px;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1>ASCII World</h1>
+                <div class="version">v0.1.0</div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Getting Started</div>
+                <a href="index.html" class="nav-link">Overview</a>
+                <a href="getting-started.html" class="nav-link">Quick Start</a>
+                <a href="examples.html" class="nav-link">Examples</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">API Reference</div>
+                <a href="core.html" class="nav-link">Core</a>
+                <a href="ecs.html" class="nav-link">ECS</a>
+                <a href="display.html" class="nav-link">Display</a>
+                <a href="world.html" class="nav-link">World</a>
+                <a href="time.html" class="nav-link">Time</a>
+                <a href="physics.html" class="nav-link">Physics</a>
+                <a href="items.html" class="nav-link">Items</a>
+                <a href="content.html" class="nav-link">Content</a>
+                <a href="config.html" class="nav-link">Configuration</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Guides</div>
+                <a href="modding-guide.html" class="nav-link active">Modding Guide</a>
+            </div>
+        </nav>
+
+        <main class="content">
+            <h1>Modding Guide</h1>
+            <p>
+                Extend ASCII World with custom content and behavior. This guide covers creating 
+                content packs (JSON data), JavaScript mods (code extensions), and custom world 
+                generators.
+            </p>
+
+            <h2>Overview</h2>
+            <p>ASCII World supports two types of extensions:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Format</th>
+                        <th>Use Case</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Content Pack</strong></td>
+                        <td>JSON</td>
+                        <td>Items, creatures, recipes, terrains</td>
+                        <td><code>content/core/</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>JavaScript Mod</strong></td>
+                        <td>TypeScript/JavaScript</td>
+                        <td>Custom behavior, generators, AI</td>
+                        <td><code>content/mods/</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert alert-info">
+                <strong>API Reference:</strong> See the <a href="content.html">Content module</a> 
+                documentation for detailed interface definitions and method signatures.
+            </div>
+
+            <h2>Content Packs</h2>
+            <p>
+                Content packs are JSON files that define game data without requiring code. 
+                They are ideal for adding items, creatures, recipes, and terrain types.
+            </p>
+
+            <h3>Pack Structure</h3>
+            <p>Every content pack requires metadata and can include items, creatures, recipes, and terrains:</p>
+            <pre><code class="language-json">{
+  "id": "my_content_pack",
+  "name": "My Content Pack",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "Adds fantasy weapons and creatures",
+  "dependencies": ["core_content"],
+  "items": [],
+  "creatures": [],
+  "recipes": [],
+  "terrains": []
+}</code></pre>
+
+            <h4>Required Metadata</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>string</td>
+                        <td>Unique identifier, lowercase with underscores</td>
+                    </tr>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td>string</td>
+                        <td>Display name</td>
+                    </tr>
+                    <tr>
+                        <td><code>version</code></td>
+                        <td>string</td>
+                        <td>Semantic version (e.g., "1.0.0")</td>
+                    </tr>
+                    <tr>
+                        <td><code>dependencies</code></td>
+                        <td>string[]</td>
+                        <td>Pack IDs that must load first</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Creating Items</h3>
+            <p>Items use templates that define their properties. The engine creates instances from these templates.</p>
+
+            <h4>Weapon Example</h4>
+            <pre><code class="language-json">{
+  "id": "sword_flaming",
+  "name": "Flaming Sword",
+  "description": "A blade that burns with eternal fire",
+  "category": "weapon",
+  "character": "/",
+  "foreground": "#ff4500",
+  "properties": {
+    "weight": 2.5,
+    "volume": 3,
+    "durability": 200,
+    "maxDurability": 200,
+    "value": 500
+  },
+  "tags": ["melee", "magic", "fire"]
+}</code></pre>
+
+            <h4>Stackable Item Example</h4>
+            <pre><code class="language-json">{
+  "id": "arrow_fire",
+  "name": "Fire Arrow",
+  "description": "An arrow with a burning tip",
+  "category": "misc",
+  "character": "^",
+  "foreground": "#ff6600",
+  "properties": {
+    "weight": 0.1,
+    "volume": 0.1,
+    "stackable": true,
+    "maxStack": 50,
+    "value": 5
+  },
+  "tags": ["ammo", "fire"]
+}</code></pre>
+
+            <h3>Creating Creatures</h3>
+            <p>Creatures define entities that can spawn in the world with AI behavior.</p>
+            <pre><code class="language-json">{
+  "id": "dragon_red",
+  "name": "Red Dragon",
+  "description": "An ancient wyrm that breathes fire",
+  "character": "D",
+  "foreground": "#ff0000",
+  "background": "#330000",
+  "health": 500,
+  "speed": 120,
+  "faction": "hostile",
+  "tags": ["boss", "flying", "fire_immune"],
+  "ai": {
+    "type": "aggressive",
+    "aggression": 0.9,
+    "visionRange": 15
+  },
+  "loot": ["dragon_scale", "gold_coin", "gold_coin", "gold_coin"]
+}</code></pre>
+
+            <h4>AI Types</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Behavior</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>aggressive</code></td>
+                        <td>Attacks player on sight</td>
+                    </tr>
+                    <tr>
+                        <td><code>passive</code></td>
+                        <td>Wanders randomly, flees when attacked</td>
+                    </tr>
+                    <tr>
+                        <td><code>neutral</code></td>
+                        <td>Wanders, defends if attacked</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Creating Recipes</h3>
+            <p>Recipes define crafting requirements and outputs.</p>
+            <pre><code class="language-json">{
+  "id": "craft_fire_arrow",
+  "name": "Craft Fire Arrow",
+  "description": "Combine arrows with flammable material",
+  "category": "crafting",
+  "ingredients": [
+    { "itemId": "arrow_wood", "quantity": 1 },
+    { "itemId": "oil", "quantity": 1 }
+  ],
+  "results": [
+    { "itemId": "arrow_fire", "quantity": 1 }
+  ],
+  "timeCost": 100,
+  "requiredTools": ["tool_kit"],
+  "requiredSkills": { "survival": 2 },
+  "station": "workbench"
+}</code></pre>
+
+            <h3>Creating Custom Terrains</h3>
+            <p>Terrains define tile types for world generation.</p>
+            <pre><code class="language-json">{
+  "id": "lava",
+  "name": "Lava",
+  "character": "~",
+  "foreground": "#ff4500",
+  "background": "#8b0000",
+  "blocksMovement": true,
+  "blocksLight": false,
+  "transparent": true,
+  "tags": ["hazard", "fire"]
+}</code></pre>
+
+            <h3>Loading Content Packs</h3>
+            <p>Content packs are loaded at runtime using the <code>ContentManager</code>:</p>
+            <pre><code class="language-typescript">const content = new ContentManager(eventBus);
+
+// Load from JSON file
+const packJson = await fetch('content/core/fantasy_pack.json').then(r => r.text());
+content.loadContentPack(packJson);
+
+// Or load directly
+content.loadContentPack({
+  id: 'quick_add',
+  name: 'Quick Add',
+  version: '1.0.0',
+  items: [/* ... */]
+});</code></pre>
+
+            <h2>JavaScript Mods</h2>
+            <p>
+                JavaScript mods provide full access to the engine API. Use them for custom 
+                behavior that cannot be expressed in JSON.
+            </p>
+
+            <h3>Mod Interface</h3>
+            <p>A mod is an object implementing the <code>Mod</code> interface:</p>
+            <pre><code class="language-typescript">interface Mod {
+  id: string;
+  name: string;
+  version: string;
+  author?: string;
+  description?: string;
+  dependencies?: string[];
+  initialize(api: ModAPI): void;
+  cleanup?(): void;
+}</code></pre>
+
+            <h3>Basic Mod Example</h3>
+            <pre><code class="language-typescript">const combatEnhancementMod: Mod = {
+  id: 'enhanced_combat',
+  name: 'Enhanced Combat',
+  version: '1.0.0',
+  author: 'Mod Author',
+  description: 'Adds critical hit mechanics',
+  dependencies: ['core_content'],
+  
+  initialize(api) {
+    // Register a new weapon
+    api.registerItem({
+      id: 'sword_great',
+      name: 'Greatsword',
+      category: 'weapon',
+      character: '/',
+      foreground: '#c0c0c0',
+      properties: {
+        weight: 4,
+        volume: 5,
+        durability: 200,
+        value: 100
+      },
+      tags: ['two_handed', 'heavy']
+    });
+
+    // Listen to combat events
+    api.eventBus.on('combat:hit', (data) => {
+      // Add critical hit chance
+      if (Math.random() < 0.1) {
+        data.damage *= 2;
+        api.eventBus.emit('combat:critical', {
+          attacker: data.attacker,
+          target: data.target,
+          damage: data.damage
+        });
+      }
+    });
+  },
+
+  cleanup() {
+    // Clean up any resources
+    console.log('Combat mod cleaned up');
+  }
+};
+
+// Load the mod
+modLoader.loadMod(combatEnhancementMod);
+modLoader.initializeMods(itemManager);</code></pre>
+
+            <h3>ModAPI Overview</h3>
+            <p>The <code>ModAPI</code> provides access to core systems:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property/Method</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>eventBus</code></td>
+                        <td>Subscribe to and emit events</td>
+                    </tr>
+                    <tr>
+                        <td><code>contentLoader</code></td>
+                        <td>Access loaded content packs</td>
+                    </tr>
+                    <tr>
+                        <td><code>registerItem()</code></td>
+                        <td>Register item templates</td>
+                    </tr>
+                    <tr>
+                        <td><code>registerCreature()</code></td>
+                        <td>Register creature templates</td>
+                    </tr>
+                    <tr>
+                        <td><code>registerRecipe()</code></td>
+                        <td>Register crafting recipes</td>
+                    </tr>
+                    <tr>
+                        <td><code>registerTerrain()</code></td>
+                        <td>Register terrain types</td>
+                    </tr>
+                    <tr>
+                        <td><code>registerGenerator()</code></td>
+                        <td>Register chunk generators</td>
+                    </tr>
+                    <tr>
+                        <td><code>createEntity()</code></td>
+                        <td>Spawn entities programmatically</td>
+                    </tr>
+                    <tr>
+                        <td><code>spawnItem()</code></td>
+                        <td>Spawn items in the world</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Event-Driven Programming</h3>
+            <p>Mods can listen to game events and react accordingly:</p>
+            <pre><code class="language-typescript">initialize(api) {
+  // Listen for entity death
+  api.eventBus.on('entity:died', (data) => {
+    const { entityId, killer } = data;
+    console.log(`Entity ${entityId} was killed by ${killer}`);
+    
+    // Spawn loot
+    api.spawnItem('gold_coin', 10, data.x, data.y, itemManager);
+  });
+
+  // Listen for player actions
+  api.eventBus.on('player:move', (data) => {
+    const { from, to } = data;
+    // Track player position
+  });
+
+  // Listen for turn events
+  api.eventBus.on('turn:end', (data) => {
+    const { turnNumber } = data;
+    // Periodic mod logic
+  });
+}</code></pre>
+
+            <h2>Custom World Generation</h2>
+            <p>Create custom chunk generators for unique world types.</p>
+
+            <h3>Generator Function</h3>
+            <p>A generator receives a chunk and context, then modifies the chunk's tiles:</p>
+            <pre><code class="language-typescript">(chunk: Chunk, context: GeneratorContext) => void</code></pre>
+
+            <h4>GeneratorContext Properties</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>world</code></td>
+                        <td>World</td>
+                        <td>The world being generated</td>
+                    </tr>
+                    <tr>
+                        <td><code>rng</code></td>
+                        <td>() => number</td>
+                        <td>Seeded random (0-1)</td>
+                    </tr>
+                    <tr>
+                        <td><code>params</code></td>
+                        <td>object</td>
+                        <td>Generator parameters from map definition</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Simple Generator Example</h3>
+            <p>This generator creates a checkerboard pattern:</p>
+            <pre><code class="language-typescript">api.registerGenerator('checkerboard', (chunk, context) => {
+  const { rng } = context;
+  
+  for (let y = 0; y < chunk.size; y++) {
+    for (let x = 0; x < chunk.size; x++) {
+      // Alternating pattern based on coordinates
+      if ((x + y) % 2 === 0) {
+        chunk.setTile(x, y, TERRAIN.floor);
+      } else {
+        chunk.setTile(x, y, TERRAIN.wall);
+      }
+    }
+  }
+  
+  // Randomly place some trees
+  for (let i = 0; i < 10; i++) {
+    const x = Math.floor(rng() * chunk.size);
+    const y = Math.floor(rng() * chunk.size);
+    if (chunk.getTile(x, y)?.terrain === 'floor') {
+      chunk.setTile(x, y, TERRAIN.tree);
+    }
+  }
+});</code></pre>
+
+            <h3>Using Parameters</h3>
+            <p>Accept parameters from the map definition:</p>
+            <pre><code class="language-typescript">api.registerGenerator('custom_wilderness', (chunk, context) => {
+  const treeDensity = (context.params.treeDensity as number) || 0.3;
+  const waterChance = (context.params.waterChance as number) || 0.05;
+  
+  for (let y = 0; y < chunk.size; y++) {
+    for (let x = 0; x < chunk.size; x++) {
+      const rand = context.rng();
+      
+      if (rand < waterChance) {
+        chunk.setTile(x, y, TERRAIN.water);
+      } else if (rand < waterChance + treeDensity) {
+        chunk.setTile(x, y, TERRAIN.tree);
+      } else {
+        chunk.setTile(x, y, TERRAIN.floor);
+      }
+    }
+  }
+});</code></pre>
+
+            <p>Then use it in a map definition:</p>
+            <pre><code class="language-json">{
+  "id": "custom_forest",
+  "name": "Custom Forest",
+  "width": 1000,
+  "height": 1000,
+  "chunkSize": 64,
+  "generator": "custom_wilderness",
+  "generatorParams": {
+    "treeDensity": 0.6,
+    "waterChance": 0.1,
+    "seed": 12345
+  }
+}</code></pre>
+
+            <h2>Tutorial: Magic System Mod</h2>
+            <p>A complete walkthrough of building a magic system with multiple content types.</p>
+
+            <div class="step" data-step="1">
+                <h4>Step 1: Define Items</h4>
+                <p>Create scrolls as consumable items that trigger spells:</p>
+                <pre><code class="language-json">{
+  "id": "scroll_fireball",
+  "name": "Scroll of Fireball",
+  "description": "Unleashes a blast of fire",
+  "category": "consumable",
+  "character": "?",
+  "foreground": "#ff6600",
+  "properties": {
+    "weight": 0.1,
+    "volume": 0.1,
+    "stackable": true,
+    "maxStack": 20,
+    "value": 50
+  },
+  "tags": ["scroll", "magic", "fire"]
+}</code></pre>
+            </div>
+
+            <div class="step" data-step="2">
+                <h4>Step 2: Create Mage Creature</h4>
+                <pre><code class="language-json">{
+  "id": "mage_apprentice",
+  "name": "Apprentice Mage",
+  "description": "A novice practitioner of the arcane arts",
+  "character": "m",
+  "foreground": "#9966ff",
+  "health": 40,
+  "speed": 90,
+  "faction": "neutral",
+  "tags": ["humanoid", "magic_user"],
+  "ai": {
+    "type": "aggressive",
+    "aggression": 0.3,
+    "visionRange": 10
+  },
+  "loot": ["scroll_fireball", "robe_cotton"]
+}</code></pre>
+            </div>
+
+            <div class="step" data-step="3">
+                <h4>Step 3: Add Crafting Recipes</h4>
+                <pre><code class="language-json">{
+  "id": "craft_scroll_fireball",
+  "name": "Inscribe Fireball Scroll",
+  "category": "crafting",
+  "ingredients": [
+    { "itemId": "paper_blank", "quantity": 1 },
+    { "itemId": "ash", "quantity": 3 }
+  ],
+  "results": [
+    { "itemId": "scroll_fireball", "quantity": 1 }
+  ],
+  "timeCost": 200,
+  "requiredSkills": { "magic": 1 }
+}</code></pre>
+            </div>
+
+            <div class="step" data-step="4">
+                <h4>Step 4: Implement Spell Logic</h4>
+                <p>Create a JavaScript mod to handle scroll usage:</p>
+                <pre><code class="language-typescript">const magicSystemMod: Mod = {
+  id: 'magic_system',
+  name: 'Magic System',
+  version: '1.0.0',
+  dependencies: ['core_content'],
+  
+  initialize(api) {
+    // Load our content pack first
+    api.contentLoader.loadContentPack(magicContentPack);
+    
+    // Handle scroll usage
+    api.eventBus.on('item:use', (data) => {
+      const { item, user } = data;
+      
+      if (item.templateId === 'scroll_fireball') {
+        // Find all entities within radius
+        const targets = findTargetsInRadius(user, 3);
+        
+        targets.forEach(target => {
+          const damage = 25 + Math.floor(Math.random() * 10);
+          api.eventBus.emit('combat:magic_damage', {
+            attacker: user,
+            target: target,
+            damage: damage,
+            type: 'fire'
+          });
+        });
+        
+        // Consume the scroll
+        api.eventBus.emit('item:consume', { item, quantity: 1 });
+      }
+    });
+    
+    // Spawn mages in appropriate biomes
+    api.eventBus.on('chunk:generated', (data) => {
+      const { chunk, generator } = data;
+      if (generator === 'dungeon' && Math.random() < 0.1) {
+        const x = Math.floor(Math.random() * 64);
+        const y = Math.floor(Math.random() * 64);
+        api.createEntity('mage_apprentice', chunk.x * 64 + x, chunk.y * 64 + y, ecsWorld);
+      }
+    });
+  }
+};</code></pre>
+            </div>
+
+            <div class="step" data-step="5">
+                <h4>Step 5: Create a Custom Generator</h4>
+                <p>Add a tower generator for magical structures:</p>
+                <pre><code class="language-typescript">api.registerGenerator('wizard_tower', (chunk, context) => {
+  const centerX = Math.floor(chunk.size / 2);
+  const centerY = Math.floor(chunk.size / 2);
+  const radius = 8;
+  
+  // Create circular tower
+  for (let y = 0; y < chunk.size; y++) {
+    for (let x = 0; x < chunk.size; x++) {
+      const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+      
+      if (dist < radius - 1) {
+        chunk.setTile(x, y, TERRAIN.floor);
+      } else if (dist < radius) {
+        chunk.setTile(x, y, TERRAIN.wall);
+      } else {
+        chunk.setTile(x, y, TERRAIN.floor);
+      }
+    }
+  }
+  
+  // Add door
+  chunk.setTile(centerX, centerY + radius - 1, TERRAIN.door);
+  
+  // Spawn archmage in center
+  const worldPos = chunk.toWorldPosition(centerX, centerY);
+  api.createEntity('archmage', worldPos.x, worldPos.y, ecsWorld);
+});</code></pre>
+            </div>
+
+            <h2>Best Practices</h2>
+
+            <h3>Naming Conventions</h3>
+            <ul>
+                <li>Use <code>snake_case</code> for IDs (e.g., <code>iron_sword</code>, <code>fire_dragon</code>)</li>
+                <li>Prefix mod-specific content with mod ID (e.g., <code>myMod_item_name</code>)</li>
+                <li>Use semantic versioning for mods (e.g., <code>1.2.3</code>)</li>
+            </ul>
+
+            <h3>Avoiding Conflicts</h3>
+            <ul>
+                <li>Always declare dependencies if your mod uses content from another pack</li>
+                <li>Check if IDs already exist before registering</li>
+                <li>Use unique event names with your mod prefix</li>
+            </ul>
+
+            <h3>Performance Tips</h3>
+            <ul>
+                <li>Use JSON content packs for data-heavy mods (better loading performance)</li>
+                <li>Avoid expensive operations in event handlers that fire frequently</li>
+                <li>Cache frequently accessed data in your mod</li>
+                <li>Implement <code>cleanup()</code> to remove event listeners</li>
+            </ul>
+
+            <h3>Error Handling</h3>
+            <pre><code class="language-typescript">initialize(api) {
+  try {
+    // Your mod logic
+    api.registerItem(myItem);
+  } catch (error) {
+    console.error(`[MyMod] Initialization failed:`, error);
+    // Emit error event for debugging
+    api.eventBus.emit('mod:error', {
+      modId: this.id,
+      error: error.message
+    });
+  }
+}</code></pre>
+
+            <h2>Publishing Mods</h2>
+
+            <h3>File Structure</h3>
+            <pre><code>my_mod/
+├── mod.json          # Content pack (optional)
+├── mod.ts            # JavaScript mod code
+├── README.md         # Documentation
+└── assets/           # Optional assets
+    └── sprites/</code></pre>
+
+            <h3>Documentation Checklist</h3>
+            <ul>
+                <li>Mod description and purpose</li>
+                <li>Version number and changelog</li>
+                <li>List of dependencies</li>
+                <li>Installation instructions</li>
+                <li>Configuration options (if any)</li>
+                <li>Known issues or limitations</li>
+            </ul>
+
+            <h3>Testing Checklist</h3>
+            <ul>
+                <li>Test with all dependencies loaded</li>
+                <li>Test without dependencies (should fail gracefully)</li>
+                <li>Verify IDs don't conflict with other popular mods</li>
+                <li>Test cleanup() method works correctly</li>
+                <li>Check for memory leaks in long-running games</li>
+            </ul>
+
+            <div class="alert alert-success">
+                <strong>Ready to Mod!</strong> Start with a simple content pack to learn the 
+                structure, then progress to JavaScript mods for more complex behavior. Check 
+                the <a href="content.html">Content module reference</a> for complete API details.
+            </div>
+
+            <div class="footer">
+                <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
