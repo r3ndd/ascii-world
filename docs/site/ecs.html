@@ -586,10 +586,12 @@ class HealthSystem extends BaseSystem {
     type: 'position';
     x: number;
     y: number;
+    z: number;  // Layer/elevation (0 = ground level)
 }
 
 // Factory function
-const pos = createPosition(10, 20);
+const pos = createPosition(10, 20);       // z defaults to 0
+const upperPos = createPosition(10, 20, 1); // Layer 1 (upper floor)
 entity.addComponent(pos);</code></pre>
 
                 <h3>Health Component</h3>
@@ -642,8 +644,8 @@ const renderable = createRenderable('@', '#ffffff', '#000000');</code></pre>
                     <tbody>
                         <tr>
                             <td><code>createPosition</code></td>
-                            <td><code>(x, y)</code></td>
-                            <td>Position in world coordinates</td>
+                            <td><code>(x, y, z?)</code></td>
+                            <td>Position in world coordinates (z = layer)</td>
                         </tr>
                         <tr>
                             <td><code>createVelocity</code></td>

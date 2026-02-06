@@ -3041,6 +3041,356 @@ itemManager.spawnItem({ templateId: 'bread', x: 50, y: 48, quantity: 2 });</code
                 </div>
             </div>
 
+            <!-- Example 10: Multi-Layer Worlds -->
+            <div class="example-section" id="example-10">
+                <div class="example-header">
+                    <div class="example-number">10</div>
+                    <div class="example-title">Multi-Layer Worlds</div>
+                </div>
+
+                <p>
+                    Create multi-level dungeons and buildings with z-axis layer support.
+                    Players can traverse between layers using stairs.
+                </p>
+
+                <h4>Updated Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">entities/</span>
+│   │   ├── <span class="file">Player.ts</span>
+│   │   └── <span class="file">NPC.ts</span>
+│   ├── <span class="folder">items/</span>
+│   │   ├── <span class="file">ItemManager.ts</span>
+│   │   └── <span class="file">InventoryUI.ts</span>
+│   ├── <span class="folder">systems/</span>
+│   │   ├── <span class="file">HealthSystem.ts</span>
+│   │   └── <span class="file">HungerSystem.ts</span>
+│   ├── <span class="folder">turns/</span>
+│   │   ├── <span class="file">TurnController.ts</span>
+│   │   └── <span class="file">ActorFactory.ts</span>
+│   ├── <span class="folder">world/</span>
+│   │   ├── <span class="file">TerrainRenderer.ts</span>
+│   │   ├── <span class="file">FOVManager.ts</span>
+│   │   ├── <span class="file">WorldGenerator.ts</span>
+│   │   └── <span class="file">LayerManager.ts</span>   <span class="comment">// Layer handling</span>
+│   ├── <span class="folder">save/</span>
+│   │   └── <span class="file">SaveManager.ts</span>
+│   ├── <span class="folder">content/</span>
+│   │   └── <span class="file">ContentLoader.ts</span>
+│   ├── <span class="file">InputHandler.ts</span>
+│   └── <span class="file">main.ts</span>
+├── <span class="folder">content/</span>
+│   ├── <span class="folder">maps/</span>
+│   │   └── <span class="file">dungeon.json</span>
+│   └── <span class="folder">packs/</span>
+│       └── <span class="file">items.json</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tsconfig.json</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/world/LayerManager.ts (NEW)</div>
+                    <pre><code class="language-typescript">import {
+    World,
+    StairsSystem,
+    TERRAIN,
+    globalEventBus
+} from 'ascii-world';
+
+export interface LayerConfig {
+    z: number;
+    name: string;
+    generator: 'dungeon' | 'cave' | 'wilderness' | 'city';
+    generatorParams?: Record<string, unknown>;
+}
+
+/**
+ * Manages multi-layer world creation and stair connections
+ */
+export class LayerManager {
+    private world: World;
+    private stairsSystem: StairsSystem;
+    private activeLayer: number = 0;
+
+    constructor(world: World) {
+        this.world = world;
+        this.stairsSystem = new StairsSystem(world, globalEventBus);
+    }
+
+    /**
+     * Add a new layer to the world
+     */
+    addLayer(config: LayerConfig): void {
+        this.world.addLayer(config.z, 500, 500);
+        console.log(`Added layer ${config.z}: ${config.name}`);
+    }
+
+    /**
+     * Create stairs connecting two layers
+     */
+    createStairLink(
+        x: number,
+        y: number,
+        fromZ: number,
+        toZ: number
+    ): void {
+        // Place stairs on source layer
+        const fromTerrain = toZ > fromZ ? TERRAIN.stairs_up : TERRAIN.stairs_down;
+        this.world.setTileAt(x, y, fromTerrain, fromZ);
+
+        // Place stairs on destination layer
+        const toTerrain = toZ > fromZ ? TERRAIN.stairs_down : TERRAIN.stairs_up;
+        this.world.setTileAt(x, y, toTerrain, toZ);
+
+        // Register the stair link
+        this.stairsSystem.registerStairLink(x, y, fromZ, x, y, toZ);
+
+        console.log(`Created stairs at (${x}, ${y}) connecting layers ${fromZ} <-> ${toZ}`);
+    }
+
+    /**
+     * Check if entity can ascend from position
+     */
+    canAscend(x: number, y: number, z: number): boolean {
+        return this.stairsSystem.canAscend(x, y, z);
+    }
+
+    /**
+     * Check if entity can descend from position
+     */
+    canDescend(x: number, y: number, z: number): boolean {
+        return this.stairsSystem.canDescend(x, y, z);
+    }
+
+    /**
+     * Get the stairs system for physics integration
+     */
+    getStairsSystem(): StairsSystem {
+        return this.stairsSystem;
+    }
+
+    /**
+     * Get current active layer
+     */
+    getActiveLayer(): number {
+        return this.activeLayer;
+    }
+
+    /**
+     * Set active layer (for rendering/UI purposes)
+     */
+    setActiveLayer(z: number): void {
+        this.activeLayer = z;
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/entities/Player.ts (UPDATED)</div>
+                    <p class="file-label">Update to include z position:</p>
+                    <pre><code class="language-typescript">export interface PlayerConfig {
+    x: number;
+    y: number;
+    z?: number;  // Layer/elevation (default 0)
+    health?: number;
+    speed?: number;
+}
+
+export function createPlayer(
+    world: ECSWorld,
+    config: PlayerConfig
+): Entity {
+    const player = world.createEntity()
+        .addComponent(createPosition(config.x, config.y, config.z ?? 0))
+        .addComponent(createHealth(config.health ?? 100, config.health ?? 100))
+        .addComponent(createSpeed(config.speed ?? 100))
+        .addComponent(createActor(true))
+        .addComponent(createRenderable('@', '#ffffff'));
+
+    return player;
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/world/TerrainRenderer.ts (UPDATED)</div>
+                    <p class="file-label">Add layer-aware rendering:</p>
+                    <pre><code class="language-typescript">export class TerrainRenderer {
+    private world: World;
+    private display: DisplayManager;
+    private camera: Camera;
+    private currentLayer: number = 0;
+
+    constructor(world: World, display: DisplayManager, camera: Camera) {
+        this.world = world;
+        this.display = display;
+        this.camera = camera;
+    }
+
+    setCurrentLayer(z: number): void {
+        this.currentLayer = z;
+    }
+
+    render(): void {
+        const cameraPos = this.camera.getPosition();
+        const viewport = this.camera.getViewportSize();
+
+        for (let y = 0; y < viewport.height; y++) {
+            for (let x = 0; x < viewport.width; x++) {
+                const worldX = cameraPos.x + x;
+                const worldY = cameraPos.y + y;
+
+                // Get tile at current layer
+                const tile = this.world.getTileAt(worldX, worldY, this.currentLayer);
+                if (!tile) continue;
+
+                this.display.draw(
+                    x,
+                    y,
+                    tile.terrain.character,
+                    tile.terrain.foreground,
+                    tile.terrain.background
+                );
+            }
+        }
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">content/maps/dungeon.json (UPDATED)</div>
+                    <p class="file-label">Multi-layer dungeon definition:</p>
+                    <pre><code class="language-json">{
+  "id": "multi_layer_dungeon",
+  "name": "Deep Dungeon",
+  "description": "A three-level dungeon with connecting stairs",
+  "width": 500,
+  "height": 500,
+  "chunkSize": 64,
+  "layers": [
+    {
+      "z": -1,
+      "name": "Basement",
+      "width": 400,
+      "height": 400,
+      "generator": "cave",
+      "generatorParams": { "fillPercent": 0.45, "iterations": 5 }
+    },
+    {
+      "z": 0,
+      "name": "Ground Floor",
+      "width": 500,
+      "height": 500,
+      "generator": "dungeon",
+      "generatorParams": { "roomChance": 0.5 }
+    },
+    {
+      "z": 1,
+      "name": "Upper Floor",
+      "width": 300,
+      "height": 300,
+      "generator": "dungeon",
+      "generatorParams": { "roomChance": 0.3 }
+    }
+  ],
+  "stairLinks": [
+    { "fromX": 100, "fromY": 100, "fromZ": 0, "toX": 100, "toY": 100, "toZ": -1 },
+    { "fromX": 200, "fromY": 200, "fromZ": 0, "toX": 150, "toY": 150, "toZ": 1 },
+    { "fromX": 300, "fromY": 100, "fromZ": 1, "toX": 300, "toY": 100, "toZ": 0 }
+  ],
+  "spawnPoints": [
+    { "x": 50, "y": 50, "z": 0, "type": "player", "tags": ["start"] }
+  ]
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/InputHandler.ts (UPDATED)</div>
+                    <p class="file-label">Add stair traversal keys:</p>
+                    <pre><code class="language-typescript">export interface InputCallbacks {
+    onMove: (direction: Direction) => void;
+    onPickup?: () => void;
+    onDrop?: () => void;
+    onInventory?: () => void;
+    onSave?: () => void;
+    onLoad?: () => void;
+    onAscend?: () => void;   // New: climb up stairs
+    onDescend?: () => void;  // New: climb down stairs
+}
+
+// In setupListeners(), add:
+case '>':
+    e.preventDefault();
+    this.callbacks.onAscend?.();
+    break;
+case '<':
+    e.preventDefault();
+    this.callbacks.onDescend?.();
+    break;</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
+                    <pre><code class="language-typescript">import { LayerManager } from './world/LayerManager';
+
+// ... in init() function:
+
+// Create layer manager for multi-layer support
+const layerManager = new LayerManager(gameWorld);
+
+// Add layers
+layerManager.addLayer({ z: -1, name: 'Basement', generator: 'cave' });
+layerManager.addLayer({ z: 0, name: 'Ground Floor', generator: 'dungeon' });
+layerManager.addLayer({ z: 1, name: 'Upper Floor', generator: 'dungeon' });
+
+// Create stair connections
+layerManager.createStairLink(100, 100, 0, -1);  // Down to basement
+layerManager.createStairLink(200, 200, 0, 1);   // Up to upper floor
+
+// Create player at ground level
+const player = createPlayer(ecsWorld, { x: 50, y: 50, z: 0 });
+
+// Setup physics with stairs support
+const physics = new PhysicsSystem(gameWorld, ecsWorld, globalEventBus);
+physics.setStairsSystem(layerManager.getStairsSystem());
+
+// Input handling with layer traversal
+new InputHandler({
+    // ... existing callbacks ...
+    onAscend: () => {
+        if (!turnController.isPlayerTurn()) return;
+        
+        if (physics.ascend(player)) {
+            const pos = player.getComponent('position') as { x: number; y: number; z: number };
+            layerManager.setActiveLayer(pos.z);
+            terrainRenderer.setCurrentLayer(pos.z);
+            turnController.playerAction();
+        }
+    },
+    onDescend: () => {
+        if (!turnController.isPlayerTurn()) return;
+        
+        if (physics.descend(player)) {
+            const pos = player.getComponent('position') as { x: number; y: number; z: number };
+            layerManager.setActiveLayer(pos.z);
+            terrainRenderer.setCurrentLayer(pos.z);
+            turnController.playerAction();
+        }
+    }
+});
+
+// Update UI to show current layer
+display.drawText(0, 3, `Layer: ${layerManager.getActiveLayer()}`);</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> A multi-layer dungeon with stairs connecting floors.
+                    Press '>' to ascend and '<' to descend when standing on stairs.
+                    The current layer is shown in the UI.
+                </div>
+            </div>
+
                 <div class="footer">
                     <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
                 </div>

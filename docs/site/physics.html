@@ -353,14 +353,14 @@
                 <h1>Physics Module</h1>
                 <p>
                     Collision detection, movement, field of view (FOV),
-                    lighting, and pathfinding. Uses rot.js for FOV, lighting,
-                    and pathfinding algorithms.
+                    lighting, pathfinding, and z-axis traversal. Uses rot.js 
+                    for FOV, lighting, and pathfinding algorithms.
                 </p>
 
                 <h2>PhysicsSystem</h2>
                 <p>
                     Handles entity movement and collision detection with the
-                    world.
+                    world. Supports multi-layer navigation through stairs.
                 </p>
 
                 <div class="method">
@@ -418,6 +418,87 @@ physics.moveEntity(player, 'southwest');</code></pre>
                         </div>
                     </div>
                     <pre><code class="language-typescript">physics.moveEntityTo(player, 100, 200);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">ascend()</div>
+                        <div class="method-signature">
+                            ascend(entity: Entity): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Moves entity up to the layer above via stairs_up terrain.
+                        Returns true if successful.
+                    </div>
+                    <pre><code class="language-typescript">// Stand on stairs_up (>) and ascend
+if (physics.ascend(player)) {
+    console.log('Climbed up to layer', 
+        player.getComponent('position')?.z);
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">descend()</div>
+                        <div class="method-signature">
+                            descend(entity: Entity): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Moves entity down to the layer below via stairs_down terrain.
+                        Returns true if successful.
+                    </div>
+                    <pre><code class="language-typescript">// Stand on stairs_down (<) and descend
+if (physics.descend(player)) {
+    console.log('Climbed down to layer', 
+        player.getComponent('position')?.z);
+}</code></pre>
+                </div>
+
+                <h2>StairsSystem</h2>
+                <p>
+                    Manages stair connections between layers and validates
+                    vertical movement. Automatically linked with PhysicsSystem.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">registerStairLink()</div>
+                        <div class="method-signature">
+                            registerStairLink(fromX: number, fromY: number, fromZ: number,
+                            toX: number, toY: number, toZ: number): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Manually registers a stair connection between two layers.
+                    </div>
+                    <pre><code class="language-typescript">// Link stairs at (50, 50, 0) going down to (50, 50, -1)
+stairsSystem.registerStairLink(50, 50, 0, 50, 50, -1);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">canAscend()</div>
+                        <div class="method-signature">
+                            canAscend(x: number, y: number, z: number): boolean
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">if (stairsSystem.canAscend(50, 50, 0)) {
+    console.log('Can go up from here');
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">canDescend()</div>
+                        <div class="method-signature">
+                            canDescend(x: number, y: number, z: number): boolean
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">if (stairsSystem.canDescend(50, 50, 0)) {
+    console.log('Can go down from here');
+}</code></pre>
                 </div>
 
                 <h2>FOVSystem</h2>
@@ -658,6 +739,26 @@ if (path) {
                             <td><code>{ entityId, from, to }</code></td>
                             <td>Movement blocked</td>
                         </tr>
+                        <tr>
+                            <td><code>physics:entityAscended</code></td>
+                            <td><code>{ entityId, from: { x, y, z }, to: { x, y, z } }</code></td>
+                            <td>Entity climbed up stairs</td>
+                        </tr>
+                        <tr>
+                            <td><code>physics:entityDescended</code></td>
+                            <td><code>{ entityId, from: { x, y, z }, to: { x, y, z } }</code></td>
+                            <td>Entity climbed down stairs</td>
+                        </tr>
+                        <tr>
+                            <td><code>physics:ascendBlocked</code></td>
+                            <td><code>{ entityId, x, y, z, reason }</code></td>
+                            <td>Ascend failed (no stairs or invalid position)</td>
+                        </tr>
+                        <tr>
+                            <td><code>physics:descendBlocked</code></td>
+                            <td><code>{ entityId, x, y, z, reason }</code></td>
+                            <td>Descend failed (no stairs or invalid position)</td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -666,14 +767,23 @@ if (path) {
     PhysicsSystem,
     FOVSystem,
     LightingSystem,
-    Pathfinding
+    Pathfinding,
+    StairsSystem,
+    TERRAIN
 } from 'ascii-world';
 
 // Initialize systems
 const physics = new PhysicsSystem(world, ecsWorld, eventBus);
+const stairsSystem = new StairsSystem(world, eventBus);
+physics.setStairsSystem(stairsSystem);
 const fov = new FOVSystem(world);
 const lighting = new LightingSystem(world);
 const pathfinding = new Pathfinding(world);
+
+// Create multi-layer dungeon with stairs
+world.addLayer(-1, 1000, 1000);  // Basement
+world.setTileAt(100, 100, TERRAIN.stairs_down, 0);
+world.setTileAt(100, 100, TERRAIN.stairs_up, -1);
 
 // Player movement with arrow keys
 document.addEventListener('keydown', (e) => {
@@ -690,6 +800,14 @@ document.addEventListener('keydown', (e) => {
         case 'ArrowRight':
             physics.moveEntity(player, 'east');
             break;
+        case '>':
+            // Ascend stairs
+            physics.ascend(player);
+            break;
+        case '<':
+            // Descend stairs
+            physics.descend(player);
+            break;
     }
 
     // Update FOV after movement
@@ -698,6 +816,11 @@ document.addEventListener('keydown', (e) => {
 
     // Update lighting
     lighting.moveLightSource('player_light', pos.x, pos.y);
+});
+
+// Listen for layer change events
+eventBus.on('physics:entityAscended', (data) => {
+    console.log(`Ascended from layer ${data.from.z} to ${data.to.z}`);
 });
 
 // AI pathfinding to player

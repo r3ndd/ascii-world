@@ -210,7 +210,7 @@ interface RecipeIngredient {
 }</code></pre>
 
             <h2>MapDefinition</h2>
-            <p>Defines a complete game world with size, generator, and spawn points.</p>
+            <p>Defines a complete game world with size, generator, and spawn points. Supports multi-layer worlds for dungeons and multi-level structures.</p>
             <pre><code class="language-typescript">interface MapDefinition {
     id: string;
     name: string;
@@ -222,6 +222,64 @@ interface RecipeIngredient {
     generatorParams?: Record<string, unknown>;  // Generator-specific params
     predefinedChunks?: PredefinedChunk[];       // Hand-crafted chunks
     spawnPoints?: SpawnPoint[];    // Player/NPC spawn locations
+    layers?: LayerDefinition[];    // Multi-layer definitions (z-levels)
+    stairLinks?: StairLinkDefinition[]; // Stair connections between layers
+}</code></pre>
+
+            <h2>LayerDefinition</h2>
+            <p>Defines a layer in a multi-layer world (for dungeons, buildings, etc.).</p>
+            <pre><code class="language-typescript">interface LayerDefinition {
+    z: number;                     // Layer elevation (0 = ground, 1 = upper, -1 = basement)
+    name: string;                  // Display name (e.g., "Basement", "Second Floor")
+    width: number;                 // Layer width (can differ per layer)
+    height: number;                // Layer height (can differ per layer)
+    generator?: string;            // Generator for this layer
+    generatorParams?: Record<string, unknown>;  // Layer-specific generator params
+    predefinedChunks?: PredefinedChunk[];       // Hand-crafted chunks for this layer
+}
+
+// Example multi-layer dungeon
+{
+    id: 'dungeon_level_1',
+    name: 'Dungeon - Level 1',
+    width: 500,
+    height: 500,
+    chunkSize: 64,
+    layers: [
+        { z: -1, name: 'Basement', width: 400, height: 400, generator: 'cave' },
+        { z: 0, name: 'Ground Floor', width: 500, height: 500, generator: 'dungeon' },
+        { z: 1, name: 'Upper Floor', width: 300, height: 300, generator: 'dungeon' }
+    ],
+    stairLinks: [
+        { fromX: 100, fromY: 100, fromZ: 0, toX: 100, toY: 100, toZ: -1 },
+        { fromX: 200, fromY: 200, fromZ: 0, toX: 150, toY: 150, toZ: 1 }
+    ],
+    spawnPoints: [
+        { x: 50, y: 50, z: 0, type: 'player', tags: ['start'] }
+    ]
+}</code></pre>
+
+            <h2>StairLinkDefinition</h2>
+            <p>Defines a stair connection between two layers.</p>
+            <pre><code class="language-typescript">interface StairLinkDefinition {
+    fromX: number;                 // Source X coordinate
+    fromY: number;                 // Source Y coordinate
+    fromZ: number;                 // Source layer (where stairs_up or stairs_down is placed)
+    toX: number;                   // Destination X coordinate
+    toY: number;                   // Destination Y coordinate
+    toZ: number;                   // Destination layer
+    type?: 'up' | 'down' | 'both'; // Direction of traversal allowed
+}
+
+// Example: Link ground floor to basement
+{
+    fromX: 100,
+    fromY: 100,
+    fromZ: 0,      // Stairs at ground level
+    toX: 100,
+    toY: 100,
+    toZ: -1,       // Lead to basement
+    type: 'both'   // Can go up or down
 }</code></pre>
 
             <h2>ContentLoader</h2>

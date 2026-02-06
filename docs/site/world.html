@@ -352,15 +352,16 @@
             <main class="content">
                 <h1>World Module</h1>
                 <p>
-                    World, chunk, and map management. Handles terrain data,
-                    entity storage per chunk, and distance-based update
-                    scheduling for large open worlds.
+                    World, chunk, and map management with multi-layer support. 
+                    Handles terrain data, entity storage per chunk, z-axis layers,
+                    and distance-based update scheduling for large open worlds.
                 </p>
 
                 <h2>World</h2>
                 <p>
                     The main world container that manages chunks and coordinates
-                    all world-related systems.
+                    all world-related systems. Supports multi-layer worlds with
+                    z-axis for vertical structures like dungeons and buildings.
                 </p>
 
                 <div class="method">
@@ -379,10 +380,11 @@ world.initialize();</code></pre>
                     <div class="method-header">
                         <div class="method-name">getTileAt()</div>
                         <div class="method-signature">
-                            getTileAt(x: number, y: number): Tile | null
+                            getTileAt(x: number, y: number, z?: number): Tile | null
                         </div>
                     </div>
                     <pre><code class="language-typescript">const tile = world.getTileAt(100, 200);
+const upperTile = world.getTileAt(100, 200, 1); // Layer 1
 if (tile && tile.blocksMovement) {
     console.log('Cannot move here!');
 }</code></pre>
@@ -392,46 +394,114 @@ if (tile && tile.blocksMovement) {
                     <div class="method-header">
                         <div class="method-name">setTileAt()</div>
                         <div class="method-signature">
-                            setTileAt(x: number, y: number, tile: Tile): boolean
+                            setTileAt(x: number, y: number, tile: Tile, z?: number): boolean
                         </div>
                     </div>
-                    <pre><code class="language-typescript">world.setTileAt(100, 200, TERRAIN.wall);</code></pre>
+                    <pre><code class="language-typescript">world.setTileAt(100, 200, TERRAIN.wall);
+world.setTileAt(100, 200, TERRAIN.stairs_up, 0); // Stairs on layer 0</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">isValidPosition()</div>
                         <div class="method-signature">
-                            isValidPosition(x: number, y: number): boolean
+                            isValidPosition(x: number, y: number, z?: number): boolean
                         </div>
                     </div>
                     <pre><code class="language-typescript">if (world.isValidPosition(newX, newY)) {
     // Can move here
+}
+if (world.isValidPosition(newX, newY, targetZ)) {
+    // Position valid on specific layer
 }</code></pre>
+                </div>
+
+                <h2>Multi-Layer Worlds</h2>
+                <p>
+                    Worlds support multiple z-layers (elevations/floors) for creating
+                    multi-level structures like dungeons, buildings, and caves.
+                    Each layer has its own chunk manager and terrain data.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">addLayer()</div>
+                        <div class="method-signature">
+                            addLayer(z: number, width: number, height: number): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Creates a new layer at the specified z-level. Layer 0 is the default.
+                    </div>
+                    <pre><code class="language-typescript">// Add upper floor (layer 1)
+world.addLayer(1, 1000, 1000);
+
+// Add basement (layer -1)
+world.addLayer(-1, 1000, 1000);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">removeLayer()</div>
+                        <div class="method-signature">
+                            removeLayer(z: number): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Removes a non-default layer. Cannot remove layer 0 (default).
+                    </div>
+                    <pre><code class="language-typescript">world.removeLayer(1); // Remove upper floor</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">hasLayer()</div>
+                        <div class="method-signature">
+                            hasLayer(z: number): boolean
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">if (world.hasLayer(1)) {
+    // Layer 1 exists
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getCurrentLayer()</div>
+                        <div class="method-signature">
+                            getCurrentLayer(): number
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Returns the z-level of the active layer (player's current layer).
+                    </div>
+                    <pre><code class="language-typescript">const currentZ = world.getCurrentLayer();</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">setPlayerPosition()</div>
                         <div class="method-signature">
-                            setPlayerPosition(x: number, y: number): void
+                            setPlayerPosition(x: number, y: number, z?: number): void
                         </div>
                     </div>
                     <div class="method-description">
                         Updates player position and activates/deactivates chunks
-                        accordingly.
+                        accordingly. Can also change the current z-layer.
                     </div>
-                    <pre><code class="language-typescript">world.setPlayerPosition(playerX, playerY);</code></pre>
+                    <pre><code class="language-typescript">world.setPlayerPosition(playerX, playerY);
+world.setPlayerPosition(playerX, playerY, 1); // Move to layer 1</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">getEntitiesAt()</div>
                         <div class="method-signature">
-                            getEntitiesAt(x: number, y: number): Entity[]
+                            getEntitiesAt(x: number, y: number, z?: number): Entity[]
                         </div>
                     </div>
                     <pre><code class="language-typescript">const entities = world.getEntitiesAt(100, 200);
+const layerEntities = world.getEntitiesAt(100, 200, 1);
 for (const entity of entities) {
     console.log(`Entity ${entity.id} is here`);
 }</code></pre>
@@ -574,11 +644,18 @@ for (const entity of entities) {
                             <td>Door</td>
                         </tr>
                         <tr>
-                            <td><code>TERRAIN.stairs</code></td>
+                            <td><code>TERRAIN.stairs_up</code></td>
                             <td>&gt;</td>
                             <td>No</td>
                             <td>No</td>
-                            <td>Stairs</td>
+                            <td>Stairs going up to layer above</td>
+                        </tr>
+                        <tr>
+                            <td><code>TERRAIN.stairs_down</code></td>
+                            <td>&lt;</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Stairs going down to layer below</td>
                         </tr>
                     </tbody>
                 </table>
@@ -593,6 +670,26 @@ for (const entity of entities) {
     fg?: string;
     bg?: string;
 }</code></pre>
+
+                <h3>Multi-Layer Example</h3>
+                <pre><code class="language-typescript">// Create multi-layer dungeon
+const world = new World(500, 500, 64, ecsWorld);
+world.initialize();
+
+// Add basement and upper floors
+world.addLayer(-1, 500, 500);  // Basement
+world.addLayer(1, 500, 500);   // Upper floor
+
+// Place stairs connecting layers
+world.setTileAt(100, 100, TERRAIN.stairs_down, 0);  // Down from layer 0 to -1
+world.setTileAt(100, 100, TERRAIN.stairs_up, -1);   // Up from layer -1 to 0
+
+world.setTileAt(200, 150, TERRAIN.stairs_up, 0);    // Up from layer 0 to 1
+world.setTileAt(200, 150, TERRAIN.stairs_down, 1);  // Down from layer 1 to 0
+
+// Check terrain at specific layer
+const tileAtLayer1 = world.getTileAt(200, 150, 1);
+console.log(tileAtLayer1?.terrain.id);  // 'stairs_down'</code></pre>
 
                 <h2>UpdateScheduler</h2>
                 <p>
@@ -680,12 +777,20 @@ for (const entity of entities) {
 const world = new World(1000, 1000, 64, ecsWorld);
 world.initialize();
 
+// Add upper floor for multi-layer dungeon
+world.addLayer(1, 1000, 1000);
+
 // Get tile
 const tile = world.getTileAt(100, 100);
+const upperTile = world.getTileAt(100, 100, 1); // Layer 1
 console.log(tile?.char);  // '.' for floor
 
 // Set custom tile
 world.setTileAt(100, 100, TERRAIN.wall);
+
+// Place stairs connecting layers
+world.setTileAt(50, 50, TERRAIN.stairs_up, 0);
+world.setTileAt(50, 50, TERRAIN.stairs_down, 1);
 
 // Check position validity
 if (world.isValidPosition(500, 500)) {
@@ -694,6 +799,9 @@ if (world.isValidPosition(500, 500)) {
 
 // Update player position (activates nearby chunks)
 world.setPlayerPosition(playerX, playerY);
+
+// Move player to upper layer
+world.setPlayerPosition(playerX, playerY, 1);
 
 // Get entities at position
 const entities = world.getEntitiesAt(100, 200);
@@ -705,7 +813,8 @@ for (const entity of entities) {
                     <strong>Performance Note:</strong> Chunks are lazily created
                     when accessed. Only chunks near the player are kept active
                     (3x3 grid by default), minimizing memory usage in large
-                    worlds.
+                    worlds. Multi-layer worlds maintain separate chunk managers
+                    per layer, and only the current layer's chunks are fully active.
                 </div>
 
                 <div class="footer">
