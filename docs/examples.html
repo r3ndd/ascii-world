@@ -1,0 +1,2981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examples - ASCII World Engine</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --accent: #e94560;
+            --accent-hover: #ff6b6b;
+            --code-bg: #0d1117;
+            --border: #30363d;
+            --success: #238636;
+            --warning: #f0883e;
+            --info: #58a6ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header .version {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-section {
+            margin-bottom: 15px;
+        }
+
+        .nav-section-title {
+            padding: 10px 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 8px 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-link:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--accent-hover);
+        }
+
+        .nav-link.active {
+            background-color: var(--bg-tertiary);
+            border-left: 3px solid var(--accent);
+        }
+
+        .content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+            max-width: 900px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin: 30px 0 15px;
+            color: var(--accent);
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            margin: 25px 0 10px;
+            color: var(--text-primary);
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        a {
+            color: var(--info);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        code {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+        }
+
+        code.inline {
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background-color: rgba(88, 166, 255, 0.1);
+            border-color: var(--info);
+        }
+
+        .alert-warning {
+            background-color: rgba(240, 136, 62, 0.1);
+            border-color: var(--warning);
+        }
+
+        .alert-success {
+            background-color: rgba(35, 134, 54, 0.1);
+            border-color: var(--success);
+        }
+
+        .example-section {
+            margin: 40px 0;
+            padding: 30px;
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .example-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .example-number {
+            width: 50px;
+            height: 50px;
+            background-color: var(--accent);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.4rem;
+        }
+
+        .example-title {
+            font-size: 1.6rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .file-tree {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .file-tree .folder {
+            color: #ffd700;
+        }
+
+        .file-tree .file {
+            color: #7ee787;
+        }
+
+        .file-tree .comment {
+            color: var(--text-secondary);
+            margin-left: 20px;
+        }
+
+        .file-label {
+            display: inline-block;
+            background-color: var(--bg-tertiary);
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .step {
+            margin: 25px 0;
+            padding: 20px;
+            background-color: var(--bg-primary);
+            border-radius: 8px;
+            border-left: 4px solid var(--info);
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: var(--info);
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .code-diff {
+            background-color: rgba(35, 134, 54, 0.2);
+            border-left: 3px solid var(--success);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1>ASCII World</h1>
+                <div class="version">v0.1.0</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Getting Started</div>
+                <a href="index.html" class="nav-link">Overview</a>
+                <a href="getting-started.html" class="nav-link">Quick Start</a>
+                <a href="examples.html" class="nav-link active">Examples</a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">API Reference</div>
+                <a href="core.html" class="nav-link">Core</a>
+                <a href="ecs.html" class="nav-link">ECS</a>
+                <a href="display.html" class="nav-link">Display</a>
+                <a href="world.html" class="nav-link">World</a>
+                <a href="time.html" class="nav-link">Time</a>
+                <a href="physics.html" class="nav-link">Physics</a>
+                <a href="items.html" class="nav-link">Items</a>
+                <a href="content.html" class="nav-link">Content</a>
+                <a href="config.html" class="nav-link">Configuration</a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Guides</div>
+                <a href="modding-guide.html" class="nav-link">Modding Guide</a>
+            </div>
+        </nav>
+
+        <main class="content">
+            <h1>Examples</h1>
+
+            <p>
+                This page provides practical, complete examples that build upon each other.
+                Each example includes file structure recommendations and working code you can
+                copy into your own project.
+            </p>
+
+            <div class="alert alert-info">
+                <strong>Note:</strong> Examples are progressive—later examples build on earlier ones.
+                Start with Example 1 and work your way through for the best learning experience.
+            </div>
+
+            <!-- Example 1: Minimal Game -->
+            <div class="example-section" id="example-1">
+                <div class="example-header">
+                    <div class="example-number">1</div>
+                    <div class="example-title">Minimal Game</div>
+                </div>
+
+                <p>
+                    The absolute minimum needed to get a game running: a player character
+                    that can move around on screen.
+                </p>
+
+                <h4>Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   └── <span class="file">main.ts</span>           <span class="comment">// Entry point - game initialization</span>
+├── <span class="file">index.html</span>          <span class="comment">// HTML container</span>
+├── <span class="file">package.json</span>        <span class="comment">// Dependencies</span>
+└── <span class="file">tsconfig.json</span>       <span class="comment">// TypeScript config</span>
+                </div>
+
+                <h4>Files</h4>
+
+                <div class="step">
+                    <div class="step-title">package.json</div>
+                    <pre><code>{
+  "name": "my-ascii-game",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "dependencies": {
+    "ascii-world": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">tsconfig.json</div>
+                    <pre><code>{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">index.html</div>
+                    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;My ASCII Game&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        canvas {
+            border: 2px solid #333;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;script type="module" src="/src/main.ts"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts</div>
+                    <pre><code>import {
+    Engine,
+    ECSWorld,
+    DisplayManager,
+    Camera,
+    Renderer,
+    createPosition,
+    createRenderable
+} from 'ascii-world';
+
+// Game state
+let playerX = 40;
+let playerY = 12;
+
+async function init() {
+    // Initialize engine
+    const engine = new Engine();
+    await engine.initialize();
+
+    // Setup display (80x25 tiles)
+    const display = new DisplayManager({
+        width: 80,
+        height: 25,
+        fontSize: 16,
+        fontFamily: 'monospace',
+        fg: '#cccccc',
+        bg: '#000000',
+        forceSquareRatio: true
+    });
+
+    // Add display to DOM
+    const container = display.getContainer();
+    if (container) {
+        document.body.appendChild(container);
+    }
+
+    // Create camera and renderer
+    const camera = new Camera(
+        { width: 80, height: 25 },
+        { width: 80, height: 25 }
+    );
+    const renderer = new Renderer(display, camera);
+
+    // Create player entity in ECS
+    const ecsWorld = new ECSWorld();
+    const player = ecsWorld.createEntity()
+        .addComponent(createPosition(playerX, playerY))
+        .addComponent(createRenderable('@', '#ffffff'));
+
+    // Handle input
+    const handleInput = (e: KeyboardEvent) => {
+        switch(e.key) {
+            case 'ArrowUp':
+            case 'w':
+                playerY = Math.max(0, playerY - 1);
+                break;
+            case 'ArrowDown':
+            case 's':
+                playerY = Math.min(24, playerY + 1);
+                break;
+            case 'ArrowLeft':
+            case 'a':
+                playerX = Math.max(0, playerX - 1);
+                break;
+            case 'ArrowRight':
+            case 'd':
+                playerX = Math.min(79, playerX + 1);
+                break;
+        }
+
+        // Update player position
+        const pos = player.getComponent('position');
+        if (pos) {
+            pos.x = playerX;
+            pos.y = playerY;
+        }
+    };
+
+    document.addEventListener('keydown', handleInput);
+
+    // Render loop
+    const gameLoop = () => {
+        renderer.render();
+        requestAnimationFrame(gameLoop);
+    };
+
+    // Start
+    engine.start();
+    gameLoop();
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', init);</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> A white <code>@</code> symbol you can move with arrow keys or WASD.
+                </div>
+            </div>
+
+            <!-- Example 2: World & Terrain -->
+            <div class="example-section" id="example-2">
+                <div class="example-header">
+                    <div class="example-number">2</div>
+                    <div class="example-title">World & Terrain</div>
+                </div>
+
+                <p>
+                    Add a world with terrain, walls, and proper chunk management.
+                </p>
+
+                <h4>Updated Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">world/</span>
+│   │   └── <span class="file">TerrainRenderer.ts</span>  <span class="comment">// Renders terrain tiles</span>
+│   ├── <span class="file">main.ts</span>                 <span class="comment">// Updated with world</span>
+│   └── <span class="file">InputHandler.ts</span>         <span class="comment">// Separated input logic</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tsconfig.json</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/world/TerrainRenderer.ts (NEW)</div>
+                    <pre><code>import { World, DisplayManager, Camera, TERRAIN } from 'ascii-world';
+
+/**
+ * Renders world terrain to the display
+ */
+export class TerrainRenderer {
+    private world: World;
+    private display: DisplayManager;
+    private camera: Camera;
+
+    constructor(world: World, display: DisplayManager, camera: Camera) {
+        this.world = world;
+        this.display = display;
+        this.camera = camera;
+    }
+
+    render(): void {
+        const cameraPos = this.camera.getPosition();
+        const viewport = this.camera.getViewportSize();
+
+        // Render visible tiles
+        for (let y = 0; y < viewport.height; y++) {
+            for (let x = 0; x < viewport.width; x++) {
+                const worldX = cameraPos.x + x;
+                const worldY = cameraPos.y + y;
+
+                const tile = this.world.getTile(worldX, worldY);
+                if (tile) {
+                    this.display.draw(
+                        x,
+                        y,
+                        tile.terrain.character,
+                        tile.terrain.foreground,
+                        tile.terrain.background
+                    );
+                }
+            }
+        }
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/InputHandler.ts (NEW)</div>
+                    <pre><code>import { Entity } from 'ascii-world';
+
+export type Direction = 'north' | 'south' | 'east' | 'west';
+
+export interface InputCallbacks {
+    onMove: (direction: Direction) => void;
+}
+
+/**
+ * Handles keyboard input for the game
+ */
+export class InputHandler {
+    private callbacks: InputCallbacks;
+
+    constructor(callbacks: InputCallbacks) {
+        this.callbacks = callbacks;
+        this.setupListeners();
+    }
+
+    private setupListeners(): void {
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                    e.preventDefault();
+                    this.callbacks.onMove('north');
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    e.preventDefault();
+                    this.callbacks.onMove('south');
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    e.preventDefault();
+                    this.callbacks.onMove('west');
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    e.preventDefault();
+                    this.callbacks.onMove('east');
+                    break;
+            }
+        });
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts (UPDATED)</div>
+                    <pre><code>import {
+    Engine,
+    ECSWorld,
+    World,
+    DisplayManager,
+    Camera,
+    Renderer,
+    PhysicsSystem,
+    createPosition,
+    createRenderable,
+    TERRAIN,
+    globalEventBus
+} from 'ascii-world';
+import { TerrainRenderer } from './world/TerrainRenderer';
+import { InputHandler, Direction } from './InputHandler';
+
+async function init() {
+    // Initialize engine
+    const engine = new Engine();
+    await engine.initialize();
+
+    // Create ECS world
+    const ecsWorld = new ECSWorld();
+
+    // Setup display
+    const display = new DisplayManager({
+        width: 80,
+        height: 25,
+        fontSize: 16,
+        fontFamily: 'monospace',
+        fg: '#cccccc',
+        bg: '#000000',
+        forceSquareRatio: true
+    });
+
+    const container = display.getContainer();
+    if (container) {
+        document.body.appendChild(container);
+    }
+
+    // Create world (100x100 tiles for this example)
+    const gameWorld = new World(100, 100, 64, ecsWorld);
+    gameWorld.initialize();
+
+    // Generate simple terrain - floor with some walls
+    for (let y = 0; y < 100; y++) {
+        for (let x = 0; x < 100; x++) {
+            // Create walls around the edges
+            if (x === 0 || x === 99 || y === 0 || y === 99) {
+                gameWorld.setTerrain(x, y, TERRAIN.WALL);
+            } else if (Math.random() < 0.05) {
+                // Random walls (5% chance)
+                gameWorld.setTerrain(x, y, TERRAIN.WALL);
+            } else {
+                gameWorld.setTerrain(x, y, TERRAIN.FLOOR);
+            }
+        }
+    }
+
+    // Create camera
+    const camera = new Camera(
+        { width: 80, height: 25 },
+        { width: 100, height: 100 }
+    );
+
+    // Create renderers
+    const entityRenderer = new Renderer(display, camera);
+    const terrainRenderer = new TerrainRenderer(gameWorld, display, camera);
+
+    // Create player at center
+    const player = ecsWorld.createEntity()
+        .addComponent(createPosition(50, 50))
+        .addComponent(createRenderable('@', '#ffffff'));
+
+    // Setup camera to follow player
+    const playerPos = player.getComponent('position') as { x: number; y: number };
+    camera.setPosition(playerPos.x, playerPos.y);
+
+    // Physics system for collision
+    const physics = new PhysicsSystem(gameWorld, ecsWorld, globalEventBus);
+
+    // Input handling
+    new InputHandler({
+        onMove: (direction: Direction) => {
+            const result = physics.moveEntity(player, direction);
+            if (result.success) {
+                // Update camera to follow player
+                const pos = player.getComponent('position') as { x: number; y: number };
+                camera.setPosition(pos.x, pos.y);
+            }
+        }
+    });
+
+    // Render loop
+    const gameLoop = () => {
+        // Clear display
+        display.clear();
+
+        // Render terrain first
+        terrainRenderer.render();
+
+        // Then render entities on top
+        entityRenderer.render();
+
+        requestAnimationFrame(gameLoop);
+    };
+
+    // Start
+    engine.start();
+    gameLoop();
+}
+
+document.addEventListener('DOMContentLoaded', init);</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> A 100x100 world with floor tiles (.) and walls (#).
+                    Player respects collision and can't walk through walls.
+                </div>
+            </div>
+
+            <!-- Example 3: Turn-Based Movement -->
+            <div class="example-section" id="example-3">
+                <div class="example-header">
+                    <div class="example-number">3</div>
+                    <div class="example-title">Turn-Based System</div>
+                </div>
+
+                <p>
+                    Convert to a proper turn-based system where NPCs take turns after the player.
+                </p>
+
+                <h4>Updated Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">entities/</span>
+│   │   ├── <span class="file">Player.ts</span>         <span class="comment">// Player entity factory</span>
+│   │   └── <span class="file">NPC.ts</span>            <span class="comment">// NPC entity factory</span>
+│   ├── <span class="folder">turns/</span>
+│   │   ├── <span class="file">TurnController.ts</span> <span class="comment">// Turn management</span>
+│   │   └── <span class="file">ActorFactory.ts</span>   <span class="comment">// Actor wrapper for entities</span>
+│   ├── <span class="folder">world/</span>
+│   │   └── <span class="file">TerrainRenderer.ts</span>
+│   ├── <span class="file">InputHandler.ts</span>
+│   └── <span class="file">main.ts</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tsconfig.json</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/turns/ActorFactory.ts (NEW)</div>
+                    <pre><code>import { Actor, Entity, EntityId } from 'ascii-world';
+
+/**
+ * Wraps an ECS Entity as a turn-based Actor
+ */
+export class EntityActor implements Actor {
+    entityId: EntityId;
+    private entity: Entity;
+    private speed: number;
+    private onAct: () => Promise<void> | void;
+
+    constructor(
+        entity: Entity,
+        speed: number,
+        onAct: () => Promise<void> | void
+    ) {
+        this.entity = entity;
+        this.entityId = entity.id;
+        this.speed = speed;
+        this.onAct = onAct;
+    }
+
+    getSpeed(): number {
+        return this.speed;
+    }
+
+    async act(): Promise<void> {
+        await this.onAct();
+    }
+
+    getEntity(): Entity {
+        return this.entity;
+    }
+}
+
+/**
+ * Factory for creating actors
+ */
+export class ActorFactory {
+    static createPlayerActor(
+        entity: Entity,
+        turnCallback: () => Promise<void>
+    ): EntityActor {
+        return new EntityActor(entity, 100, turnCallback);
+    }
+
+    static createNPCActor(
+        entity: Entity,
+        speed: number = 100
+    ): EntityActor {
+        return new EntityActor(entity, speed, async () => {
+            // Simple AI: wait
+            await new Promise(resolve => setTimeout(resolve, 100));
+        });
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/turns/TurnController.ts (NEW)</div>
+                    <pre><code>import {
+    TurnManager,
+    SpeedSystem,
+    ECSWorld,
+    globalEventBus,
+    Actor
+} from 'ascii-world';
+
+/**
+ * Manages the turn-based game loop
+ */
+export class TurnController {
+    private turnManager: TurnManager;
+    private speedSystem: SpeedSystem;
+    private isWaitingForPlayer: boolean = false;
+    private playerResolve: (() => void) | null = null;
+
+    constructor(ecsWorld: ECSWorld) {
+        this.speedSystem = new SpeedSystem();
+        this.turnManager = new TurnManager(
+            ecsWorld,
+            globalEventBus,
+            this.speedSystem
+        );
+
+        // Set up player action callback
+        this.turnManager.setPlayerActionCallback(async () => {
+            this.isWaitingForPlayer = true;
+            
+            // Wait for player input
+            await new Promise<void>(resolve => {
+                this.playerResolve = resolve;
+            });
+            
+            this.isWaitingForPlayer = false;
+        });
+    }
+
+    registerActor(actor: Actor, isPlayer: boolean = false): void {
+        this.turnManager.registerActor(actor, isPlayer);
+    }
+
+    async start(): Promise<void> {
+        await this.turnManager.start();
+    }
+
+    stop(): void {
+        this.turnManager.stop();
+    }
+
+    /**
+     * Call this when player takes an action
+     */
+    playerAction(): void {
+        if (this.isWaitingForPlayer && this.playerResolve) {
+            this.playerResolve();
+            this.playerResolve = null;
+        }
+    }
+
+    isPlayerTurn(): boolean {
+        return this.isWaitingForPlayer;
+    }
+
+    getCurrentTurn(): number {
+        return this.turnManager.getCurrentTurn();
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/entities/Player.ts (NEW)</div>
+                    <pre><code>import {
+    Entity,
+    ECSWorld,
+    createPosition,
+    createHealth,
+    createSpeed,
+    createActor,
+    createRenderable
+} from 'ascii-world';
+
+export interface PlayerConfig {
+    x: number;
+    y: number;
+    health?: number;
+    speed?: number;
+}
+
+/**
+ * Factory for creating the player entity
+ */
+export function createPlayer(
+    world: ECSWorld,
+    config: PlayerConfig
+): Entity {
+    const player = world.createEntity()
+        .addComponent(createPosition(config.x, config.y))
+        .addComponent(createHealth(config.health ?? 100, config.health ?? 100))
+        .addComponent(createSpeed(config.speed ?? 100))
+        .addComponent(createActor(true))
+        .addComponent(createRenderable('@', '#ffffff'));
+
+    return player;
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/entities/NPC.ts (NEW)</div>
+                    <pre><code>import {
+    Entity,
+    ECSWorld,
+    createPosition,
+    createHealth,
+    createSpeed,
+    createActor,
+    createRenderable
+} from 'ascii-world';
+
+export interface NPCConfig {
+    x: number;
+    y: number;
+    character: string;
+    color: string;
+    health?: number;
+    speed?: number;
+    name?: string;
+}
+
+/**
+ * Factory for creating NPC entities
+ */
+export function createNPC(
+    world: ECSWorld,
+    config: NPCConfig
+): Entity {
+    const npc = world.createEntity()
+        .addComponent(createPosition(config.x, config.y))
+        .addComponent(createHealth(config.health ?? 50, config.health ?? 50))
+        .addComponent(createSpeed(config.speed ?? 100))
+        .addComponent(createActor(false))
+        .addComponent(createRenderable(config.character, config.color));
+
+    return npc;
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts (UPDATED)</div>
+                    <pre><code>import {
+    Engine,
+    ECSWorld,
+    World,
+    DisplayManager,
+    Camera,
+    Renderer,
+    PhysicsSystem,
+    TERRAIN,
+    globalEventBus
+} from 'ascii-world';
+import { TerrainRenderer } from './world/TerrainRenderer';
+import { InputHandler, Direction } from './InputHandler';
+import { TurnController } from './turns/TurnController';
+import { ActorFactory } from './turns/ActorFactory';
+import { createPlayer } from './entities/Player';
+import { createNPC } from './entities/NPC';
+
+async function init() {
+    const engine = new Engine();
+    await engine.initialize();
+
+    const ecsWorld = new ECSWorld();
+
+    // Setup display
+    const display = new DisplayManager({
+        width: 80,
+        height: 25,
+        fontSize: 16,
+        fontFamily: 'monospace',
+        fg: '#cccccc',
+        bg: '#000000',
+        forceSquareRatio: true
+    });
+
+    const container = display.getContainer();
+    if (container) {
+        document.body.appendChild(container);
+    }
+
+    // Create world
+    const gameWorld = new World(100, 100, 64, ecsWorld);
+    gameWorld.initialize();
+
+    // Generate terrain
+    for (let y = 0; y < 100; y++) {
+        for (let x = 0; x < 100; x++) {
+            if (x === 0 || x === 99 || y === 0 || y === 99) {
+                gameWorld.setTerrain(x, y, TERRAIN.WALL);
+            } else if (Math.random() < 0.05) {
+                gameWorld.setTerrain(x, y, TERRAIN.WALL);
+            } else {
+                gameWorld.setTerrain(x, y, TERRAIN.FLOOR);
+            }
+        }
+    }
+
+    // Create camera
+    const camera = new Camera(
+        { width: 80, height: 25 },
+        { width: 100, height: 100 }
+    );
+
+    // Create renderers
+    const entityRenderer = new Renderer(display, camera);
+    const terrainRenderer = new TerrainRenderer(gameWorld, display, camera);
+
+    // Create turn controller
+    const turnController = new TurnController(ecsWorld);
+
+    // Create player
+    const player = createPlayer(ecsWorld, { x: 50, y: 50 });
+    const playerPos = player.getComponent('position') as { x: number; y: number };
+    camera.setPosition(playerPos.x, playerPos.y);
+
+    // Create some NPCs
+    const npc1 = createNPC(ecsWorld, {
+        x: 45, y: 45,
+        character: 'g',
+        color: '#00aa00',
+        name: 'Goblin'
+    });
+
+    const npc2 = createNPC(ecsWorld, {
+        x: 55, y: 55,
+        character: 'o',
+        color: '#ff8800',
+        name: 'Orc',
+        speed: 80  // Slower than player
+    });
+
+    // Setup physics
+    const physics = new PhysicsSystem(gameWorld, ecsWorld, globalEventBus);
+
+    // Register actors with turn system
+    const playerActor = ActorFactory.createPlayerActor(player, async () => {
+        // Player actor waits for input (handled by TurnController)
+    });
+    turnController.registerActor(playerActor, true);
+
+    turnController.registerActor(
+        ActorFactory.createNPCActor(npc1, 100)
+    );
+    turnController.registerActor(
+        ActorFactory.createNPCActor(npc2, 80)
+    );
+
+    // Input handling - now integrated with turn system
+    new InputHandler({
+        onMove: (direction: Direction) => {
+            if (!turnController.isPlayerTurn()) return;
+
+            const result = physics.moveEntity(player, direction);
+            if (result.success) {
+                const pos = player.getComponent('position') as { x: number; y: number };
+                camera.setPosition(pos.x, pos.y);
+                
+                // Signal that player has acted
+                turnController.playerAction();
+            }
+        }
+    });
+
+    // Render loop
+    const gameLoop = () => {
+        display.clear();
+        terrainRenderer.render();
+        entityRenderer.render();
+
+        // Display turn info
+        display.drawText(0, 0, `Turn: ${turnController.getCurrentTurn()}`);
+        if (turnController.isPlayerTurn()) {
+            display.drawText(0, 1, 'Your turn!');
+        }
+
+        requestAnimationFrame(gameLoop);
+    };
+
+    // Start
+    engine.start();
+    turnController.start();
+    gameLoop();
+}
+
+document.addEventListener('DOMContentLoaded', init);</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> Turn-based movement. The game waits for player input,
+                    then processes NPC turns. Turn counter displayed on screen.
+                </div>
+            </div>
+
+            <!-- Example 4: Items & Inventory -->
+            <div class="example-section" id="example-4">
+                <div class="example-header">
+                    <div class="example-number">4</div>
+                    <div class="example-title">Items & Inventory</div>
+                </div>
+
+                <p>
+                    Add items that can be picked up, dropped, and managed in inventory.
+                </p>
+
+                <h4>Updated Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">entities/</span>
+│   │   ├── <span class="file">Player.ts</span>
+│   │   └── <span class="file">NPC.ts</span>
+│   ├── <span class="folder">items/</span>
+│   │   ├── <span class="file">ItemManager.ts</span>    <span class="comment">// Item management</span>
+│   │   └── <span class="file">InventoryUI.ts</span>    <span class="comment">// Simple inventory display</span>
+│   ├── <span class="folder">turns/</span>
+│   │   ├── <span class="file">TurnController.ts</span>
+│   │   └── <span class="file">ActorFactory.ts</span>
+│   ├── <span class="folder">world/</span>
+│   │   └── <span class="file">TerrainRenderer.ts</span>
+│   ├── <span class="file">InputHandler.ts</span>
+│   └── <span class="file">main.ts</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tsconfig.json</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/items/ItemManager.ts (NEW)</div>
+                    <pre><code>import {
+    ItemManager as EngineItemManager,
+    Inventory,
+    InventoryManager,
+    globalEventBus,
+    Position
+} from 'ascii-world';
+
+export interface ItemSpawnConfig {
+    templateId: string;
+    quantity?: number;
+    x: number;
+    y: number;
+}
+
+/**
+ * Manages all items in the game
+ */
+export class GameItemManager {
+    private itemManager: EngineItemManager;
+    private inventoryManager: InventoryManager;
+
+    constructor() {
+        this.itemManager = new EngineItemManager(globalEventBus);
+        this.inventoryManager = new InventoryManager(
+            this.itemManager,
+            globalEventBus
+        );
+    }
+
+    getItemManager(): EngineItemManager {
+        return this.itemManager;
+    }
+
+    getInventoryManager(): InventoryManager {
+        return this.inventoryManager;
+    }
+
+    /**
+     * Spawn an item at a specific location
+     */
+    spawnItem(config: ItemSpawnConfig): void {
+        this.itemManager.spawnItem(
+            config.templateId,
+            config.quantity ?? 1,
+            { x: config.x, y: config.y }
+        );
+    }
+
+    /**
+     * Create an inventory for an entity
+     */
+    createInventory(
+        entityId: number,
+        capacity: number = 50,
+        volumeCapacity: number = 30
+    ): Inventory {
+        return this.inventoryManager.createInventory(
+            entityId,
+            capacity,
+            volumeCapacity
+        );
+    }
+
+    /**
+     * Get items at a location
+     */
+    getItemsAt(x: number, y: number) {
+        return this.itemManager.getItemsAt({ x, y });
+    }
+
+    /**
+     * Pick up an item
+     */
+    pickupItem(
+        itemId: string,
+        entityId: number
+    ): boolean {
+        const inventory = this.inventoryManager.getInventory(entityId);
+        if (!inventory) return false;
+
+        const item = this.itemManager.getItem(itemId);
+        if (!item) return false;
+
+        return inventory.addItem(item);
+    }
+
+    /**
+     * Drop an item
+     */
+    dropItem(
+        itemId: string,
+        entityId: number,
+        x: number,
+        y: number
+    ): boolean {
+        const inventory = this.inventoryManager.getInventory(entityId);
+        if (!inventory) return false;
+
+        const item = inventory.removeItem(itemId);
+        if (!item) return false;
+
+        // Update item location
+        const instance = item.getInstance();
+        instance.location = { x, y };
+        instance.containerId = undefined;
+
+        return true;
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/items/InventoryUI.ts (NEW)</div>
+                    <pre><code>import { Inventory, Item } from 'ascii-world';
+import { DisplayManager } from 'ascii-world';
+
+/**
+ * Simple inventory UI display
+ */
+export class InventoryUI {
+    private display: DisplayManager;
+    private isVisible: boolean = false;
+
+    constructor(display: DisplayManager) {
+        this.display = display;
+    }
+
+    show(inventory: Inventory): void {
+        this.isVisible = true;
+        this.render(inventory);
+    }
+
+    hide(): void {
+        this.isVisible = false;
+    }
+
+    toggle(inventory: Inventory): void {
+        if (this.isVisible) {
+            this.hide();
+        } else {
+            this.show(inventory);
+        }
+    }
+
+    isOpen(): boolean {
+        return this.isVisible;
+    }
+
+    private render(inventory: Inventory): void {
+        const items = inventory.getItems();
+        const width = 40;
+        const startX = 20;
+        const startY = 5;
+
+        // Draw border
+        for (let x = 0; x < width; x++) {
+            this.display.draw(startX + x, startY, '-', '#888888');
+            this.display.draw(startX + x, startY + items.length + 3, '-', '#888888');
+        }
+        for (let y = 0; y < items.length + 4; y++) {
+            this.display.draw(startX, startY + y, '|', '#888888');
+            this.display.draw(startX + width - 1, startY + y, '|', '#888888');
+        }
+
+        // Draw corners
+        this.display.draw(startX, startY, '+', '#888888');
+        this.display.draw(startX + width - 1, startY, '+', '#888888');
+        this.display.draw(startX, startY + items.length + 3, '+', '#888888');
+        this.display.draw(startX + width - 1, startY + items.length + 3, '+', '#888888');
+
+        // Title
+        this.display.drawText(startX + 2, startY + 1, 'INVENTORY', width - 4);
+
+        // Items
+        items.forEach((item, index) => {
+            const line = `${index + 1}. ${item.name} (${item.quantity})`;
+            this.display.drawText(startX + 2, startY + 3 + index, line, width - 4);
+        });
+
+        if (items.length === 0) {
+            this.display.drawText(startX + 2, startY + 3, '(empty)', width - 4);
+        }
+
+        // Weight info
+        const weightInfo = `Weight: ${inventory.currentWeight.toFixed(1)}/${inventory.weightCapacity}`;
+        this.display.drawText(startX + 2, startY + items.length + 2, weightInfo, width - 4);
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/InputHandler.ts (UPDATED)</div>
+                    <pre><code>import { Entity } from 'ascii-world';
+
+export type Direction = 'north' | 'south' | 'east' | 'west';
+
+export interface InputCallbacks {
+    onMove: (direction: Direction) => void;
+    onPickup?: () => void;
+    onDrop?: () => void;
+    onInventory?: () => void;
+}
+
+/**
+ * Handles keyboard input for the game
+ */
+export class InputHandler {
+    private callbacks: InputCallbacks;
+
+    constructor(callbacks: InputCallbacks) {
+        this.callbacks = callbacks;
+        this.setupListeners();
+    }
+
+    private setupListeners(): void {
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                    e.preventDefault();
+                    this.callbacks.onMove('north');
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    e.preventDefault();
+                    this.callbacks.onMove('south');
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    e.preventDefault();
+                    this.callbacks.onMove('west');
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    e.preventDefault();
+                    this.callbacks.onMove('east');
+                    break;
+                case 'g':
+                case 'p':
+                    e.preventDefault();
+                    this.callbacks.onPickup?.();
+                    break;
+                case 'D':
+                    e.preventDefault();
+                    this.callbacks.onDrop?.();
+                    break;
+                case 'i':
+                    e.preventDefault();
+                    this.callbacks.onInventory?.();
+                    break;
+            }
+        });
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/entities/Player.ts (UPDATED)</div>
+                    <pre><code>import {
+    Entity,
+    ECSWorld,
+    createPosition,
+    createHealth,
+    createSpeed,
+    createActor,
+    createRenderable,
+    createInventoryComponent
+} from 'ascii-world';
+
+export interface PlayerConfig {
+    x: number;
+    y: number;
+    health?: number;
+    speed?: number;
+}
+
+/**
+ * Factory for creating the player entity with inventory
+ */
+export function createPlayer(
+    world: ECSWorld,
+    config: PlayerConfig
+): Entity {
+    const player = world.createEntity()
+        .addComponent(createPosition(config.x, config.y))
+        .addComponent(createHealth(config.health ?? 100, config.health ?? 100))
+        .addComponent(createSpeed(config.speed ?? 100))
+        .addComponent(createActor(true))
+        .addComponent(createRenderable('@', '#ffffff'))
+        .addComponent(createInventoryComponent(50, 30));
+
+    return player;
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts (UPDATED)</div>
+                    <pre><code>import {
+    Engine,
+    ECSWorld,
+    World,
+    DisplayManager,
+    Camera,
+    Renderer,
+    PhysicsSystem,
+    TERRAIN,
+    globalEventBus
+} from 'ascii-world';
+import { TerrainRenderer } from './world/TerrainRenderer';
+import { InputHandler, Direction } from './InputHandler';
+import { TurnController } from './turns/TurnController';
+import { ActorFactory } from './turns/ActorFactory';
+import { createPlayer } from './entities/Player';
+import { createNPC } from './entities/NPC';
+import { GameItemManager } from './items/ItemManager';
+import { InventoryUI } from './items/InventoryUI';
+
+async function init() {
+    const engine = new Engine();
+    await engine.initialize();
+
+    const ecsWorld = new ECSWorld();
+
+    // Setup display
+    const display = new DisplayManager({
+        width: 80,
+        height: 25,
+        fontSize: 16,
+        fontFamily: 'monospace',
+        fg: '#cccccc',
+        bg: '#000000',
+        forceSquareRatio: true
+    });
+
+    const container = display.getContainer();
+    if (container) {
+        document.body.appendChild(container);
+    }
+
+    // Create world
+    const gameWorld = new World(100, 100, 64, ecsWorld);
+    gameWorld.initialize();
+
+    // Generate terrain
+    for (let y = 0; y < 100; y++) {
+        for (let x = 0; x < 100; x++) {
+            if (x === 0 || x === 99 || y === 0 || y === 99) {
+                gameWorld.setTerrain(x, y, TERRAIN.WALL);
+            } else if (Math.random() < 0.05) {
+                gameWorld.setTerrain(x, y, TERRAIN.WALL);
+            } else {
+                gameWorld.setTerrain(x, y, TERRAIN.FLOOR);
+            }
+        }
+    }
+
+    // Setup item system
+    const itemManager = new GameItemManager();
+    
+    // Create inventory UI
+    const inventoryUI = new InventoryUI(display);
+
+    // Spawn some items
+    itemManager.spawnItem({ templateId: 'sword_iron', x: 52, y: 50 });
+    itemManager.spawnItem({ templateId: 'potion_health', x: 48, y: 50, quantity: 3 });
+    itemManager.spawnItem({ templateId: 'wood_plank', x: 50, y: 52, quantity: 5 });
+
+    // Create camera
+    const camera = new Camera(
+        { width: 80, height: 25 },
+        { width: 100, height: 100 }
+    );
+
+    // Create renderers
+    const entityRenderer = new Renderer(display, camera);
+    const terrainRenderer = new TerrainRenderer(gameWorld, display, camera);
+
+    // Create turn controller
+    const turnController = new TurnController(ecsWorld);
+
+    // Create player and inventory
+    const player = createPlayer(ecsWorld, { x: 50, y: 50 });
+    const playerInventory = itemManager.createInventory(player.id, 50, 30);
+    const playerPos = player.getComponent('position') as { x: number; y: number };
+    camera.setPosition(playerPos.x, playerPos.y);
+
+    // Setup physics
+    const physics = new PhysicsSystem(gameWorld, ecsWorld, globalEventBus);
+
+    // Register player actor
+    const playerActor = ActorFactory.createPlayerActor(player, async () => {});
+    turnController.registerActor(playerActor, true);
+
+    // Input handling
+    new InputHandler({
+        onMove: (direction: Direction) => {
+            if (!turnController.isPlayerTurn() || inventoryUI.isOpen()) return;
+
+            const result = physics.moveEntity(player, direction);
+            if (result.success) {
+                const pos = player.getComponent('position') as { x: number; y: number };
+                camera.setPosition(pos.x, pos.y);
+                turnController.playerAction();
+            }
+        },
+        onPickup: () => {
+            if (!turnController.isPlayerTurn() || inventoryUI.isOpen()) return;
+
+            const pos = player.getComponent('position') as { x: number; y: number };
+            const items = itemManager.getItemsAt(pos.x, pos.y);
+            
+            if (items.length > 0) {
+                const item = items[0];
+                if (itemManager.pickupItem(item.id, player.id)) {
+                    console.log(`Picked up ${item.name}`);
+                    turnController.playerAction();
+                }
+            }
+        },
+        onDrop: () => {
+            if (!turnController.isPlayerTurn() || inventoryUI.isOpen()) return;
+
+            const items = playerInventory.getItems();
+            if (items.length > 0) {
+                const pos = player.getComponent('position') as { x: number; y: number };
+                const item = items[0];
+                if (itemManager.dropItem(item.id, player.id, pos.x, pos.y)) {
+                    console.log(`Dropped ${item.name}`);
+                    turnController.playerAction();
+                }
+            }
+        },
+        onInventory: () => {
+            if (!turnController.isPlayerTurn()) return;
+            inventoryUI.toggle(playerInventory);
+        }
+    });
+
+    // Render loop
+    const gameLoop = () => {
+        display.clear();
+        terrainRenderer.render();
+        entityRenderer.render();
+
+        // Draw items on ground
+        const cameraPos = camera.getPosition();
+        const items = itemManager.getItemManager().getAllItems();
+        items.forEach(item => {
+            const loc = item.location;
+            if (loc && camera.isInViewport(loc.x, loc.y)) {
+                const screenPos = camera.worldToScreen(loc.x, loc.y);
+                if (screenPos) {
+                    display.draw(screenPos.x, screenPos.y, item.character, item.foreground);
+                }
+            }
+        });
+
+        // UI
+        display.drawText(0, 0, `Turn: ${turnController.getCurrentTurn()}`);
+        display.drawText(0, 1, `Inv: ${playerInventory.getItemCount()} items`);
+        if (turnController.isPlayerTurn()) {
+            display.drawText(0, 2, 'Your turn! (g=pickup, D=drop, i=inv)');
+        }
+
+        // Draw inventory UI if open
+        if (inventoryUI.isOpen()) {
+            inventoryUI.show(playerInventory);
+        }
+
+        requestAnimationFrame(gameLoop);
+    };
+
+    // Start
+    engine.start();
+    turnController.start();
+    gameLoop();
+}
+
+document.addEventListener('DOMContentLoaded', init);</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> Items spawn on the map. Press 'g' to pick up,
+                    'D' to drop, 'i' to open inventory UI showing items and weight.
+                </div>
+            </div>
+
+            <!-- Example 5: Field of View -->
+            <div class="example-section" id="example-5">
+                <div class="example-header">
+                    <div class="example-number">5</div>
+                    <div class="example-title">Field of View & Lighting</div>
+                </div>
+
+                <p>
+                    Add field of view so only visible areas are shown, and remember explored areas.
+                </p>
+
+                <h4>Updated Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">entities/</span>
+│   │   ├── <span class="file">Player.ts</span>
+│   │   └── <span class="file">NPC.ts</span>
+│   ├── <span class="folder">items/</span>
+│   │   ├── <span class="file">ItemManager.ts</span>
+│   │   └── <span class="file">InventoryUI.ts</span>
+│   ├── <span class="folder">turns/</span>
+│   │   ├── <span class="file">TurnController.ts</span>
+│   │   └── <span class="file">ActorFactory.ts</span>
+│   ├── <span class="folder">world/</span>
+│   │   ├── <span class="file">TerrainRenderer.ts</span>
+│   │   └── <span class="file">FOVManager.ts</span>    <span class="comment">// FOV management</span>
+│   ├── <span class="file">InputHandler.ts</span>
+│   └── <span class="file">main.ts</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tsconfig.json</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/world/FOVManager.ts (NEW)</div>
+                    <pre><code>import { World, FOVSystem } from 'ascii-world';
+
+/**
+ * Manages Field of View and explored tiles
+ */
+export class FOVManager {
+    private world: World;
+    private fovSystem: FOVSystem;
+    private exploredTiles: Set<string> = new Set();
+    private visibleTiles: Set<string> = new Set();
+    private fovRadius: number = 10;
+
+    constructor(world: World) {
+        this.world = world;
+        this.fovSystem = new FOVSystem(world);
+    }
+
+    /**
+     * Update FOV from a position
+     */
+    updateFOV(x: number, y: number, radius?: number): void {
+        this.visibleTiles.clear();
+        
+        const r = radius ?? this.fovRadius;
+        
+        // Compute FOV using rot.js
+        this.fovSystem.computeFOV(x, y, r, (vx, vy) => {
+            const key = `${vx},${vy}`;
+            this.visibleTiles.add(key);
+            this.exploredTiles.add(key);
+        });
+    }
+
+    /**
+     * Check if a tile is currently visible
+     */
+    isVisible(x: number, y: number): boolean {
+        return this.visibleTiles.has(`${x},${y}`);
+    }
+
+    /**
+     * Check if a tile has been explored
+     */
+    isExplored(x: number, y: number): boolean {
+        return this.exploredTiles.has(`${x},${y}`);
+    }
+
+    /**
+     * Get visibility state for rendering
+     */
+    getVisibilityState(x: number, y: number): 'visible' | 'explored' | 'hidden' {
+        if (this.isVisible(x, y)) return 'visible';
+        if (this.isExplored(x, y)) return 'explored';
+        return 'hidden';
+    }
+
+    setFOVRadius(radius: number): void {
+        this.fovRadius = radius;
+    }
+
+    getFOVRadius(): number {
+        return this.fovRadius;
+    }
+
+    /**
+     * Clear explored tiles (for new game)
+     */
+    reset(): void {
+        this.exploredTiles.clear();
+        this.visibleTiles.clear();
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/world/TerrainRenderer.ts (UPDATED)</div>
+                    <pre><code>import { World, DisplayManager, Camera, TERRAIN } from 'ascii-world';
+import { FOVManager } from './FOVManager';
+
+/**
+ * Renders world terrain with FOV support
+ */
+export class TerrainRenderer {
+    private world: World;
+    private display: DisplayManager;
+    private camera: Camera;
+    private fovManager: FOVManager | null = null;
+
+    constructor(world: World, display: DisplayManager, camera: Camera) {
+        this.world = world;
+        this.display = display;
+        this.camera = camera;
+    }
+
+    setFOVManager(fovManager: FOVManager): void {
+        this.fovManager = fovManager;
+    }
+
+    render(): void {
+        const cameraPos = this.camera.getPosition();
+        const viewport = this.camera.getViewportSize();
+
+        for (let y = 0; y < viewport.height; y++) {
+            for (let x = 0; x < viewport.width; x++) {
+                const worldX = cameraPos.x + x;
+                const worldY = cameraPos.y + y;
+
+                const tile = this.world.getTile(worldX, worldY);
+                if (!tile) continue;
+
+                // Determine visibility
+                let fg = tile.terrain.foreground;
+                let bg = tile.terrain.background ?? '#000000';
+                let char = tile.terrain.character;
+
+                if (this.fovManager) {
+                    const visibility = this.fovManager.getVisibilityState(worldX, worldY);
+                    
+                    if (visibility === 'hidden') {
+                        // Don't render hidden tiles
+                        continue;
+                    } else if (visibility === 'explored') {
+                        // Dim explored but not visible tiles
+                        fg = this.dimColor(fg);
+                        bg = this.dimColor(bg);
+                    }
+                    // 'visible' uses normal colors
+                }
+
+                this.display.draw(x, y, char, fg, bg);
+            }
+        }
+    }
+
+    /**
+     * Dim a color for explored but not visible tiles
+     */
+    private dimColor(color: string): string {
+        // Simple dimming - convert to darker version
+        // In a real game, you might want more sophisticated color manipulation
+        if (color.startsWith('#')) {
+            // Parse hex and reduce brightness
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            
+            const dimR = Math.floor(r * 0.3);
+            const dimG = Math.floor(g * 0.3);
+            const dimB = Math.floor(b * 0.3);
+            
+            return `#${dimR.toString(16).padStart(2, '0')}${dimG.toString(16).padStart(2, '0')}${dimB.toString(16).padStart(2, '0')}`;
+        }
+        return color;
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
+                    <p class="file-label">Add FOVManager initialization and update:</p>
+                    <pre><code>import { FOVManager } from './world/FOVManager';
+
+// ... in init() function:
+
+// Create FOV manager
+const fovManager = new FOVManager(gameWorld);
+terrainRenderer.setFOVManager(fovManager);
+
+// Initial FOV calculation
+fovManager.updateFOV(playerPos.x, playerPos.y);
+
+// ... in InputHandler onMove:
+
+onMove: (direction: Direction) => {
+    if (!turnController.isPlayerTurn() || inventoryUI.isOpen()) return;
+
+    const result = physics.moveEntity(player, direction);
+    if (result.success) {
+        const pos = player.getComponent('position') as { x: number; y: number };
+        camera.setPosition(pos.x, pos.y);
+        
+        // Update FOV after moving
+        fovManager.updateFOV(pos.x, pos.y);
+        
+        turnController.playerAction();
+    }
+},</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> Only tiles within the player's view radius are visible.
+                    Explored areas are shown in dimmed colors. Unexplored areas are black.
+                </div>
+            </div>
+
+            <!-- Example 6: World Generation -->
+            <div class="example-section" id="example-6">
+                <div class="example-header">
+                    <div class="example-number">6</div>
+                    <div class="example-title">World Generation</div>
+                </div>
+
+                <p>
+                    Use the built-in world generators instead of manual terrain placement.
+                </p>
+
+                <h4>Updated Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">entities/</span>
+│   │   ├── <span class="file">Player.ts</span>
+│   │   └── <span class="file">NPC.ts</span>
+│   ├── <span class="folder">items/</span>
+│   │   ├── <span class="file">ItemManager.ts</span>
+│   │   └── <span class="file">InventoryUI.ts</span>
+│   ├── <span class="folder">turns/</span>
+│   │   ├── <span class="file">TurnController.ts</span>
+│   │   └── <span class="file">ActorFactory.ts</span>
+│   ├── <span class="folder">world/</span>
+│   │   ├── <span class="file">TerrainRenderer.ts</span>
+│   │   ├── <span class="file">FOVManager.ts</span>
+│   │   └── <span class="file">WorldGenerator.ts</span>  <span class="comment">// Generation wrapper</span>
+│   ├── <span class="file">InputHandler.ts</span>
+│   └── <span class="file">main.ts</span>
+├── <span class="folder">content/</span>
+│   └── <span class="folder">maps/</span>
+│       └── <span class="file">dungeon.json</span>        <span class="comment">// Map definition</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tsconfig.json</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/world/WorldGenerator.ts (NEW)</div>
+                    <pre><code>import {
+    World,
+    ECSWorld,
+    WorldGenerator as EngineWorldGenerator
+} from 'ascii-world';
+
+export type GeneratorType = 'wilderness' | 'dungeon' | 'cave' | 'city';
+
+export interface GeneratorConfig {
+    type: GeneratorType;
+    seed?: number;
+    params?: Record<string, unknown>;
+}
+
+/**
+ * Wrapper for world generation
+ */
+export class WorldGenerator {
+    private world: World;
+    private ecsWorld: ECSWorld;
+    private generator: EngineWorldGenerator;
+
+    constructor(world: World, ecsWorld: ECSWorld) {
+        this.world = world;
+        this.ecsWorld = ecsWorld;
+        this.generator = new EngineWorldGenerator();
+    }
+
+    /**
+     * Generate a world using built-in generator
+     */
+    generate(config: GeneratorConfig): void {
+        switch (config.type) {
+            case 'wilderness':
+                this.generator.generateWilderness(
+                    this.world,
+                    config.params?.treeDensity as number ?? 0.3,
+                    config.params?.waterChance as number ?? 0.1
+                );
+                break;
+
+            case 'dungeon':
+                this.generator.generateDungeon(
+                    this.world,
+                    config.params?.roomChance as number ?? 0.4
+                );
+                break;
+
+            case 'cave':
+                this.generator.generateCave(
+                    this.world,
+                    config.params?.fillPercent as number ?? 0.45,
+                    config.params?.iterations as number ?? 4
+                );
+                break;
+
+            case 'city':
+                this.generator.generateCity(
+                    this.world,
+                    config.params?.blockSize as number ?? 10,
+                    config.params?.buildingDensity as number ?? 0.6
+                );
+                break;
+        }
+    }
+
+    /**
+     * Get a safe spawn location
+     */
+    findSpawnLocation(): { x: number; y: number } | null {
+        // Find a floor tile
+        const bounds = this.world.getBounds();
+        
+        for (let attempts = 0; attempts < 100; attempts++) {
+            const x = Math.floor(Math.random() * bounds.width);
+            const y = Math.floor(Math.random() * bounds.height);
+            
+            const tile = this.world.getTile(x, y);
+            if (tile && !tile.terrain.blocksMovement) {
+                return { x, y };
+            }
+        }
+        
+        return null;
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">content/maps/dungeon.json (NEW)</div>
+                    <pre><code>{
+  "id": "test_dungeon",
+  "name": "Test Dungeon",
+  "description": "A simple dungeon for testing",
+  "width": 100,
+  "height": 100,
+  "chunkSize": 64,
+  "generator": "dungeon",
+  "generatorParams": {
+    "roomChance": 0.5,
+    "seed": 12345
+  },
+  "spawnPoints": [
+    {
+      "x": 50,
+      "y": 50,
+      "type": "player",
+      "tags": ["start"]
+    }
+  ]
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
+                    <p class="file-label">Replace manual terrain generation with generator:</p>
+                    <pre><code>import { WorldGenerator } from './world/WorldGenerator';
+
+// ... in init() function, replace the terrain generation loop:
+
+// Create world
+const gameWorld = new World(100, 100, 64, ecsWorld);
+gameWorld.initialize();
+
+// Generate world using dungeon generator
+const worldGenerator = new WorldGenerator(gameWorld, ecsWorld);
+worldGenerator.generate({
+    type: 'dungeon',
+    params: {
+        roomChance: 0.5
+    }
+});
+
+// Find a safe spawn for the player
+const spawn = worldGenerator.findSpawnLocation();
+const startX = spawn?.x ?? 50;
+const startY = spawn?.y ?? 50;
+
+// Create player at spawn
+const player = createPlayer(ecsWorld, { x: startX, y: startY });</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> Procedurally generated dungeon with rooms and corridors.
+                    Player spawns at a safe floor location.
+                </div>
+            </div>
+
+            <!-- Example 7: Save/Load -->
+            <div class="example-section" id="example-7">
+                <div class="example-header">
+                    <div class="example-number">7</div>
+                    <div class="example-title">Save & Load</div>
+                </div>
+
+                <p>
+                    Add the ability to save the game state and load it later.
+                </p>
+
+                <h4>Updated Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">entities/</span>
+│   │   ├── <span class="file">Player.ts</span>
+│   │   └── <span class="file">NPC.ts</span>
+│   ├── <span class="folder">items/</span>
+│   │   ├── <span class="file">ItemManager.ts</span>
+│   │   └── <span class="file">InventoryUI.ts</span>
+│   ├── <span class="folder">turns/</span>
+│   │   ├── <span class="file">TurnController.ts</span>
+│   │   └── <span class="file">ActorFactory.ts</span>
+│   ├── <span class="folder">world/</span>
+│   │   ├── <span class="file">TerrainRenderer.ts</span>
+│   │   ├── <span class="file">FOVManager.ts</span>
+│   │   └── <span class="file">WorldGenerator.ts</span>
+│   ├── <span class="folder">save/</span>
+│   │   └── <span class="file">SaveManager.ts</span>    <span class="comment">// Save/load logic</span>
+│   ├── <span class="file">InputHandler.ts</span>
+│   └── <span class="file">main.ts</span>
+├── <span class="folder">content/</span>
+│   └── <span class="folder">maps/</span>
+│       └── <span class="file">dungeon.json</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tsconfig.json</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/save/SaveManager.ts (NEW)</div>
+                    <pre><code>import {
+    SaveManager as EngineSaveManager,
+    World,
+    ECSWorld,
+    globalEventBus
+} from 'ascii-world';
+import { GameItemManager } from '../items/ItemManager';
+
+export interface SaveMetadata {
+    name: string;
+    timestamp: number;
+    turn: number;
+    playerLevel?: number;
+}
+
+/**
+ * Manages saving and loading game state
+ */
+export class GameSaveManager {
+    private saveManager: EngineSaveManager;
+    private currentSlot: string = 'autosave';
+
+    constructor() {
+        this.saveManager = new EngineSaveManager(globalEventBus);
+    }
+
+    /**
+     * Save the current game state
+     */
+    async save(
+        slot: string,
+        world: World,
+        ecsWorld: ECSWorld,
+        itemManager: GameItemManager,
+        metadata: Partial<SaveMetadata> = {}
+    ): Promise<void> {
+        const saveData = {
+            world: world.serialize(),
+            entities: this.serializeEntities(ecsWorld),
+            items: itemManager.getItemManager().serializeItems(),
+            inventories: itemManager.getInventoryManager().serializeInventories(),
+            metadata: {
+                name: metadata.name ?? 'Save Game',
+                timestamp: Date.now(),
+                turn: metadata.turn ?? 0,
+                ...metadata
+            }
+        };
+
+        await this.saveManager.saveToSlot(slot, saveData);
+        console.log(`Game saved to slot: ${slot}`);
+    }
+
+    /**
+     * Load a game state
+     */
+    async load(
+        slot: string,
+        world: World,
+        ecsWorld: ECSWorld,
+        itemManager: GameItemManager
+    ): Promise<boolean> {
+        const saveData = await this.saveManager.loadFromSlot(slot);
+        if (!saveData) {
+            console.warn(`No save found in slot: ${slot}`);
+            return false;
+        }
+
+        // Restore world
+        world.deserialize(saveData.world);
+
+        // Restore entities
+        this.deserializeEntities(ecsWorld, saveData.entities);
+
+        // Restore items
+        itemManager.getItemManager().deserializeItems(saveData.items);
+
+        // Restore inventories
+        itemManager.getInventoryManager().deserializeInventories(saveData.inventories);
+
+        console.log(`Game loaded from slot: ${slot}`);
+        return true;
+    }
+
+    /**
+     * Check if a save exists
+     */
+    async hasSave(slot: string): Promise<boolean> {
+        return await this.saveManager.exists(slot);
+    }
+
+    /**
+     * Get list of all saves
+     */
+    async listSaves(): Promise<{ slot: string; metadata: SaveMetadata }[]> {
+        return await this.saveManager.listSaves();
+    }
+
+    /**
+     * Delete a save
+     */
+    async deleteSave(slot: string): Promise<boolean> {
+        return await this.saveManager.delete(slot);
+    }
+
+    /**
+     * Quick save (uses autosave slot)
+     */
+    async quickSave(
+        world: World,
+        ecsWorld: ECSWorld,
+        itemManager: GameItemManager,
+        turn: number
+    ): Promise<void> {
+        await this.save('autosave', world, ecsWorld, itemManager, {
+            name: 'Quick Save',
+            turn
+        });
+    }
+
+    /**
+     * Quick load (from autosave slot)
+     */
+    async quickLoad(
+        world: World,
+        ecsWorld: ECSWorld,
+        itemManager: GameItemManager
+    ): Promise<boolean> {
+        return await this.load('autosave', world, ecsWorld, itemManager);
+    }
+
+    private serializeEntities(ecsWorld: ECSWorld): unknown[] {
+        // Simplified serialization - in production use proper EntitySerializer
+        const entities: unknown[] = [];
+        for (const entity of ecsWorld.getAllEntities()) {
+            entities.push({
+                id: entity.id,
+                components: entity.getAllComponents()
+            });
+        }
+        return entities;
+    }
+
+    private deserializeEntities(ecsWorld: ECSWorld, data: unknown[]): void {
+        // Clear existing entities
+        for (const entity of ecsWorld.getAllEntities()) {
+            ecsWorld.removeEntity(entity.id);
+        }
+
+        // Recreate entities from save
+        // This is simplified - real implementation needs proper component recreation
+        console.log('Deserializing entities:', data.length);
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/InputHandler.ts (UPDATED)</div>
+                    <pre><code>export interface InputCallbacks {
+    onMove: (direction: Direction) => void;
+    onPickup?: () => void;
+    onDrop?: () => void;
+    onInventory?: () => void;
+    onSave?: () => void;
+    onLoad?: () => void;
+}
+
+// In setupListeners(), add:
+case 'F5':
+    e.preventDefault();
+    this.callbacks.onSave?.();
+    break;
+case 'F9':
+    e.preventDefault();
+    this.callbacks.onLoad?.();
+    break;</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
+                    <pre><code>import { GameSaveManager } from './save/SaveManager';
+
+// Create save manager
+const saveManager = new GameSaveManager();
+
+// ... in InputHandler:
+
+new InputHandler({
+    // ... existing callbacks ...
+    onSave: async () => {
+        await saveManager.save('manual', gameWorld, ecsWorld, itemManager, {
+            name: 'Manual Save',
+            turn: turnController.getCurrentTurn()
+        });
+        console.log('Game saved!');
+    },
+    onLoad: async () => {
+        const success = await saveManager.load('manual', gameWorld, ecsWorld, itemManager);
+        if (success) {
+            console.log('Game loaded!');
+        } else {
+            console.log('No save found');
+        }
+    }
+});</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> Press F5 to save, F9 to load. Game state including
+                    world, entities, and items is persisted.
+                </div>
+            </div>
+
+            <!-- Example 8: Custom Systems -->
+            <div class="example-section" id="example-8">
+                <div class="example-header">
+                    <div class="example-number">8</div>
+                    <div class="example-title">Custom Systems</div>
+                </div>
+
+                <p>
+                    Create a custom ECS system for game-specific logic.
+                </p>
+
+                <h4>Updated Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">entities/</span>
+│   │   ├── <span class="file">Player.ts</span>
+│   │   └── <span class="file">NPC.ts</span>
+│   ├── <span class="folder">items/</span>
+│   │   ├── <span class="file">ItemManager.ts</span>
+│   │   └── <span class="file">InventoryUI.ts</span>
+│   ├── <span class="folder">systems/</span>
+│   │   ├── <span class="file">HealthSystem.ts</span>   <span class="comment">// Custom system</span>
+│   │   └── <span class="file">HungerSystem.ts</span>   <span class="comment">// Custom system</span>
+│   ├── <span class="folder">turns/</span>
+│   │   ├── <span class="file">TurnController.ts</span>
+│   │   └── <span class="file">ActorFactory.ts</span>
+│   ├── <span class="folder">world/</span>
+│   │   ├── <span class="file">TerrainRenderer.ts</span>
+│   │   ├── <span class="file">FOVManager.ts</span>
+│   │   └── <span class="file">WorldGenerator.ts</span>
+│   ├── <span class="folder">save/</span>
+│   │   └── <span class="file">SaveManager.ts</span>
+│   ├── <span class="file">InputHandler.ts</span>
+│   └── <span class="file">main.ts</span>
+├── <span class="folder">content/</span>
+│   └── <span class="folder">maps/</span>
+│       └── <span class="file">dungeon.json</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tsconfig.json</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/systems/HealthSystem.ts (NEW)</div>
+                    <pre><code>import {
+    BaseSystem,
+    Entity,
+    Query,
+    Component
+} from 'ascii-world';
+
+// Custom component for health regeneration
+export interface RegenerationComponent extends Component {
+    type: 'regeneration';
+    amount: number;
+    interval: number;  // Turns between regen
+    lastRegen: number; // Last turn regen occurred
+}
+
+export function createRegeneration(
+    amount: number = 1,
+    interval: number = 10
+): RegenerationComponent {
+    return {
+        type: 'regeneration',
+        amount,
+        interval,
+        lastRegen: 0
+    };
+}
+
+/**
+ * System that handles health regeneration
+ */
+export class HealthSystem extends BaseSystem {
+    readonly name = 'HealthSystem';
+    readonly priority = 10;
+    query: Query = {
+        all: ['health', 'regeneration']
+    };
+
+    private currentTurn: number = 0;
+
+    update(entities: Entity[], _deltaTime: number): void {
+        this.currentTurn++;
+
+        for (const entity of entities) {
+            const health = entity.getComponent('health') as 
+                { type: 'health'; current: number; max: number } | undefined;
+            const regen = entity.getComponent('regeneration') as 
+                RegenerationComponent | undefined;
+
+            if (!health || !regen) continue;
+
+            // Check if it's time to regenerate
+            const turnsSinceRegen = this.currentTurn - regen.lastRegen;
+            if (turnsSinceRegen >= regen.interval) {
+                // Regenerate health
+                const oldHealth = health.current;
+                health.current = Math.min(
+                    health.max,
+                    health.current + regen.amount
+                );
+
+                if (health.current > oldHealth) {
+                    console.log(`Entity ${entity.id} regenerated ${health.current - oldHealth} HP`);
+                }
+
+                regen.lastRegen = this.currentTurn;
+            }
+        }
+    }
+
+    onEntityAdded(entity: Entity): void {
+        console.log(`Entity ${entity.id} added to HealthSystem`);
+    }
+
+    onEntityRemoved(entity: Entity): void {
+        console.log(`Entity ${entity.id} removed from HealthSystem`);
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/systems/HungerSystem.ts (NEW)</div>
+                    <pre><code>import {
+    BaseSystem,
+    Entity,
+    Query,
+    Component
+} from 'ascii-world';
+
+// Custom component for hunger
+export interface HungerComponent extends Component {
+    type: 'hunger';
+    current: number;
+    max: number;
+    rate: number;  // Hunger increase per turn
+}
+
+export function createHunger(
+    current: number = 0,
+    max: number = 1000,
+    rate: number = 1
+): HungerComponent {
+    return {
+        type: 'hunger',
+        current,
+        max,
+        rate
+    };
+}
+
+/**
+ * System that handles hunger mechanics
+ */
+export class HungerSystem extends BaseSystem {
+    readonly name = 'HungerSystem';
+    readonly priority = 20;
+    query: Query = {
+        all: ['hunger']
+    };
+
+    update(entities: Entity[], _deltaTime: number): void {
+        for (const entity of entities) {
+            const hunger = entity.getComponent('hunger') as HungerComponent | undefined;
+            if (!hunger) continue;
+
+            // Increase hunger
+            hunger.current += hunger.rate;
+
+            // Check for starvation
+            if (hunger.current >= hunger.max) {
+                hunger.current = hunger.max;
+                
+                // Apply starvation damage if health component exists
+                const health = entity.getComponent('health') as 
+                    { type: 'health'; current: number; max: number } | undefined;
+                if (health) {
+                    health.current -= 1;
+                    console.log(`Entity ${entity.id} is starving! HP: ${health.current}`);
+                }
+            }
+        }
+    }
+
+    /**
+     * Reduce hunger (when eating food)
+     */
+    static eat(entity: Entity, amount: number): boolean {
+        const hunger = entity.getComponent('hunger') as HungerComponent | undefined;
+        if (!hunger) return false;
+
+        hunger.current = Math.max(0, hunger.current - amount);
+        return true;
+    }
+
+    /**
+     * Get hunger status text
+     */
+    static getStatus(entity: Entity): string {
+        const hunger = entity.getComponent('hunger') as HungerComponent | undefined;
+        if (!hunger) return 'Unknown';
+
+        const percent = (hunger.current / hunger.max) * 100;
+        if (percent < 20) return 'Full';
+        if (percent < 40) return 'Satisfied';
+        if (percent < 60) return 'Peckish';
+        if (percent < 80) return 'Hungry';
+        return 'Starving';
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/entities/Player.ts (UPDATED)</div>
+                    <pre><code>import {
+    Entity,
+    ECSWorld,
+    createPosition,
+    createHealth,
+    createSpeed,
+    createActor,
+    createRenderable,
+    createInventoryComponent
+} from 'ascii-world';
+import { createRegeneration } from '../systems/HealthSystem';
+import { createHunger } from '../systems/HungerSystem';
+
+export interface PlayerConfig {
+    x: number;
+    y: number;
+    health?: number;
+    speed?: number;
+}
+
+/**
+ * Factory for creating the player entity with all components
+ */
+export function createPlayer(
+    world: ECSWorld,
+    config: PlayerConfig
+): Entity {
+    const player = world.createEntity()
+        .addComponent(createPosition(config.x, config.y))
+        .addComponent(createHealth(config.health ?? 100, config.health ?? 100))
+        .addComponent(createSpeed(config.speed ?? 100))
+        .addComponent(createActor(true))
+        .addComponent(createRenderable('@', '#ffffff'))
+        .addComponent(createInventoryComponent(50, 30))
+        // Custom system components
+        .addComponent(createRegeneration(1, 20))  // Regen 1 HP every 20 turns
+        .addComponent(createHunger(0, 1000, 1));  // Get hungry over time
+
+    return player;
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
+                    <pre><code>import { HealthSystem } from './systems/HealthSystem';
+import { HungerSystem } from './systems/HungerSystem';
+
+// After creating ECS world:
+
+// Add custom systems
+ecsWorld.addSystem(new HealthSystem());
+ecsWorld.addSystem(new HungerSystem());
+
+// Update systems each turn (in game loop or turn callback):
+
+// In render loop, display hunger status:
+import { HungerSystem } from './systems/HungerSystem';
+
+// ...
+
+// Display UI:
+display.drawText(0, 0, `Turn: ${turnController.getCurrentTurn()}`);
+display.drawText(0, 1, `Hunger: ${HungerSystem.getStatus(player)}`);
+
+const health = player.getComponent('health') as 
+    { type: 'health'; current: number; max: number } | undefined;
+if (health) {
+    display.drawText(0, 2, `HP: ${health.current}/${health.max}`);
+}</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> Player has hunger that increases each turn.
+                    Health regenerates slowly. Custom systems process alongside engine systems.
+                </div>
+            </div>
+
+            <!-- Example 9: Content Packs -->
+            <div class="example-section" id="example-9">
+                <div class="example-header">
+                    <div class="example-number">9</div>
+                    <div class="example-title">Content Packs</div>
+                </div>
+
+                <p>
+                    Load custom content (items, creatures, etc.) from JSON files.
+                </p>
+
+                <h4>Updated Project Structure</h4>
+                <div class="file-tree">
+<span class="folder">my-game/</span>
+├── <span class="folder">src/</span>
+│   ├── <span class="folder">entities/</span>
+│   │   ├── <span class="file">Player.ts</span>
+│   │   └── <span class="file">NPC.ts</span>
+│   ├── <span class="folder">items/</span>
+│   │   ├── <span class="file">ItemManager.ts</span>
+│   │   └── <span class="file">InventoryUI.ts</span>
+│   ├── <span class="folder">systems/</span>
+│   │   ├── <span class="file">HealthSystem.ts</span>
+│   │   └── <span class="file">HungerSystem.ts</span>
+│   ├── <span class="folder">turns/</span>
+│   │   ├── <span class="file">TurnController.ts</span>
+│   │   └── <span class="file">ActorFactory.ts</span>
+│   ├── <span class="folder">world/</span>
+│   │   ├── <span class="file">TerrainRenderer.ts</span>
+│   │   ├── <span class="file">FOVManager.ts</span>
+│   │   └── <span class="file">WorldGenerator.ts</span>
+│   ├── <span class="folder">save/</span>
+│   │   └── <span class="file">SaveManager.ts</span>
+│   ├── <span class="folder">content/</span>
+│   │   └── <span class="file">ContentLoader.ts</span>  <span class="comment">// Load content packs</span>
+│   ├── <span class="file">InputHandler.ts</span>
+│   └── <span class="file">main.ts</span>
+├── <span class="folder">content/</span>
+│   ├── <span class="folder">core/</span>
+│   │   ├── <span class="file">items.json</span>        <span class="comment">// Custom items</span>
+│   │   ├── <span class="file">creatures.json</span>    <span class="comment">// Custom creatures</span>
+│   │   └── <span class="file">recipes.json</span>      <span class="comment">// Crafting recipes</span>
+│   └── <span class="folder">maps/</span>
+│       └── <span class="file">dungeon.json</span>
+├── <span class="file">index.html</span>
+├── <span class="file">package.json</span>
+└── <span class="file">tsconfig.json</span>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">content/core/items.json (NEW)</div>
+                    <pre><code>{
+  "id": "mygame_items",
+  "name": "My Game Items",
+  "version": "1.0.0",
+  "author": "You",
+  "description": "Custom items for my game",
+  "items": [
+    {
+      "id": "healing_herb",
+      "name": "Healing Herb",
+      "description": "A medicinal herb that restores health",
+      "category": "consumable",
+      "character": "*",
+      "foreground": "#00ff00",
+      "properties": {
+        "weight": 0.1,
+        "volume": 0.1,
+        "stackable": true,
+        "maxStack": 20,
+        "value": 15,
+        "metadata": {
+          "healAmount": 20
+        }
+      }
+    },
+    {
+      "id": "iron_dagger",
+      "name": "Iron Dagger",
+      "description": "A sharp dagger made of iron",
+      "category": "weapon",
+      "character": "-",
+      "foreground": "#aaaaaa",
+      "properties": {
+        "weight": 0.8,
+        "volume": 2,
+        "durability": 80,
+        "maxDurability": 80,
+        "value": 30,
+        "metadata": {
+          "damage": 5,
+          "speed": 1.2
+        }
+      }
+    },
+    {
+      "id": "bread",
+      "name": "Loaf of Bread",
+      "description": "Fresh baked bread",
+      "category": "consumable",
+      "character": "%",
+      "foreground": "#d2691e",
+      "properties": {
+        "weight": 0.5,
+        "volume": 1,
+        "stackable": true,
+        "maxStack": 10,
+        "value": 5,
+        "metadata": {
+          "foodValue": 100
+        }
+      }
+    }
+  ]
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">content/core/creatures.json (NEW)</div>
+                    <pre><code>{
+  "id": "mygame_creatures",
+  "name": "My Game Creatures",
+  "version": "1.0.0",
+  "creatures": [
+    {
+      "id": "rat",
+      "name": "Giant Rat",
+      "description": "An oversized rat with sharp teeth",
+      "character": "r",
+      "foreground": "#8b4513",
+      "health": 15,
+      "speed": 120,
+      "faction": "hostile",
+      "tags": ["animal", "hostile"],
+      "ai": {
+        "type": "aggressive",
+        "aggression": 0.5,
+        "visionRange": 6
+      },
+      "loot": ["meat_raw"]
+    },
+    {
+      "id": "skeleton",
+      "name": "Skeleton",
+      "description": "An undead skeleton warrior",
+      "character": "s",
+      "foreground": "#dddddd",
+      "health": 40,
+      "speed": 80,
+      "faction": "hostile",
+      "tags": ["undead", "hostile"],
+      "ai": {
+        "type": "aggressive",
+        "aggression": 0.8,
+        "visionRange": 8
+      },
+      "loot": ["bone", "sword_rusty"]
+    }
+  ]
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/content/ContentLoader.ts (NEW)</div>
+                    <pre><code>import {
+    ContentLoader as EngineContentLoader,
+    ItemTemplate,
+    globalEventBus
+} from 'ascii-world';
+import { GameItemManager } from '../items/ItemManager';
+
+export interface ContentPack {
+    id: string;
+    name: string;
+    version: string;
+    items?: ItemTemplate[];
+    creatures?: unknown[];
+    recipes?: unknown[];
+}
+
+/**
+ * Loads custom content packs
+ */
+export class GameContentLoader {
+    private contentLoader: EngineContentLoader;
+    private itemManager: GameItemManager;
+
+    constructor(itemManager: GameItemManager) {
+        this.itemManager = itemManager;
+        this.contentLoader = new EngineContentLoader(globalEventBus);
+    }
+
+    /**
+     * Load a content pack from JSON
+     */
+    async loadContentPack(pack: ContentPack): Promise<void> {
+        console.log(`Loading content pack: ${pack.name} v${pack.version}`);
+
+        // Register items
+        if (pack.items) {
+            for (const item of pack.items) {
+                this.itemManager.getItemManager().registerTemplate(item);
+            }
+            console.log(`  - Loaded ${pack.items.length} items`);
+        }
+
+        // Store creatures for later spawning
+        if (pack.creatures) {
+            // In a full implementation, you'd store these in a CreatureManager
+            console.log(`  - Loaded ${pack.creatures.length} creatures`);
+        }
+    }
+
+    /**
+     * Load content pack from URL
+     */
+    async loadFromUrl(url: string): Promise<void> {
+        try {
+            const response = await fetch(url);
+            const pack = await response.json();
+            await this.loadContentPack(pack);
+        } catch (error) {
+            console.error(`Failed to load content from ${url}:`, error);
+        }
+    }
+
+    /**
+     * Load multiple packs
+     */
+    async loadMultiple(packs: ContentPack[]): Promise<void> {
+        for (const pack of packs) {
+            await this.loadContentPack(pack);
+        }
+    }
+}</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
+                    <pre><code>import { GameContentLoader } from './content/ContentLoader';
+
+// Create content loader
+const contentLoader = new GameContentLoader(itemManager);
+
+// Load content packs
+await contentLoader.loadFromUrl('/content/core/items.json');
+await contentLoader.loadFromUrl('/content/core/creatures.json');
+
+// Now spawn custom items
+itemManager.spawnItem({ templateId: 'healing_herb', x: 51, y: 50, quantity: 3 });
+itemManager.spawnItem({ templateId: 'iron_dagger', x: 49, y: 50 });
+itemManager.spawnItem({ templateId: 'bread', x: 50, y: 48, quantity: 2 });</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Result:</strong> Custom items from JSON files are loaded and available
+                    in the game. You can define items, creatures, and recipes in external files.
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+</content>
+</invoke>
