@@ -351,6 +351,31 @@ npm run build</code></pre>
             <div class="step">
                 <div class="step-header">
                     <div class="step-number">2</div>
+                    <div class="step-title">Link the Engine to Your Project</div>
+                </div>
+                <p>Since you're using the engine locally, you need to link it to your game project. Choose one of these methods:</p>
+                
+                <h4>Option A: npm link (Recommended for development)</h4>
+                <pre><code class="language-typescript"># In the ascii-world directory (run once):
+npm link
+
+# In your new game project directory:
+npm link ascii-world</code></pre>
+                
+                <h4>Option B: Install from local path</h4>
+                <pre><code class="language-typescript"># In your new game project directory:
+npm install /path/to/ascii-world</code></pre>
+                
+                <div class="alert alert-warning">
+                    <strong>Important:</strong> The <code>dist/</code> directory must exist with built files. Make sure you've run <code>npm run build</code> in the ascii-world directory first.
+                </div>
+                
+                <p>npm will automatically resolve the entry point from <code>package.json</code> (which points to <code>dist/index.js</code>), so you only need to reference the root ascii-world directory.</p>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">3</div>
                     <div class="step-title">Project Setup</div>
                 </div>
                 <p>Create your project structure:</p>
@@ -380,7 +405,7 @@ npm run build</code></pre>
 
             <div class="step">
                 <div class="step-header">
-                    <div class="step-number">3</div>
+                    <div class="step-number">4</div>
                     <div class="step-title">Your First Game</div>
                 </div>
                 <p>Create <code>src/main.ts</code> with this minimal game:</p>
@@ -521,7 +546,7 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
 
             <div class="step">
                 <div class="step-header">
-                    <div class="step-number">4</div>
+                    <div class="step-number">5</div>
                     <div class="step-title">HTML Setup</div>
                 </div>
                 <p>Create <code>index.html</code>:</p>
@@ -554,7 +579,7 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
 
             <div class="step">
                 <div class="step-header">
-                    <div class="step-number">5</div>
+                    <div class="step-number">6</div>
                     <div class="step-title">Build and Run</div>
                 </div>
                 <p>Build your project:</p>
