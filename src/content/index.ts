@@ -75,6 +75,14 @@ export interface TerrainDefinition {
   tags?: string[];
 }
 
+export interface LayerDefinition {
+  z: number;
+  width: number;
+  height: number;
+  predefinedChunks?: PredefinedChunk[];
+  spawnPoints?: SpawnPoint[];
+}
+
 export interface MapDefinition {
   id: string;
   name: string;
@@ -86,6 +94,18 @@ export interface MapDefinition {
   generatorParams?: Record<string, unknown>;
   predefinedChunks?: PredefinedChunk[];
   spawnPoints?: SpawnPoint[];
+  layers?: LayerDefinition[]; // Multi-layer support
+  stairLinks?: StairLinkDefinition[];
+}
+
+export interface StairLinkDefinition {
+  fromX: number;
+  fromY: number;
+  fromZ: number;
+  toX: number;
+  toY: number;
+  toZ: number;
+  direction: 'up' | 'down';
 }
 
 export interface PredefinedChunk {
@@ -332,26 +352,54 @@ export class MapLoader {
       ecsWorld
     );
 
-    // Apply predefined chunks if present
-    if (definition.predefinedChunks) {
-      this.applyPredefinedChunks(world, definition.predefinedChunks);
-    }
+    // Handle multi-layer maps
+    if (definition.layers && definition.layers.length > 0) {
+      // Add additional layers
+      for (const layerDef of definition.layers) {
+        if (layerDef.z !== 0) { // Layer 0 is already created by World constructor
+          world.addLayer(layerDef.z, layerDef.width, layerDef.height);
+        }
+        
+        // Apply predefined chunks for this layer
+        if (layerDef.predefinedChunks) {
+          this.applyPredefinedChunks(world, layerDef.predefinedChunks, layerDef.z);
+        }
+        
+        // Place spawn points for this layer
+        if (layerDef.spawnPoints) {
+          this.placeSpawnPoints(world, ecsWorld, layerDef.spawnPoints, layerDef.z);
+        }
+        
+        // Generate remaining chunks for this layer
+        if (definition.generator) {
+          const params = { ...definition.generatorParams, ...generatorOverrides };
+          this.worldGenerator.generateWorldLayer(world, layerDef.z, definition.generator, params);
+        }
+      }
+    } else {
+      // Single layer (backward compatibility)
+      // Apply predefined chunks if present
+      if (definition.predefinedChunks) {
+        this.applyPredefinedChunks(world, definition.predefinedChunks);
+      }
 
-    // Generate remaining chunks using specified generator
-    if (definition.generator) {
-      const params = { ...definition.generatorParams, ...generatorOverrides };
-      this.worldGenerator.generateWorld(world, definition.generator, params);
-    }
+      // Generate remaining chunks using specified generator
+      if (definition.generator) {
+        const params = { ...definition.generatorParams, ...generatorOverrides };
+        this.worldGenerator.generateWorld(world, definition.generator, params);
+      }
 
-    // Place entities from spawn points
-    if (definition.spawnPoints) {
-      this.placeSpawnPoints(world, ecsWorld, definition.spawnPoints);
+      // Place entities from spawn points
+      if (definition.spawnPoints) {
+        this.placeSpawnPoints(world, ecsWorld, definition.spawnPoints);
+      }
     }
 
     this.eventBus.emit('map:worldCreated', { 
       mapId: definition.id,
       worldWidth: definition.width,
-      worldHeight: definition.height
+      worldHeight: definition.height,
+      layerCount: world.getLayers().length
     });
 
     return world;
@@ -360,8 +408,8 @@ export class MapLoader {
   /**
    * Apply predefined chunks to a world
    */
-  private applyPredefinedChunks(world: World, chunks: PredefinedChunk[]): void {
-    const chunkManager = world.getChunkManager();
+  private applyPredefinedChunks(world: World, chunks: PredefinedChunk[], z: number = 0): void {
+    const chunkManager = world.getChunkManager(z);
 
     for (const chunkDef of chunks) {
       const chunk = chunkManager.getOrCreateChunk(chunkDef.chunkX, chunkDef.chunkY);
@@ -387,7 +435,8 @@ export class MapLoader {
             type: placement.type,
             templateId: placement.templateId,
             x: worldPos.x,
-            y: worldPos.y
+            y: worldPos.y,
+            z
           });
         }
       }
@@ -400,12 +449,14 @@ export class MapLoader {
   private placeSpawnPoints(
     _world: World, 
     _ecsWorld: ECSWorld, 
-    spawnPoints: SpawnPoint[]
+    spawnPoints: SpawnPoint[],
+    z: number = 0
   ): void {
     for (const spawn of spawnPoints) {
       this.eventBus.emit('map:spawnPoint', {
         x: spawn.x,
         y: spawn.y,
+        z,
         type: spawn.type,
         tags: spawn.tags
       });
@@ -507,6 +558,47 @@ export class WorldGenerator {
     if (generator && context) {
       generator(chunk, context);
     }
+  }
+
+  /**
+   * Generate a specific layer in a multi-layer world
+   */
+  generateWorldLayer(
+    world: World,
+    z: number,
+    generatorName: string,
+    params: Record<string, unknown> = {}
+  ): void {
+    const generator = this.generators.get(generatorName);
+    if (!generator) {
+      throw new Error(`Generator "${generatorName}" not found`);
+    }
+
+    // Simple RNG (could be replaced with rot.js RNG)
+    // Use a deterministic default seed for reproducibility, modified by layer
+    let seed = ((params.seed as number) || 12345) + z * 1000;
+    const rng = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+
+    const context: GeneratorContext = {
+      world,
+      rng,
+      params
+    };
+
+    this.eventBus.emit('generation:layerStarted', { 
+      generator: generatorName,
+      layer: z,
+      seed: params.seed || 'default'
+    });
+
+    // Store for chunk generation callback
+    if (!(world as any).__layerGenerators) {
+      (world as any).__layerGenerators = new Map();
+    }
+    (world as any).__layerGenerators.set(z, { generator, context });
   }
 
   private registerDefaultGenerators(): void {

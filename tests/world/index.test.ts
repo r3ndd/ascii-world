@@ -73,14 +73,16 @@ describe('Chunk', () => {
       chunk.setTile(2, 0, TERRAIN.water);
       chunk.setTile(3, 0, TERRAIN.tree);
       chunk.setTile(4, 0, TERRAIN.door);
-      chunk.setTile(5, 0, TERRAIN.stairs);
+      chunk.setTile(5, 0, TERRAIN.stairs_up);
+      chunk.setTile(6, 0, TERRAIN.stairs_down);
 
       expect(chunk.getTile(0, 0)?.terrain).toBe('floor');
       expect(chunk.getTile(1, 0)?.terrain).toBe('wall');
       expect(chunk.getTile(2, 0)?.terrain).toBe('water');
       expect(chunk.getTile(3, 0)?.terrain).toBe('tree');
       expect(chunk.getTile(4, 0)?.terrain).toBe('door');
-      expect(chunk.getTile(5, 0)?.terrain).toBe('stairs');
+      expect(chunk.getTile(5, 0)?.terrain).toBe('stairs_up');
+      expect(chunk.getTile(6, 0)?.terrain).toBe('stairs_down');
     });
   });
 
@@ -540,7 +542,8 @@ describe('TERRAIN definitions', () => {
     expect(TERRAIN.water).toBeDefined();
     expect(TERRAIN.tree).toBeDefined();
     expect(TERRAIN.door).toBeDefined();
-    expect(TERRAIN.stairs).toBeDefined();
+    expect(TERRAIN.stairs_up).toBeDefined();
+    expect(TERRAIN.stairs_down).toBeDefined();
   });
 
   it('should have correct properties for each terrain type', () => {
@@ -571,6 +574,7 @@ describe('TERRAIN definitions', () => {
     expect(TERRAIN.water.char).toBe('~');
     expect(TERRAIN.tree.char).toBe('T');
     expect(TERRAIN.door.char).toBe('+');
-    expect(TERRAIN.stairs.char).toBe('>');
+    expect(TERRAIN.stairs_up.char).toBe('>');
+    expect(TERRAIN.stairs_down.char).toBe('<');
   });
 });

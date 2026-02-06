@@ -76,8 +76,8 @@ describe('PhysicsSystem', () => {
 
       expect(handler).toHaveBeenCalledWith(expect.objectContaining({
         entityId: entity.id,
-        from: { x: 25, y: 25 },
-        to: { x: 26, y: 25 }
+        from: { x: 25, y: 25, z: 0 },
+        to: { x: 26, y: 25, z: 0 }
       }));
     });
 
@@ -95,8 +95,8 @@ describe('PhysicsSystem', () => {
       expect(result).toBe(false);
       expect(handler).toHaveBeenCalledWith(expect.objectContaining({
         entityId: entity.id,
-        from: { x: 25, y: 25 },
-        to: { x: 25, y: 24 }
+        from: { x: 25, y: 25, z: 0 },
+        to: { x: 25, y: 24, z: 0 }
       }));
     });
 
@@ -160,8 +160,8 @@ describe('PhysicsSystem', () => {
       physicsSystem.moveEntityTo(entity, 20, 20);
 
       expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-        from: { x: 10, y: 10 },
-        to: { x: 20, y: 20 }
+        from: { x: 10, y: 10, z: 0 },
+        to: { x: 20, y: 20, z: 0 }
       }));
     });
 
@@ -188,7 +188,7 @@ describe('PhysicsSystem', () => {
       entity.addComponent(createPosition(15, 25));
 
       const pos = physicsSystem.getEntityPosition(entity);
-      expect(pos).toEqual({ x: 15, y: 25 });
+      expect(pos).toEqual({ x: 15, y: 25, z: 0 });
     });
 
     it('should return null for entity without position', () => {

@@ -16,5 +16,7 @@ export const ACTION_COSTS: ActionCosts = {
   DROP: 25,
   USE: 100,
   EQUIP: 50,
-  UNEQUIP: 25
+  UNEQUIP: 25,
+  ASCEND: 100,
+  DESCEND: 100
 };

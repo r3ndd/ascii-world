@@ -8,6 +8,7 @@ export type EntityId = number;
 export interface Position {
   x: number;
   y: number;
+  z?: number;  // Layer/elevation (optional, defaults to 0)
 }
 
 export interface Size {

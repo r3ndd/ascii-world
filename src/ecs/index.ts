@@ -227,6 +227,7 @@ export interface PositionComponent extends Component {
   type: 'position';
   x: number;
   y: number;
+  z: number;  // Layer/elevation
 }
 
 export interface VelocityComponent extends Component {
@@ -261,8 +262,8 @@ export interface RenderableComponent extends Component {
 }
 
 // Component factories
-export function createPosition(x: number, y: number): PositionComponent {
-  return { type: 'position', x, y };
+export function createPosition(x: number, y: number, z: number = 0): PositionComponent {
+  return { type: 'position', x, y, z };
 }
 
 export function createVelocity(vx: number, vy: number): VelocityComponent {

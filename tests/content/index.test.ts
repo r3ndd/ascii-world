@@ -419,6 +419,7 @@ describe('Content Module', () => {
           mapId: 'emit_test',
           worldWidth: 100,
           worldHeight: 100,
+          layerCount: 1,
         });
       });
 
@@ -475,6 +476,7 @@ describe('Content Module', () => {
         expect(handler).toHaveBeenCalledWith({
           x: 10,
           y: 20,
+          z: 0,
           type: 'player',
           tags: ['start'],
         });

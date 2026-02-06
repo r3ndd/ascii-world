@@ -29,7 +29,9 @@ export enum ActionType {
   WAIT = 'wait',
   INTERACT = 'interact',
   PICKUP = 'pickup',
-  DROP = 'drop'
+  DROP = 'drop',
+  ASCEND = 'ascend',
+  DESCEND = 'descend'
 }
 
 // Action definition
@@ -77,6 +79,16 @@ export class Action {
   static createDropAction(speed: number): Action {
     const cost = Math.round((ACTION_COSTS.DROP * 100) / speed);
     return new Action(ActionType.DROP, cost);
+  }
+
+  static createAscendAction(speed: number): Action {
+    const cost = Math.round((ACTION_COSTS.ASCEND * 100) / speed);
+    return new Action(ActionType.ASCEND, cost);
+  }
+
+  static createDescendAction(speed: number): Action {
+    const cost = Math.round((ACTION_COSTS.DESCEND * 100) / speed);
+    return new Action(ActionType.DESCEND, cost);
   }
 }
 

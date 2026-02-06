@@ -31,24 +31,25 @@ export class PhysicsSystem {
     this.eventBus = eventBus;
   }
 
-  canMoveTo(x: number, y: number): boolean {
-    return this.world.isValidPosition(x, y);
+  canMoveTo(x: number, y: number, z: number = 0): boolean {
+    return this.world.isValidPosition(x, y, z);
   }
 
   moveEntity(entity: Entity, direction: Direction): boolean {
-    const position = entity.getComponent('position') as { type: 'position'; x: number; y: number } | undefined;
+    const position = entity.getComponent('position') as { type: 'position'; x: number; y: number; z: number } | undefined;
     
     if (!position) return false;
 
     const offset = DIRECTION_OFFSETS[direction];
     const newX = position.x + offset.x;
     const newY = position.y + offset.y;
+    const currentZ = position.z;
 
-    if (!this.canMoveTo(newX, newY)) {
+    if (!this.canMoveTo(newX, newY, currentZ)) {
       this.eventBus.emit('physics:movementBlocked', {
         entityId: entity.id,
-        from: { x: position.x, y: position.y },
-        to: { x: newX, y: newY }
+        from: { x: position.x, y: position.y, z: currentZ },
+        to: { x: newX, y: newY, z: currentZ }
       });
       return false;
     }
@@ -59,38 +60,136 @@ export class PhysicsSystem {
 
     this.eventBus.emit('physics:entityMoved', {
       entityId: entity.id,
-      from: { x: position.x - offset.x, y: position.y - offset.y },
-      to: { x: newX, y: newY }
+      from: { x: position.x - offset.x, y: position.y - offset.y, z: currentZ },
+      to: { x: newX, y: newY, z: currentZ }
     });
 
     return true;
   }
 
-  moveEntityTo(entity: Entity, x: number, y: number): boolean {
-    if (!this.canMoveTo(x, y)) return false;
-
-    const position = entity.getComponent('position') as { type: 'position'; x: number; y: number } | undefined;
+  moveEntityTo(entity: Entity, x: number, y: number, z?: number): boolean {
+    const position = entity.getComponent('position') as { type: 'position'; x: number; y: number; z: number } | undefined;
     
     if (!position) return false;
 
+    const targetZ = z ?? position.z;
+
+    if (!this.canMoveTo(x, y, targetZ)) return false;
+
     const oldX = position.x;
     const oldY = position.y;
+    const oldZ = position.z;
 
     position.x = x;
     position.y = y;
+    position.z = targetZ;
 
     this.eventBus.emit('physics:entityMoved', {
       entityId: entity.id,
-      from: { x: oldX, y: oldY },
-      to: { x, y }
+      from: { x: oldX, y: oldY, z: oldZ },
+      to: { x, y, z: targetZ }
     });
 
     return true;
   }
 
   getEntityPosition(entity: Entity): Position | null {
-    const position = entity.getComponent('position') as { type: 'position'; x: number; y: number } | undefined;
-    return position ? { x: position.x, y: position.y } : null;
+    const position = entity.getComponent('position') as { type: 'position'; x: number; y: number; z: number } | undefined;
+    return position ? { x: position.x, y: position.y, z: position.z } : null;
+  }
+
+  /**
+   * Ascend to the layer above via stairs
+   */
+  ascend(entity: Entity, stairsSystem: StairsSystem): boolean {
+    const position = entity.getComponent('position') as { type: 'position'; x: number; y: number; z: number } | undefined;
+    
+    if (!position) return false;
+
+    const { x, y, z } = position;
+
+    // Check if we can ascend from this position
+    if (!stairsSystem.canAscend(x, y, z)) {
+      this.eventBus.emit('physics:ascendBlocked', {
+        entityId: entity.id,
+        position: { x, y, z },
+        reason: 'no_stairs_up'
+      });
+      return false;
+    }
+
+    const destination = stairsSystem.getAscendDestination(x, y, z);
+    if (!destination) return false;
+
+    // Validate the destination position
+    if (!this.world.isValidPosition(destination.x, destination.y, destination.z)) {
+      this.eventBus.emit('physics:ascendBlocked', {
+        entityId: entity.id,
+        position: { x, y, z },
+        reason: 'invalid_destination'
+      });
+      return false;
+    }
+
+    // Update position
+    position.x = destination.x;
+    position.y = destination.y;
+    position.z = destination.z ?? 0;
+
+    this.eventBus.emit('physics:entityAscended', {
+      entityId: entity.id,
+      from: { x, y, z },
+      to: destination
+    });
+
+    return true;
+  }
+
+  /**
+   * Descend to the layer below via stairs
+   */
+  descend(entity: Entity, stairsSystem: StairsSystem): boolean {
+    const position = entity.getComponent('position') as { type: 'position'; x: number; y: number; z: number } | undefined;
+    
+    if (!position) return false;
+
+    const { x, y, z } = position;
+
+    // Check if we can descend from this position
+    if (!stairsSystem.canDescend(x, y, z)) {
+      this.eventBus.emit('physics:descendBlocked', {
+        entityId: entity.id,
+        position: { x, y, z },
+        reason: 'no_stairs_down'
+      });
+      return false;
+    }
+
+    const destination = stairsSystem.getDescendDestination(x, y, z);
+    if (!destination) return false;
+
+    // Validate the destination position
+    if (!this.world.isValidPosition(destination.x, destination.y, destination.z)) {
+      this.eventBus.emit('physics:descendBlocked', {
+        entityId: entity.id,
+        position: { x, y, z },
+        reason: 'invalid_destination'
+      });
+      return false;
+    }
+
+    // Update position
+    position.x = destination.x;
+    position.y = destination.y;
+    position.z = destination.z ?? 0;
+
+    this.eventBus.emit('physics:entityDescended', {
+      entityId: entity.id,
+      from: { x, y, z },
+      to: destination
+    });
+
+    return true;
   }
 }
 
@@ -290,5 +389,128 @@ export class Pathfinding {
     }
 
     return path;
+  }
+}
+
+// Stair connection between layers
+export interface StairLink {
+  fromX: number;
+  fromY: number;
+  fromZ: number;
+  toX: number;
+  toY: number;
+  toZ: number;
+  direction: 'up' | 'down';
+}
+
+// Stairs system for managing stair connections between layers
+export class StairsSystem {
+  private stairLinks: Map<string, StairLink> = new Map();
+  private eventBus: EventBus;
+
+  constructor(_world: World, eventBus: EventBus) {
+    this.eventBus = eventBus;
+  }
+
+  private getStairKey(x: number, y: number, z: number): string {
+    return `${x},${y},${z}`;
+  }
+
+  /**
+   * Register a stair connection between two positions
+   */
+  registerStairLink(link: StairLink): void {
+    const key = this.getStairKey(link.fromX, link.fromY, link.fromZ);
+    this.stairLinks.set(key, link);
+    
+    this.eventBus.emit('stairs:linkRegistered', {
+      from: { x: link.fromX, y: link.fromY, z: link.fromZ },
+      to: { x: link.toX, y: link.toY, z: link.toZ },
+      direction: link.direction
+    });
+  }
+
+  /**
+   * Get stair link at a position
+   */
+  getStairLink(x: number, y: number, z: number): StairLink | undefined {
+    return this.stairLinks.get(this.getStairKey(x, y, z));
+  }
+
+  /**
+   * Check if there's a stair connection at the given position
+   */
+  hasStairLink(x: number, y: number, z: number): boolean {
+    return this.stairLinks.has(this.getStairKey(x, y, z));
+  }
+
+  /**
+   * Get all registered stair links
+   */
+  getAllStairLinks(): StairLink[] {
+    return Array.from(this.stairLinks.values());
+  }
+
+  /**
+   * Remove a stair link
+   */
+  removeStairLink(x: number, y: number, z: number): boolean {
+    const key = this.getStairKey(x, y, z);
+    const link = this.stairLinks.get(key);
+    if (link) {
+      this.stairLinks.delete(key);
+      this.eventBus.emit('stairs:linkRemoved', {
+        from: { x, y, z },
+        to: { x: link.toX, y: link.toY, z: link.toZ }
+      });
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Clear all stair links
+   */
+  clear(): void {
+    this.stairLinks.clear();
+    this.eventBus.emit('stairs:allLinksCleared', {});
+  }
+
+  /**
+   * Check if an entity can ascend from their current position
+   */
+  canAscend(x: number, y: number, z: number): boolean {
+    const link = this.getStairLink(x, y, z);
+    return link !== undefined && link.direction === 'up';
+  }
+
+  /**
+   * Check if an entity can descend from their current position
+   */
+  canDescend(x: number, y: number, z: number): boolean {
+    const link = this.getStairLink(x, y, z);
+    return link !== undefined && link.direction === 'down';
+  }
+
+  /**
+   * Get the destination position when ascending
+   */
+  getAscendDestination(x: number, y: number, z: number): Position | null {
+    const link = this.getStairLink(x, y, z);
+    if (link && link.direction === 'up') {
+      return { x: link.toX, y: link.toY, z: link.toZ };
+    }
+    return null;
+  }
+
+  /**
+   * Get the destination position when descending
+   */
+  getDescendDestination(x: number, y: number, z: number): Position | null {
+    const link = this.getStairLink(x, y, z);
+    if (link && link.direction === 'down') {
+      return { x: link.toX, y: link.toY, z: link.toZ };
+    }
+    return null;
   }
 }

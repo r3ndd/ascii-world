@@ -8,7 +8,7 @@ import { WORLD_DEFAULTS, CourseUpdateLevel } from '../config/WorldDefaults';
 import { Entity, EntityId, ECSWorld } from '../ecs';
 
 // Terrain types
-type TerrainType = 'floor' | 'wall' | 'water' | 'tree' | 'door' | 'stairs';
+type TerrainType = 'floor' | 'wall' | 'water' | 'tree' | 'door' | 'stairs_up' | 'stairs_down';
 
 // Tile data for a single tile
 export interface Tile {
@@ -68,12 +68,21 @@ export const TERRAIN: Record<TerrainType, Tile> = {
     fg: '#8b4513',
     bg: '#000000'
   },
-  stairs: {
-    terrain: 'stairs',
+  stairs_up: {
+    terrain: 'stairs_up',
     blocksMovement: false,
     blocksLight: false,
     transparent: true,
     char: '>',
+    fg: '#ffff00',
+    bg: '#000000'
+  },
+  stairs_down: {
+    terrain: 'stairs_down',
+    blocksMovement: false,
+    blocksLight: false,
+    transparent: true,
+    char: '<',
     fg: '#ffff00',
     bg: '#000000'
   }
@@ -445,13 +454,20 @@ export class ChunkManager {
   }
 }
 
-// World container
+// Layer configuration for multi-layer worlds
+export interface LayerConfig {
+  width: number;
+  height: number;
+}
+
+// World container - supports multiple z-layers
 export class World {
-  private width: number;
-  private height: number;
-  private chunkManager: ChunkManager;
+  private layers: Map<number, LayerConfig> = new Map();
+  private chunkManagers: Map<number, ChunkManager> = new Map();
   private updateScheduler: UpdateScheduler;
   private ecsWorld: ECSWorld;
+  private chunkSize: number;
+  private defaultLayer: number = 0;
 
   constructor(
     width: number = WORLD_DEFAULTS.width,
@@ -459,66 +475,118 @@ export class World {
     chunkSize: number = WORLD_DEFAULTS.chunkSize,
     ecsWorld: ECSWorld
   ) {
-    this.width = width;
-    this.height = height;
+    this.chunkSize = chunkSize;
     this.ecsWorld = ecsWorld;
     this.updateScheduler = new UpdateScheduler();
-    this.chunkManager = new ChunkManager(chunkSize, this.updateScheduler, ecsWorld);
+    
+    // Create default layer 0
+    this.addLayer(0, width, height);
+  }
+
+  /**
+   * Add a new layer to the world
+   */
+  addLayer(z: number, width: number, height: number): void {
+    this.layers.set(z, { width, height });
+    this.chunkManagers.set(z, new ChunkManager(this.chunkSize, this.updateScheduler, this.ecsWorld));
+  }
+
+  /**
+   * Remove a layer from the world
+   */
+  removeLayer(z: number): boolean {
+    if (z === this.defaultLayer) {
+      throw new Error('Cannot remove the default layer (0)');
+    }
+    return this.layers.delete(z) && this.chunkManagers.delete(z);
+  }
+
+  /**
+   * Check if a layer exists
+   */
+  hasLayer(z: number): boolean {
+    return this.layers.has(z);
+  }
+
+  /**
+   * Get all layer indices
+   */
+  getLayers(): number[] {
+    return Array.from(this.layers.keys()).sort((a, b) => a - b);
+  }
+
+  /**
+   * Get the chunk manager for a specific layer
+   */
+  getChunkManager(z: number = this.defaultLayer): ChunkManager {
+    const manager = this.chunkManagers.get(z);
+    if (!manager) {
+      throw new Error(`Layer ${z} does not exist`);
+    }
+    return manager;
   }
 
   initialize(): void {
-    // Initial chunk generation at center
-    const centerX = Math.floor(this.width / 2);
-    const centerY = Math.floor(this.height / 2);
-    this.chunkManager.setPlayerPosition(centerX, centerY);
+    // Initial chunk generation at center of default layer
+    const config = this.layers.get(this.defaultLayer)!;
+    const centerX = Math.floor(config.width / 2);
+    const centerY = Math.floor(config.height / 2);
+    this.getChunkManager(this.defaultLayer).setPlayerPosition(centerX, centerY);
   }
 
-  getWidth(): number {
-    return this.width;
+  getWidth(z: number = this.defaultLayer): number {
+    const config = this.layers.get(z);
+    return config ? config.width : 0;
   }
 
-  getHeight(): number {
-    return this.height;
-  }
-
-  getChunkManager(): ChunkManager {
-    return this.chunkManager;
+  getHeight(z: number = this.defaultLayer): number {
+    const config = this.layers.get(z);
+    return config ? config.height : 0;
   }
 
   getUpdateScheduler(): UpdateScheduler {
     return this.updateScheduler;
   }
 
-  getTileAt(x: number, y: number): Tile | null {
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+  getTileAt(x: number, y: number, z: number = this.defaultLayer): Tile | null {
+    const config = this.layers.get(z);
+    if (!config || x < 0 || x >= config.width || y < 0 || y >= config.height) {
       return null;
     }
-    return this.chunkManager.getTileAt(x, y);
+    return this.getChunkManager(z).getTileAt(x, y);
   }
 
-  setTileAt(x: number, y: number, tile: Tile): boolean {
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+  setTileAt(x: number, y: number, tile: Tile, z: number = this.defaultLayer): boolean {
+    const config = this.layers.get(z);
+    if (!config || x < 0 || x >= config.width || y < 0 || y >= config.height) {
       return false;
     }
-    return this.chunkManager.setTileAt(x, y, tile);
+    return this.getChunkManager(z).setTileAt(x, y, tile);
   }
 
-  isValidPosition(x: number, y: number): boolean {
-    return x >= 0 && x < this.width && y >= 0 && y < this.height &&
-           this.chunkManager.isValidPosition(x, y);
+  isValidPosition(x: number, y: number, z: number = this.defaultLayer): boolean {
+    const config = this.layers.get(z);
+    if (!config || x < 0 || x >= config.width || y < 0 || y >= config.height) {
+      return false;
+    }
+    return this.getChunkManager(z).isValidPosition(x, y);
   }
 
   update(): void {
-    this.chunkManager.update();
+    // Update all layers
+    for (const chunkManager of this.chunkManagers.values()) {
+      chunkManager.update();
+    }
   }
 
-  setPlayerPosition(x: number, y: number): void {
-    this.chunkManager.setPlayerPosition(x, y);
+  setPlayerPosition(x: number, y: number, z: number = this.defaultLayer): void {
+    this.getChunkManager(z).setPlayerPosition(x, y);
   }
 
-  getEntitiesAt(x: number, y: number): Entity[] {
-    const { chunkX, chunkY } = this.chunkManager.worldToChunk(x, y);
-    const chunk = this.chunkManager.getChunk(chunkX, chunkY);
+  getEntitiesAt(x: number, y: number, z: number = this.defaultLayer): Entity[] {
+    const chunkManager = this.getChunkManager(z);
+    const { chunkX, chunkY } = chunkManager.worldToChunk(x, y);
+    const chunk = chunkManager.getChunk(chunkX, chunkY);
     
     if (!chunk) return [];
     
