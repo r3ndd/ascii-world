@@ -8,6 +8,8 @@
 
 ---
 
+See [https://ondras.github.io/rot.js/doc/](https://ondras.github.io/rot.js/doc/) for rot.js documentation.
+
 ## Core Design Decisions
 
 ### 1. World Bounds
