@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Examples - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <style>
         :root {
             --bg-primary: #1a1a2e;
@@ -419,7 +425,7 @@
 
                 <div class="step">
                     <div class="step-title">package.json</div>
-                    <pre><code>{
+                    <pre><code class="language-json">{
   "name": "my-ascii-game",
   "version": "1.0.0",
   "type": "module",
@@ -439,7 +445,7 @@
 
                 <div class="step">
                     <div class="step-title">tsconfig.json</div>
-                    <pre><code>{
+                    <pre><code class="language-json">{
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
@@ -457,7 +463,7 @@
 
                 <div class="step">
                     <div class="step-title">index.html</div>
-                    <pre><code>&lt;!DOCTYPE html&gt;
+                    <pre><code class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html lang="en"&gt;
 &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
@@ -486,7 +492,7 @@
 
                 <div class="step">
                     <div class="step-title">src/main.ts</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     Engine,
     ECSWorld,
     DisplayManager,
@@ -612,7 +618,7 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
 
                 <div class="step">
                     <div class="step-title">src/world/TerrainRenderer.ts (NEW)</div>
-                    <pre><code>import { World, DisplayManager, Camera, TERRAIN } from 'ascii-world';
+                    <pre><code class="language-typescript">import { World, DisplayManager, Camera, TERRAIN } from 'ascii-world';
 
 /**
  * Renders world terrain to the display
@@ -656,7 +662,7 @@ export class TerrainRenderer {
 
                 <div class="step">
                     <div class="step-title">src/InputHandler.ts (NEW)</div>
-                    <pre><code>import { Entity } from 'ascii-world';
+                    <pre><code class="language-typescript">import { Entity } from 'ascii-world';
 
 export type Direction = 'north' | 'south' | 'east' | 'west';
 
@@ -706,7 +712,7 @@ export class InputHandler {
 
                 <div class="step">
                     <div class="step-title">src/main.ts (UPDATED)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     Engine,
     ECSWorld,
     World,
@@ -859,7 +865,7 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
 
                 <div class="step">
                     <div class="step-title">src/turns/ActorFactory.ts (NEW)</div>
-                    <pre><code>import { Actor, Entity, EntityId } from 'ascii-world';
+                    <pre><code class="language-typescript">import { Actor, Entity, EntityId } from 'ascii-world';
 
 /**
  * Wraps an ECS Entity as a turn-based Actor
@@ -919,7 +925,7 @@ export class ActorFactory {
 
                 <div class="step">
                     <div class="step-title">src/turns/TurnController.ts (NEW)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     TurnManager,
     SpeedSystem,
     ECSWorld,
@@ -991,7 +997,7 @@ export class TurnController {
 
                 <div class="step">
                     <div class="step-title">src/entities/Player.ts (NEW)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     Entity,
     ECSWorld,
     createPosition,
@@ -1028,7 +1034,7 @@ export function createPlayer(
 
                 <div class="step">
                     <div class="step-title">src/entities/NPC.ts (NEW)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     Entity,
     ECSWorld,
     createPosition,
@@ -1068,7 +1074,7 @@ export function createNPC(
 
                 <div class="step">
                     <div class="step-title">src/main.ts (UPDATED)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     Engine,
     ECSWorld,
     World,
@@ -1256,7 +1262,7 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
 
                 <div class="step">
                     <div class="step-title">src/items/ItemManager.ts (NEW)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     ItemManager as EngineItemManager,
     Inventory,
     InventoryManager,
@@ -1370,7 +1376,7 @@ export class GameItemManager {
 
                 <div class="step">
                     <div class="step-title">src/items/InventoryUI.ts (NEW)</div>
-                    <pre><code>import { Inventory, Item } from 'ascii-world';
+                    <pre><code class="language-typescript">import { Inventory, Item } from 'ascii-world';
 import { DisplayManager } from 'ascii-world';
 
 /**
@@ -1449,7 +1455,7 @@ export class InventoryUI {
 
                 <div class="step">
                     <div class="step-title">src/InputHandler.ts (UPDATED)</div>
-                    <pre><code>import { Entity } from 'ascii-world';
+                    <pre><code class="language-typescript">import { Entity } from 'ascii-world';
 
 export type Direction = 'north' | 'south' | 'east' | 'west';
 
@@ -1515,7 +1521,7 @@ export class InputHandler {
 
                 <div class="step">
                     <div class="step-title">src/entities/Player.ts (UPDATED)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     Entity,
     ECSWorld,
     createPosition,
@@ -1554,7 +1560,7 @@ export function createPlayer(
 
                 <div class="step">
                     <div class="step-title">src/main.ts (UPDATED)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     Engine,
     ECSWorld,
     World,
@@ -1780,7 +1786,7 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
 
                 <div class="step">
                     <div class="step-title">src/world/FOVManager.ts (NEW)</div>
-                    <pre><code>import { World, FOVSystem } from 'ascii-world';
+                    <pre><code class="language-typescript">import { World, FOVSystem } from 'ascii-world';
 
 /**
  * Manages Field of View and explored tiles
@@ -1856,7 +1862,7 @@ export class FOVManager {
 
                 <div class="step">
                     <div class="step-title">src/world/TerrainRenderer.ts (UPDATED)</div>
-                    <pre><code>import { World, DisplayManager, Camera, TERRAIN } from 'ascii-world';
+                    <pre><code class="language-typescript">import { World, DisplayManager, Camera, TERRAIN } from 'ascii-world';
 import { FOVManager } from './FOVManager';
 
 /**
@@ -1940,7 +1946,7 @@ export class TerrainRenderer {
                 <div class="step">
                     <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
                     <p class="file-label">Add FOVManager initialization and update:</p>
-                    <pre><code>import { FOVManager } from './world/FOVManager';
+                    <pre><code class="language-typescript">import { FOVManager } from './world/FOVManager';
 
 // ... in init() function:
 
@@ -2015,7 +2021,7 @@ onMove: (direction: Direction) => {
 
                 <div class="step">
                     <div class="step-title">src/world/WorldGenerator.ts (NEW)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     World,
     ECSWorld,
     WorldGenerator as EngineWorldGenerator
@@ -2105,7 +2111,7 @@ export class WorldGenerator {
 
                 <div class="step">
                     <div class="step-title">content/maps/dungeon.json (NEW)</div>
-                    <pre><code>{
+                    <pre><code class="language-json">{
   "id": "test_dungeon",
   "name": "Test Dungeon",
   "description": "A simple dungeon for testing",
@@ -2131,7 +2137,7 @@ export class WorldGenerator {
                 <div class="step">
                     <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
                     <p class="file-label">Replace manual terrain generation with generator:</p>
-                    <pre><code>import { WorldGenerator } from './world/WorldGenerator';
+                    <pre><code class="language-typescript">import { WorldGenerator } from './world/WorldGenerator';
 
 // ... in init() function, replace the terrain generation loop:
 
@@ -2205,7 +2211,7 @@ const player = createPlayer(ecsWorld, { x: startX, y: startY });</code></pre>
 
                 <div class="step">
                     <div class="step-title">src/save/SaveManager.ts (NEW)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     SaveManager as EngineSaveManager,
     World,
     ECSWorld,
@@ -2363,7 +2369,7 @@ export class GameSaveManager {
 
                 <div class="step">
                     <div class="step-title">src/InputHandler.ts (UPDATED)</div>
-                    <pre><code>export interface InputCallbacks {
+                    <pre><code class="language-typescript">export interface InputCallbacks {
     onMove: (direction: Direction) => void;
     onPickup?: () => void;
     onDrop?: () => void;
@@ -2385,7 +2391,7 @@ case 'F9':
 
                 <div class="step">
                     <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
-                    <pre><code>import { GameSaveManager } from './save/SaveManager';
+                    <pre><code class="language-typescript">import { GameSaveManager } from './save/SaveManager';
 
 // Create save manager
 const saveManager = new GameSaveManager();
@@ -2463,7 +2469,7 @@ new InputHandler({
 
                 <div class="step">
                     <div class="step-title">src/systems/HealthSystem.ts (NEW)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     BaseSystem,
     Entity,
     Query,
@@ -2544,7 +2550,7 @@ export class HealthSystem extends BaseSystem {
 
                 <div class="step">
                     <div class="step-title">src/systems/HungerSystem.ts (NEW)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     BaseSystem,
     Entity,
     Query,
@@ -2635,7 +2641,7 @@ export class HungerSystem extends BaseSystem {
 
                 <div class="step">
                     <div class="step-title">src/entities/Player.ts (UPDATED)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     Entity,
     ECSWorld,
     createPosition,
@@ -2679,7 +2685,7 @@ export function createPlayer(
 
                 <div class="step">
                     <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
-                    <pre><code>import { HealthSystem } from './systems/HealthSystem';
+                    <pre><code class="language-typescript">import { HealthSystem } from './systems/HealthSystem';
 import { HungerSystem } from './systems/HungerSystem';
 
 // After creating ECS world:
@@ -2763,7 +2769,7 @@ if (health) {
 
                 <div class="step">
                     <div class="step-title">content/core/items.json (NEW)</div>
-                    <pre><code>{
+                    <pre><code class="language-json">{
   "id": "mygame_items",
   "name": "My Game Items",
   "version": "1.0.0",
@@ -2831,7 +2837,7 @@ if (health) {
 
                 <div class="step">
                     <div class="step-title">content/core/creatures.json (NEW)</div>
-                    <pre><code>{
+                    <pre><code class="language-json">{
   "id": "mygame_creatures",
   "name": "My Game Creatures",
   "version": "1.0.0",
@@ -2876,7 +2882,7 @@ if (health) {
 
                 <div class="step">
                     <div class="step-title">src/content/ContentLoader.ts (NEW)</div>
-                    <pre><code>import {
+                    <pre><code class="language-typescript">import {
     ContentLoader as EngineContentLoader,
     ItemTemplate,
     globalEventBus
@@ -2951,7 +2957,7 @@ export class GameContentLoader {
 
                 <div class="step">
                     <div class="step-title">src/main.ts (RELEVANT CHANGES)</div>
-                    <pre><code>import { GameContentLoader } from './content/ContentLoader';
+                    <pre><code class="language-typescript">import { GameContentLoader } from './content/ContentLoader';
 
 // Create content loader
 const contentLoader = new GameContentLoader(itemManager);
