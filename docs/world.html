@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>World Module - ASCII World Engine</title>
+        <style>
+            :root {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #eaeaea;
+                --text-secondary: #a0a0a0;
+                --accent: #e94560;
+                --accent-hover: #ff6b6b;
+                --code-bg: #0d1117;
+                --border: #30363d;
+                --success: #238636;
+                --warning: #f0883e;
+                --info: #58a6ff;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "Segoe UI", system-ui, sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                line-height: 1.6;
+            }
+            .container {
+                display: flex;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 280px;
+                background-color: var(--bg-secondary);
+                border-right: 1px solid var(--border);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+            .sidebar-header {
+                padding: 0 20px 20px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 20px;
+            }
+            .sidebar-header h1 {
+                font-size: 1.4rem;
+                color: var(--accent);
+                margin-bottom: 5px;
+            }
+            .sidebar-header .version {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+            }
+            .nav-section {
+                margin-bottom: 15px;
+            }
+            .nav-section-title {
+                padding: 10px 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+            .nav-link {
+                display: block;
+                padding: 8px 20px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.95rem;
+            }
+            .nav-link:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--accent-hover);
+            }
+            .nav-link.active {
+                background-color: var(--bg-tertiary);
+                border-left: 3px solid var(--accent);
+            }
+            .content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 40px;
+                max-width: 900px;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--text-primary);
+            }
+            h2 {
+                font-size: 1.8rem;
+                margin: 40px 0 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+            h3 {
+                font-size: 1.4rem;
+                margin: 30px 0 15px;
+                color: var(--accent);
+            }
+            h4 {
+                font-size: 1.1rem;
+                margin: 25px 0 10px;
+                color: var(--text-primary);
+            }
+            p {
+                margin-bottom: 15px;
+                color: var(--text-primary);
+            }
+            a {
+                color: var(--info);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            pre {
+                background-color: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                overflow-x: auto;
+                margin: 20px 0;
+            }
+            code {
+                font-family: "Fira Code", "Consolas", monospace;
+                font-size: 0.9rem;
+                color: #e6edf3;
+            }
+            code.inline {
+                background-color: var(--code-bg);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            th,
+            td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            th {
+                background-color: var(--bg-tertiary);
+                font-weight: 600;
+                color: var(--accent);
+            }
+            tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            ul,
+            ol {
+                margin: 15px 0;
+                padding-left: 30px;
+            }
+            li {
+                margin-bottom: 8px;
+            }
+            .method {
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                border-left: 4px solid var(--accent);
+            }
+            .method-header {
+                margin-bottom: 15px;
+            }
+            .method-name {
+                font-family: "Fira Code", monospace;
+                font-size: 1.2rem;
+                color: var(--accent);
+                font-weight: 600;
+            }
+            .method-signature {
+                font-family: "Fira Code", monospace;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                margin-top: 5px;
+            }
+            .method-description {
+                margin-bottom: 15px;
+            }
+            .parameters,
+            .returns {
+                margin: 15px 0;
+            }
+            .parameters h4,
+            .returns h4 {
+                color: var(--info);
+                margin-bottom: 10px;
+            }
+            .alert {
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid;
+            }
+            .alert-info {
+                background-color: rgba(88, 166, 255, 0.1);
+                border-color: var(--info);
+            }
+            .alert-warning {
+                background-color: rgba(240, 136, 62, 0.1);
+                border-color: var(--warning);
+            }
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    width: 100%;
+                    position: relative;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .content {
+                    margin-left: 0;
+                    padding: 20px;
+                }
+                .container {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h1>ASCII World</h1>
+                    <div class="version">v0.1.0</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="index.html" class="nav-link">Overview</a>
+                    <a href="getting-started.html" class="nav-link"
+                        >Quick Start</a
+                    >
+                    <a href="examples.html" class="nav-link">Examples</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">API Reference</div>
+                    <a href="core.html" class="nav-link">Core</a>
+                    <a href="ecs.html" class="nav-link">ECS</a>
+                    <a href="display.html" class="nav-link">Display</a>
+                    <a href="world.html" class="nav-link active">World</a>
+                    <a href="time.html" class="nav-link">Time</a>
+                    <a href="physics.html" class="nav-link">Physics</a>
+                    <a href="items.html" class="nav-link">Items</a>
+                    <a href="content.html" class="nav-link">Content</a>
+                    <a href="config.html" class="nav-link">Configuration</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Guides</div>
+                    <a href="modding-guide.html" class="nav-link"
+                        >Modding Guide</a
+                    >
+                </div>
+            </nav>
+
+            <main class="content">
+                <h1>World Module</h1>
+                <p>
+                    World, chunk, and map management. Handles terrain data,
+                    entity storage per chunk, and distance-based update
+                    scheduling for large open worlds.
+                </p>
+
+                <h2>World</h2>
+                <p>
+                    The main world container that manages chunks and coordinates
+                    all world-related systems.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new World()</div>
+                        <div class="method-signature">
+                            constructor(width: number, height: number,
+                            chunkSize: number, ecsWorld: ECSWorld)
+                        </div>
+                    </div>
+                    <pre><code>const world = new World(1000, 1000, 64, ecsWorld);
+world.initialize();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getTileAt()</div>
+                        <div class="method-signature">
+                            getTileAt(x: number, y: number): Tile | null
+                        </div>
+                    </div>
+                    <pre><code>const tile = world.getTileAt(100, 200);
+if (tile && tile.blocksMovement) {
+    console.log('Cannot move here!');
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">setTileAt()</div>
+                        <div class="method-signature">
+                            setTileAt(x: number, y: number, tile: Tile): boolean
+                        </div>
+                    </div>
+                    <pre><code>world.setTileAt(100, 200, TERRAIN.wall);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">isValidPosition()</div>
+                        <div class="method-signature">
+                            isValidPosition(x: number, y: number): boolean
+                        </div>
+                    </div>
+                    <pre><code>if (world.isValidPosition(newX, newY)) {
+    // Can move here
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">setPlayerPosition()</div>
+                        <div class="method-signature">
+                            setPlayerPosition(x: number, y: number): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Updates player position and activates/deactivates chunks
+                        accordingly.
+                    </div>
+                    <pre><code>world.setPlayerPosition(playerX, playerY);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getEntitiesAt()</div>
+                        <div class="method-signature">
+                            getEntitiesAt(x: number, y: number): Entity[]
+                        </div>
+                    </div>
+                    <pre><code>const entities = world.getEntitiesAt(100, 200);
+for (const entity of entities) {
+    console.log(`Entity ${entity.id} is here`);
+}</code></pre>
+                </div>
+
+                <h2>Chunk</h2>
+                <p>64x64 tile container with local coordinate system.</p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getTile()</div>
+                        <div class="method-signature">
+                            getTile(localX: number, localY: number): Tile | null
+                        </div>
+                    </div>
+                    <pre><code>const tile = chunk.getTile(10, 15);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">setTile()</div>
+                        <div class="method-signature">
+                            setTile(localX: number, localY: number, tile: Tile):
+                            boolean
+                        </div>
+                    </div>
+                    <pre><code>chunk.setTile(10, 15, TERRAIN.floor);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">toWorldPosition()</div>
+                        <div class="method-signature">
+                            toWorldPosition(localX: number, localY: number):
+                            Position
+                        </div>
+                    </div>
+                    <pre><code>const worldPos = chunk.toWorldPosition(10, 15);
+// Returns { x: chunkX * 64 + 10, y: chunkY * 64 + 15 }</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">toLocalPosition()</div>
+                        <div class="method-signature">
+                            toLocalPosition(worldX: number, worldY: number):
+                            Position
+                        </div>
+                    </div>
+                    <pre><code>const localPos = chunk.toLocalPosition(500, 500);</code></pre>
+                </div>
+
+                <h2>ChunkManager</h2>
+                <p>
+                    Manages chunk lifecycle, activation, and distance-based
+                    updates.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getOrCreateChunk()</div>
+                        <div class="method-signature">
+                            getOrCreateChunk(chunkX: number, chunkY: number):
+                            Chunk
+                        </div>
+                    </div>
+                    <pre><code>const chunk = chunkManager.getOrCreateChunk(5, 5);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">worldToChunk()</div>
+                        <div class="method-signature">
+                            worldToChunk(worldX: number, worldY: number):
+                            ChunkCoord
+                        </div>
+                    </div>
+                    <pre><code>const coord = chunkManager.worldToChunk(500, 500);
+// Returns { chunkX: 7, chunkY: 7 } for 64x64 chunks</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getActiveChunks()</div>
+                        <div class="method-signature">
+                            getActiveChunks(): Chunk[]
+                        </div>
+                    </div>
+                    <pre><code>const activeChunks = chunkManager.getActiveChunks();
+// Returns 9 chunks (3x3 grid around player)</code></pre>
+                </div>
+
+                <h2>Terrain</h2>
+                <p>Built-in terrain types with default properties.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Terrain</th>
+                            <th>Char</th>
+                            <th>Blocks Movement</th>
+                            <th>Blocks Light</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>TERRAIN.floor</code></td>
+                            <td>.</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Default floor</td>
+                        </tr>
+                        <tr>
+                            <td><code>TERRAIN.wall</code></td>
+                            <td>#</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                            <td>Solid wall</td>
+                        </tr>
+                        <tr>
+                            <td><code>TERRAIN.water</code></td>
+                            <td>~</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Water</td>
+                        </tr>
+                        <tr>
+                            <td><code>TERRAIN.tree</code></td>
+                            <td>T</td>
+                            <td>Yes</td>
+                            <td>No</td>
+                            <td>Tree (transparent)</td>
+                        </tr>
+                        <tr>
+                            <td><code>TERRAIN.door</code></td>
+                            <td>+</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                            <td>Door</td>
+                        </tr>
+                        <tr>
+                            <td><code>TERRAIN.stairs</code></td>
+                            <td>&gt;</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Stairs</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Tile Interface</h3>
+                <pre><code>interface Tile {
+    terrain: TerrainType;
+    blocksMovement: boolean;
+    blocksLight: boolean;
+    transparent: boolean;
+    char?: string;
+    fg?: string;
+    bg?: string;
+}</code></pre>
+
+                <h2>UpdateScheduler</h2>
+                <p>
+                    Distance-based update scheduling for performance
+                    optimization.
+                </p>
+
+                <h3>Update Frequency by Distance</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Distance</th>
+                            <th>Update Interval</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0-1 chunks</td>
+                            <td>Every turn</td>
+                            <td>Full updates</td>
+                        </tr>
+                        <tr>
+                            <td>2-3 chunks</td>
+                            <td>Every 5 turns</td>
+                            <td>Course updates</td>
+                        </tr>
+                        <tr>
+                            <td>4-6 chunks</td>
+                            <td>Every 20 turns</td>
+                            <td>Course updates</td>
+                        </tr>
+                        <tr>
+                            <td>7+ chunks</td>
+                            <td>Every 100 turns</td>
+                            <td>Course updates</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>MapManager</h2>
+                <p>Manages multiple map definitions and loading.</p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">registerMap()</div>
+                        <div class="method-signature">
+                            registerMap(metadata: MapMetadata): void
+                        </div>
+                    </div>
+                    <pre><code>mapManager.registerMap({
+    id: 'dungeon_level_1',
+    name: 'Level 1 - The Entrance',
+    description: 'The upper level of the ancient dungeon',
+    size: { width: 500, height: 500 }
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">loadMap()</div>
+                        <div class="method-signature">
+                            loadMap(id: string, width?: number, height?:
+                            number): World
+                        </div>
+                    </div>
+                    <pre><code>const world = mapManager.loadMap('dungeon_level_1');</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">createDefaultWorld()</div>
+                        <div class="method-signature">
+                            createDefaultWorld(): World
+                        </div>
+                    </div>
+                    <pre><code>const world = mapManager.createDefaultWorld();
+// Creates 1000x1000 world with default settings</code></pre>
+                </div>
+
+                <h2>Complete Example</h2>
+                <pre><code>import { World, TERRAIN } from 'ascii-world';
+
+// Create world
+const world = new World(1000, 1000, 64, ecsWorld);
+world.initialize();
+
+// Get tile
+const tile = world.getTileAt(100, 100);
+console.log(tile?.char);  // '.' for floor
+
+// Set custom tile
+world.setTileAt(100, 100, TERRAIN.wall);
+
+// Check position validity
+if (world.isValidPosition(500, 500)) {
+    // Can move here
+}
+
+// Update player position (activates nearby chunks)
+world.setPlayerPosition(playerX, playerY);
+
+// Get entities at position
+const entities = world.getEntitiesAt(100, 200);
+for (const entity of entities) {
+    console.log(`Found entity: ${entity.id}`);
+}</code></pre>
+
+                <div class="alert alert-info">
+                    <strong>Performance Note:</strong> Chunks are lazily created
+                    when accessed. Only chunks near the player are kept active
+                    (3x3 grid by default), minimizing memory usage in large
+                    worlds.
+                </div>
+
+                <div class="footer">
+                    <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>

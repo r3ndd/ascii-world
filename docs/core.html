@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Core Module - ASCII World Engine</title>
+        <style>
+            :root {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #eaeaea;
+                --text-secondary: #a0a0a0;
+                --accent: #e94560;
+                --accent-hover: #ff6b6b;
+                --code-bg: #0d1117;
+                --border: #30363d;
+                --success: #238636;
+                --warning: #f0883e;
+                --info: #58a6ff;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "Segoe UI", system-ui, sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                line-height: 1.6;
+            }
+            .container {
+                display: flex;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 280px;
+                background-color: var(--bg-secondary);
+                border-right: 1px solid var(--border);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+            .sidebar-header {
+                padding: 0 20px 20px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 20px;
+            }
+            .sidebar-header h1 {
+                font-size: 1.4rem;
+                color: var(--accent);
+                margin-bottom: 5px;
+            }
+            .sidebar-header .version {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+            }
+            .nav-section {
+                margin-bottom: 15px;
+            }
+            .nav-section-title {
+                padding: 10px 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+            .nav-link {
+                display: block;
+                padding: 8px 20px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.95rem;
+            }
+            .nav-link:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--accent-hover);
+            }
+            .nav-link.active {
+                background-color: var(--bg-tertiary);
+                border-left: 3px solid var(--accent);
+            }
+            .content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 40px;
+                max-width: 900px;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--text-primary);
+            }
+            h2 {
+                font-size: 1.8rem;
+                margin: 40px 0 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+            h3 {
+                font-size: 1.4rem;
+                margin: 30px 0 15px;
+                color: var(--accent);
+            }
+            h4 {
+                font-size: 1.1rem;
+                margin: 25px 0 10px;
+                color: var(--text-primary);
+            }
+            p {
+                margin-bottom: 15px;
+                color: var(--text-primary);
+            }
+            a {
+                color: var(--info);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            pre {
+                background-color: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                overflow-x: auto;
+                margin: 20px 0;
+            }
+            code {
+                font-family: "Fira Code", "Consolas", monospace;
+                font-size: 0.9rem;
+                color: #e6edf3;
+            }
+            code.inline {
+                background-color: var(--code-bg);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            th,
+            td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            th {
+                background-color: var(--bg-tertiary);
+                font-weight: 600;
+                color: var(--accent);
+            }
+            tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            ul,
+            ol {
+                margin: 15px 0;
+                padding-left: 30px;
+            }
+            li {
+                margin-bottom: 8px;
+            }
+            .method {
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                border-left: 4px solid var(--accent);
+            }
+            .method-header {
+                margin-bottom: 15px;
+            }
+            .method-name {
+                font-family: "Fira Code", monospace;
+                font-size: 1.2rem;
+                color: var(--accent);
+                font-weight: 600;
+            }
+            .method-signature {
+                font-family: "Fira Code", monospace;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                margin-top: 5px;
+            }
+            .method-description {
+                margin-bottom: 15px;
+            }
+            .parameters,
+            .returns {
+                margin: 15px 0;
+            }
+            .parameters h4,
+            .returns h4 {
+                color: var(--info);
+                margin-bottom: 10px;
+            }
+            .alert {
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid;
+            }
+            .alert-info {
+                background-color: rgba(88, 166, 255, 0.1);
+                border-color: var(--info);
+            }
+            .alert-warning {
+                background-color: rgba(240, 136, 62, 0.1);
+                border-color: var(--warning);
+            }
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    width: 100%;
+                    position: relative;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .content {
+                    margin-left: 0;
+                    padding: 20px;
+                }
+                .container {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h1>ASCII World</h1>
+                    <div class="version">v0.1.0</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="index.html" class="nav-link">Overview</a>
+                    <a href="getting-started.html" class="nav-link"
+                        >Quick Start</a
+                    >
+                    <a href="examples.html" class="nav-link">Examples</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">API Reference</div>
+                    <a href="core.html" class="nav-link active">Core</a>
+                    <a href="ecs.html" class="nav-link">ECS</a>
+                    <a href="display.html" class="nav-link">Display</a>
+                    <a href="world.html" class="nav-link">World</a>
+                    <a href="time.html" class="nav-link">Time</a>
+                    <a href="physics.html" class="nav-link">Physics</a>
+                    <a href="items.html" class="nav-link">Items</a>
+                    <a href="content.html" class="nav-link">Content</a>
+                    <a href="config.html" class="nav-link">Configuration</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Guides</div>
+                    <a href="modding-guide.html" class="nav-link"
+                        >Modding Guide</a
+                    >
+                </div>
+            </nav>
+
+            <main class="content">
+                <h1>Core Module</h1>
+                <p>
+                    The Core module provides the foundation of the ASCII World
+                    Engine, including the main Engine class, configuration
+                    management, event system, and common type definitions.
+                </p>
+
+                <h2>Engine</h2>
+                <p>
+                    The main entry point for the game engine. Manages
+                    initialization, lifecycle, and coordinates between all
+                    systems.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new Engine()</div>
+                        <div class="method-signature">constructor()</div>
+                    </div>
+                    <div class="method-description">
+                        Creates a new Engine instance. Uses the global event bus
+                        and loads configuration automatically.
+                    </div>
+                    <pre><code>const engine = new Engine();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">initialize()</div>
+                        <div class="method-signature">
+                            async initialize(): Promise&lt;void&gt;
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Initializes the engine, loading configuration and
+                        emitting initialization events.
+                    </div>
+                    <pre><code>await engine.initialize();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">start()</div>
+                        <div class="method-signature">start(): void</div>
+                    </div>
+                    <div class="method-description">
+                        Starts the engine and emits the 'engine:started' event.
+                    </div>
+                    <pre><code>engine.start();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">stop()</div>
+                        <div class="method-signature">stop(): void</div>
+                    </div>
+                    <div class="method-description">
+                        Stops the engine and emits the 'engine:stopped' event.
+                    </div>
+                    <pre><code>engine.stop();</code></pre>
+                </div>
+
+                <h2>EventBus</h2>
+                <p>
+                    Pub/sub event system for decoupled communication between
+                    systems. The engine provides a global event bus instance.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">on()</div>
+                        <div class="method-signature">
+                            on&lt;T&gt;(event: string, handler: (data: T) =>
+                            void): () => void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Registers an event handler. Returns an unsubscribe
+                        function.
+                    </div>
+                    <div class="parameters">
+                        <h4>Parameters</h4>
+                        <ul>
+                            <li>
+                                <code>event</code> - Event name to listen for
+                            </li>
+                            <li>
+                                <code>handler</code> - Function called when
+                                event is emitted
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="returns">
+                        <h4>Returns</h4>
+                        <p>Function to unsubscribe from the event</p>
+                    </div>
+                    <pre><code>const unsubscribe = eventBus.on('entity:moved', (data) => {
+    console.log(`Entity ${data.entityId} moved to (${data.x}, ${data.y})`);
+});
+
+// Later, to unsubscribe:
+unsubscribe();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">emit()</div>
+                        <div class="method-signature">
+                            emit&lt;T&gt;(event: string, data: T): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Emits an event to all registered handlers.
+                    </div>
+                    <pre><code>eventBus.emit('player:joined', { playerId: 1, name: 'Hero' });</code></pre>
+                </div>
+
+                <h3>Global Event Bus</h3>
+                <p>
+                    A singleton event bus is available for application-wide
+                    events:
+                </p>
+                <pre><code>import { globalEventBus } from 'ascii-world';
+
+globalEventBus.on('game:started', () => {
+    console.log('Game started!');
+});</code></pre>
+
+                <h2>Config</h2>
+                <p>
+                    Singleton configuration manager for world settings, action
+                    costs, and debug flags.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getInstance()</div>
+                        <div class="method-signature">
+                            static getInstance(): Config
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Returns the singleton Config instance.
+                    </div>
+                    <pre><code>const config = Config.getInstance();
+console.log(config.world.width);  // 1000</code></pre>
+                </div>
+
+                <h3>Configuration Properties</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>world.width</code></td>
+                            <td>number</td>
+                            <td>World width in tiles (default: 1000)</td>
+                        </tr>
+                        <tr>
+                            <td><code>world.height</code></td>
+                            <td>number</td>
+                            <td>World height in tiles (default: 1000)</td>
+                        </tr>
+                        <tr>
+                            <td><code>world.chunkSize</code></td>
+                            <td>number</td>
+                            <td>Chunk size in tiles (default: 64)</td>
+                        </tr>
+                        <tr>
+                            <td><code>world.maxActiveChunks</code></td>
+                            <td>number</td>
+                            <td>Max chunks to update (default: 9)</td>
+                        </tr>
+                        <tr>
+                            <td><code>debug</code></td>
+                            <td>boolean</td>
+                            <td>Enable debug logging</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Types</h2>
+                <p>Common type definitions used throughout the engine.</p>
+
+                <h3>Position</h3>
+                <pre><code>interface Position {
+    x: number;
+    y: number;
+}</code></pre>
+
+                <h3>Size</h3>
+                <pre><code>interface Size {
+    width: number;
+    height: number;
+}</code></pre>
+
+                <h3>Direction</h3>
+                <pre><code>type Direction = 'north' | 'south' | 'east' | 'west' |
+                 'northeast' | 'northwest' | 'southeast' | 'southwest';</code></pre>
+
+                <h3>ChunkCoord</h3>
+                <pre><code>interface ChunkCoord {
+    chunkX: number;
+    chunkY: number;
+}</code></pre>
+
+                <h3>Bounds</h3>
+                <pre><code>interface Bounds {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+}</code></pre>
+
+                <h2>Common Events</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Data</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>engine:initialized</code></td>
+                            <td><code>{ version: string }</code></td>
+                            <td>Engine finished initialization</td>
+                        </tr>
+                        <tr>
+                            <td><code>engine:started</code></td>
+                            <td><code>{}</code></td>
+                            <td>Engine started</td>
+                        </tr>
+                        <tr>
+                            <td><code>engine:stopped</code></td>
+                            <td><code>{}</code></td>
+                            <td>Engine stopped</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-info">
+                    <strong>Tip:</strong> Use the EventBus for all cross-system
+                    communication. This keeps your code decoupled and testable.
+                </div>
+
+                <div class="footer">
+                    <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>

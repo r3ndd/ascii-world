@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Module - ASCII World Engine</title>
+    <style>
+        :root { --bg-primary: #1a1a2e; --bg-secondary: #16213e; --bg-tertiary: #0f3460; --text-primary: #eaeaea; --text-secondary: #a0a0a0; --accent: #e94560; --accent-hover: #ff6b6b; --code-bg: #0d1117; --border: #30363d; --success: #238636; --warning: #f0883e; --info: #58a6ff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-primary); color: var(--text-primary); line-height: 1.6; }
+        .container { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background-color: var(--bg-secondary); border-right: 1px solid var(--border); position: fixed; height: 100vh; overflow-y: auto; padding: 20px 0; }
+        .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .sidebar-header h1 { font-size: 1.4rem; color: var(--accent); margin-bottom: 5px; }
+        .sidebar-header .version { font-size: 0.85rem; color: var(--text-secondary); }
+        .nav-section { margin-bottom: 15px; }
+        .nav-section-title { padding: 10px 20px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); font-weight: 600; }
+        .nav-link { display: block; padding: 8px 20px; color: var(--text-primary); text-decoration: none; transition: all 0.2s ease; font-size: 0.95rem; }
+        .nav-link:hover { background-color: var(--bg-tertiary); color: var(--accent-hover); }
+        .nav-link.active { background-color: var(--bg-tertiary); border-left: 3px solid var(--accent); }
+        .content { flex: 1; margin-left: 280px; padding: 40px; max-width: 900px; }
+        h1 { font-size: 2.5rem; margin-bottom: 20px; color: var(--text-primary); }
+        h2 { font-size: 1.8rem; margin: 40px 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); color: var(--text-primary); }
+        h3 { font-size: 1.4rem; margin: 30px 0 15px; color: var(--accent); }
+        h4 { font-size: 1.1rem; margin: 25px 0 10px; color: var(--text-primary); }
+        p { margin-bottom: 15px; color: var(--text-primary); }
+        a { color: var(--info); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        pre { background-color: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow-x: auto; margin: 20px 0; }
+        code { font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.9rem; color: #e6edf3; }
+        code.inline { background-color: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background-color: var(--bg-secondary); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--bg-tertiary); font-weight: 600; color: var(--accent); }
+        tr:hover { background-color: rgba(255, 255, 255, 0.05); }
+        ul, ol { margin: 15px 0; padding-left: 30px; }
+        li { margin-bottom: 8px; }
+        .method { margin: 30px 0; padding: 20px; background-color: var(--bg-secondary); border-radius: 8px; border-left: 4px solid var(--accent); }
+        .method-header { margin-bottom: 15px; }
+        .method-name { font-family: 'Fira Code', monospace; font-size: 1.2rem; color: var(--accent); font-weight: 600; }
+        .method-signature { font-family: 'Fira Code', monospace; color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px; }
+        .method-description { margin-bottom: 15px; }
+        .parameters, .returns { margin: 15px 0; }
+        .parameters h4, .returns h4 { color: var(--info); margin-bottom: 10px; }
+        .alert { padding: 15px 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid; }
+        .alert-info { background-color: rgba(88, 166, 255, 0.1); border-color: var(--info); }
+        .alert-warning { background-color: rgba(240, 136, 62, 0.1); border-color: var(--warning); }
+        .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 0.9rem; }
+        @media (max-width: 768px) { .sidebar { width: 100%; position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--border); } .content { margin-left: 0; padding: 20px; } .container { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1>ASCII World</h1>
+                <div class="version">v0.1.0</div>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Getting Started</div>
+                <a href="index.html" class="nav-link">Overview</a>
+                <a href="getting-started.html" class="nav-link">Quick Start</a>
+                <a href="examples.html" class="nav-link">Examples</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">API Reference</div>
+                <a href="core.html" class="nav-link">Core</a>
+                <a href="ecs.html" class="nav-link">ECS</a>
+                <a href="display.html" class="nav-link">Display</a>
+                <a href="world.html" class="nav-link">World</a>
+                <a href="time.html" class="nav-link">Time</a>
+                <a href="physics.html" class="nav-link">Physics</a>
+                <a href="items.html" class="nav-link">Items</a>
+                <a href="content.html" class="nav-link active">Content</a>
+                <a href="config.html" class="nav-link">Configuration</a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Guides</div>
+                <a href="modding-guide.html" class="nav-link">Modding Guide</a>
+            </div>
+        </nav>
+
+        <main class="content">
+            <h1>Content Module</h1>
+            <p>Content loading pipeline, JSON content packs, map definitions, world generation, and mod system. Build games with data-driven content that can be extended without code changes.</p>
+
+            <h2>ContentPack</h2>
+            <p>A JSON bundle containing items, creatures, recipes, and terrain definitions. Content packs are the primary way to add game content.</p>
+            <pre><code>interface ContentPack {
+    id: string;                    // Unique pack identifier
+    name: string;                  // Display name
+    version: string;               // Semantic version
+    author?: string;               // Creator name
+    description?: string;          // Description
+    dependencies?: string[];       // Required pack IDs
+    items?: ItemTemplate[];        // Item definitions
+    creatures?: CreatureTemplate[]; // Creature definitions
+    recipes?: Recipe[];            // Crafting recipes
+    terrains?: TerrainDefinition[]; // Custom terrain
+}</code></pre>
+
+            <h2>CreatureTemplate</h2>
+            <p>Template for spawning creature entities.</p>
+            <pre><code>interface CreatureTemplate {
+    id: string;
+    name: string;
+    description: string;
+    character: string;             // Display char
+    foreground: string;            // Color
+    background?: string;
+    health: number;
+    speed: number;                 // Action speed
+    faction?: string;              // 'friendly', 'hostile', etc.
+    tags: string[];
+    ai?: {
+        type: string;              // AI behavior type
+        aggression: number;        // 0-1 aggression level
+        visionRange: number;       // Sight distance
+    };
+    loot?: string[];               // Item template IDs to drop
+}</code></pre>
+
+            <h2>Recipe</h2>
+            <p>Crafting recipe definition.</p>
+            <pre><code>interface Recipe {
+    id: string;
+    name: string;
+    description: string;
+    category: 'crafting' | 'construction' | 'cooking';
+    ingredients: RecipeIngredient[];
+    results: RecipeIngredient[];
+    timeCost: number;              // Ticks to craft
+    requiredTools?: string[];      // Required tool item IDs
+    requiredSkills?: Record<string, number>;  // Skill requirements
+    station?: string;              // Required crafting station
+}
+
+interface RecipeIngredient {
+    itemId: string;
+    quantity: number;
+}</code></pre>
+
+            <h2>MapDefinition</h2>
+            <p>Defines a complete game world with size, generator, and spawn points.</p>
+            <pre><code>interface MapDefinition {
+    id: string;
+    name: string;
+    description: string;
+    width: number;                 // World width in tiles
+    height: number;                // World height in tiles
+    chunkSize: number;             // Chunk dimensions (usually 64)
+    generator?: string;            // Generator name: 'wilderness', 'dungeon', 'cave', 'city'
+    generatorParams?: Record<string, unknown>;  // Generator-specific params
+    predefinedChunks?: PredefinedChunk[];       // Hand-crafted chunks
+    spawnPoints?: SpawnPoint[];    // Player/NPC spawn locations
+}</code></pre>
+
+            <h2>ContentLoader</h2>
+            <p>Loads and manages content packs with dependency resolution.</p>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">new ContentLoader()</div>
+                    <div class="method-signature">constructor(eventBus: EventBus)</div>
+                </div>
+                <pre><code>const contentLoader = new ContentLoader(eventBus);</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">loadContentPack()</div>
+                    <div class="method-signature">loadContentPack(pack: ContentPack): void</div>
+                </div>
+                <div class="method-description">Load a content pack. Validates dependencies. Emits <code>content:packLoaded</code> event.</div>
+                <pre><code>contentLoader.loadContentPack({
+    id: 'fantasy_weapons',
+    name: 'Fantasy Weapons Pack',
+    version: '1.0.0',
+    dependencies: ['core_content'],
+    items: [
+        {
+            id: 'sword_flaming',
+            name: 'Flaming Sword',
+            category: ItemCategory.WEAPON,
+            character: '/',
+            foreground: '#ff4500',
+            properties: { weight: 2, volume: 3, value: 500 }
+        }
+    ]
+});</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">loadContentPackFromJSON()</div>
+                    <div class="method-signature">loadContentPackFromJSON(json: string): void</div>
+                </div>
+                <pre><code>const json = await fetch('content/weapons.json').then(r => r.text());
+contentLoader.loadContentPackFromJSON(json);</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">getAllItemTemplates()</div>
+                    <div class="method-signature">getAllItemTemplates(): ItemTemplate[]</div>
+                </div>
+                <pre><code>const allItems = contentLoader.getAllItemTemplates();
+console.log(`Loaded ${allItems.length} item types`);</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">getAllCreatureTemplates()</div>
+                    <div class="method-signature">getAllCreatureTemplates(): CreatureTemplate[]</div>
+                </div>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">getAllRecipes()</div>
+                    <div class="method-signature">getAllRecipes(): Recipe[]</div>
+                </div>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">registerTerrain()</div>
+                    <div class="method-signature">registerTerrain(definition: TerrainDefinition): void</div>
+                </div>
+                <pre><code>contentLoader.registerTerrain({
+    id: 'lava',
+    name: 'Lava',
+    character: '~',
+    foreground: '#ff4500',
+    background: '#8b0000',
+    blocksMovement: true,
+    blocksLight: false,
+    transparent: true
+});</code></pre>
+            </div>
+
+            <h2>MapLoader</h2>
+            <p>Loads map definitions and creates game worlds.</p>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">new MapLoader()</div>
+                    <div class="method-signature">constructor(contentLoader: ContentLoader, eventBus: EventBus)</div>
+                </div>
+                <pre><code>const mapLoader = new MapLoader(contentLoader, eventBus);</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">loadMapDefinition()</div>
+                    <div class="method-signature">loadMapDefinition(definition: MapDefinition): void</div>
+                </div>
+                <pre><code>mapLoader.loadMapDefinition({
+    id: 'dungeon_level_1',
+    name: 'Level 1 - The Entrance',
+    description: 'The upper level of the ancient dungeon',
+    width: 500,
+    height: 500,
+    chunkSize: 64,
+    generator: 'dungeon',
+    generatorParams: { roomChance: 0.4, seed: 12345 },
+    spawnPoints: [
+        { x: 32, y: 32, type: 'player', tags: ['start'] }
+    ]
+});</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">createWorldFromDefinition()</div>
+                    <div class="method-signature">createWorldFromDefinition(mapId: string, ecsWorld: ECSWorld, generatorOverrides?: Record&lt;string, unknown&gt;): World</div>
+                </div>
+                <div class="method-description">Generate a complete game world from a map definition. Applies predefined chunks, runs generator, and places spawn points.</div>
+                <pre><code>const world = mapLoader.createWorldFromDefinition('dungeon_level_1', ecsWorld);
+// World is ready with terrain and spawn points defined</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">getMapMetadataList()</div>
+                    <div class="method-signature">getMapMetadataList(): MapMetadata[]</div>
+                </div>
+                <div class="method-description">Get metadata for all loaded maps. Useful for map selection UI.</div>
+                <pre><code>const maps = mapLoader.getMapMetadataList();
+for (const map of maps) {
+    console.log(`${map.name}: ${map.size.width}x${map.size.height}`);
+}</code></pre>
+            </div>
+
+            <h2>WorldGenerator</h2>
+            <p>Pluggable world generation system with built-in generators.</p>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">registerGenerator()</div>
+                    <div class="method-signature">registerGenerator(name: string, generator: ChunkGenerator): void</div>
+                </div>
+                <div class="method-description">Register a custom chunk generator function.</div>
+                <pre><code>mapLoader.worldGenerator.registerGenerator('maze', (chunk, context) => {
+    // Generate maze-like terrain in this chunk
+    for (let y = 0; y < chunk.size; y++) {
+        for (let x = 0; x < chunk.size; x++) {
+            // Your generation logic here
+            chunk.setTile(x, y, TERRAIN.floor);
+        }
+    }
+});</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">generateWorld()</div>
+                    <div class="method-signature">generateWorld(world: World, generatorName: string, params?: Record&lt;string, unknown&gt;): void</div>
+                </div>
+                <div class="method-description">Apply a generator to a world. Generator runs lazily as chunks are accessed.</div>
+                <pre><code>mapLoader.worldGenerator.generateWorld(world, 'cave', {
+    fillPercent: 0.45,
+    iterations: 5,
+    seed: 12345
+});</code></pre>
+            </div>
+
+            <h3>Built-in Generators</h3>
+            <table>
+                <thead>
+                    <tr><th>Generator</th><th>Description</th><th>Parameters</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>wilderness</code></td>
+                        <td>Forests, clearings, and water</td>
+                        <td>treeDensity (0-1), waterChance (0-1)</td>
+                    </tr>
+                    <tr>
+                        <td><code>dungeon</code></td>
+                        <td>Room-based dungeons with corridors</td>
+                        <td>roomChance (0-1)</td>
+                    </tr>
+                    <tr>
+                        <td><code>cave</code></td>
+                        <td>Cellular automata caves</td>
+                        <td>fillPercent (0-1), iterations</td>
+                    </tr>
+                    <tr>
+                        <td><code>city</code></td>
+                        <td>Grid streets and buildings</td>
+                        <td>blockSize, buildingDensity (0-1)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>GeneratorContext</h3>
+            <p>Passed to generator functions.</p>
+            <pre><code>interface GeneratorContext {
+    world: World;                  // The world being generated
+    rng: () => number;            // Seeded random number generator (0-1)
+    params: Record<string, unknown>;  // Generator parameters
+}
+
+type ChunkGenerator = (chunk: Chunk, context: GeneratorContext) => void;</code></pre>
+
+            <h2>Mod System</h2>
+            <p>JavaScript-based modding with full API access.</p>
+
+            <h3>Mod Interface</h3>
+            <pre><code>interface Mod {
+    id: string;
+    name: string;
+    version: string;
+    author?: string;
+    description?: string;
+    dependencies?: string[];
+    initialize(api: ModAPI): void;  // Called when mod loads
+    cleanup?(): void;               // Optional cleanup
+}</code></pre>
+
+            <h3>ModAPI</h3>
+            <p>API provided to mods for content registration.</p>
+            <pre><code>interface ModAPI {
+    eventBus: EventBus;
+    contentLoader: ContentLoader;
+    mapLoader: MapLoader;
+    worldGenerator: WorldGenerator;
+    registerItem: (template: ItemTemplate) => void;
+    registerCreature: (template: CreatureTemplate) => void;
+    registerRecipe: (recipe: Recipe) => void;
+    registerTerrain: (definition: TerrainDefinition) => void;
+    registerGenerator: (name: string, generator: ChunkGenerator) => void;
+    createEntity: (templateId: string, x: number, y: number, ecsWorld: ECSWorld) => Entity | null;
+    spawnItem: (templateId: string, quantity: number, x: number, y: number, itemManager: any) => any;
+}</code></pre>
+
+            <h2>ModLoader</h2>
+            <p>Manages mod loading and lifecycle.</p>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">loadMod()</div>
+                    <div class="method-signature">loadMod(mod: Mod): void</div>
+                </div>
+                <div class="method-description">Load a mod with dependency checking. Emits <code>mod:loaded</code> event.</div>
+                <pre><code>const myMod: Mod = {
+    id: 'super_creatures',
+    name: 'Super Creatures Mod',
+    version: '1.0.0',
+    dependencies: ['core_content'],
+    initialize(api) {
+        // Register new creature
+        api.registerCreature({
+            id: 'dragon_red',
+            name: 'Red Dragon',
+            character: 'D',
+            foreground: '#ff0000',
+            health: 500,
+            speed: 150,
+            tags: ['boss', 'flying'],
+            ai: { type: 'aggressive', aggression: 1.0, visionRange: 15 }
+        });
+
+        // Register custom generator
+        api.registerGenerator('dragon_lair', (chunk, context) => {
+            // Custom generation logic
+        });
+    }
+};
+
+modLoader.loadMod(myMod);</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">initializeMods()</div>
+                    <div class="method-signature">initializeMods(itemManager?: any): void</div>
+                </div>
+                <div class="method-description">Initialize all loaded mods in dependency order. Must be called after loading mods.</div>
+                <pre><code>modLoader.initializeMods(itemManager);</code></pre>
+            </div>
+
+            <h2>ContentManager</h2>
+            <p>Facade class combining all content systems.</p>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">new ContentManager()</div>
+                    <div class="method-signature">constructor(eventBus: EventBus)</div>
+                </div>
+                <pre><code>const contentManager = new ContentManager(eventBus);
+// Provides access to contentLoader, mapLoader, and modLoader</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">loadContentPack()</div>
+                    <div class="method-signature">loadContentPack(json: string): void</div>
+                </div>
+                <pre><code>const json = await fetch('content/pack.json').then(r => r.text());
+contentManager.loadContentPack(json);</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">loadMap()</div>
+                    <div class="method-signature">loadMap(json: string): void</div>
+                </div>
+                <pre><code>const mapJson = await fetch('maps/dungeon.json').then(r => r.text());
+contentManager.loadMap(mapJson);</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">createWorld()</div>
+                    <div class="method-signature">createWorld(mapId: string, ecsWorld: ECSWorld): World</div>
+                </div>
+                <pre><code>const world = contentManager.createWorld('dungeon_level_1', ecsWorld);</code></pre>
+            </div>
+
+            <div class="method">
+                <div class="method-header">
+                    <div class="method-name">getAvailableMaps()</div>
+                    <div class="method-signature">getAvailableMaps(): MapMetadata[]</div>
+                </div>
+                <pre><code>const maps = contentManager.getAvailableMaps();
+// Returns list for map selection UI</code></pre>
+            </div>
+
+            <h2>Complete Example</h2>
+            <pre><code>import { ContentManager } from 'ascii-world';
+
+// Create content manager
+const content = new ContentManager(eventBus);
+
+// Load content pack from JSON
+const packJson = await fetch('content/fantasy_pack.json').then(r => r.text());
+content.loadContentPack(packJson);
+
+// Load map definition
+const mapJson = await fetch('maps/dungeon.json').then(r => r.text());
+content.loadMap(mapJson);
+
+// Load a JavaScript mod
+const combatMod: Mod = {
+    id: 'enhanced_combat',
+    name: 'Enhanced Combat',
+    version: '1.0.0',
+    initialize(api) {
+        // Add new weapon
+        api.registerItem({
+            id: 'sword_great',
+            name: 'Greatsword',
+            category: ItemCategory.WEAPON,
+            character: '/',
+            foreground: '#silver',
+            properties: {
+                weight: 4,
+                volume: 5,
+                durability: 200,
+                value: 100
+            }
+        });
+
+        // Listen to events
+        api.eventBus.on('combat:hit', (data) => {
+            console.log(`Combat hit: ${data.damage} damage`);
+        });
+    }
+};
+
+content.loadMod(combatMod);
+content.initializeMods(itemManager);
+
+// Create world
+const world = content.createWorld('dungeon_level_1', ecsWorld);
+console.log('World ready!');</code></pre>
+
+            <h2>Events</h2>
+            <table>
+                <thead>
+                    <tr><th>Event</th><th>Payload</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>content:packLoaded</code></td><td>{ packId, name }</td><td>Content pack loaded</td></tr>
+                    <tr><td><code>map:definitionLoaded</code></td><td>{ mapId, name, width, height }</td><td>Map definition loaded</td></tr>
+                    <tr><td><code>map:worldCreated</code></td><td>{ mapId, worldWidth, worldHeight }</td><td>World created from definition</td></tr>
+                    <tr><td><code>map:spawnPoint</code></td><td>{ x, y, type, tags? }</td><td>Spawn point encountered</td></tr>
+                    <tr><td><code>mod:loaded</code></td><td>{ modId, name, version }</td><td>Mod loaded</td></tr>
+                    <tr><td><code>mod:initialized</code></td><td>{ modId }</td><td>Mod initialized</td></tr>
+                    <tr><td><code>mod:initError</code></td><td>{ modId, error }</td><td>Mod initialization failed</td></tr>
+                    <tr><td><code>generation:started</code></td><td>{ generator, seed }</td><td>World generation started</td></tr>
+                </tbody>
+            </table>
+
+            <div class="alert alert-info">
+                <strong>Content Directory:</strong> Place content packs in <code>content/core/</code> and maps in <code>content/maps/</code>. Mods go in <code>content/mods/</code>.
+            </div>
+
+            <div class="footer">
+                <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Configuration - ASCII World Engine</title>
+        <style>
+            :root {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #eaeaea;
+                --text-secondary: #a0a0a0;
+                --accent: #e94560;
+                --accent-hover: #ff6b6b;
+                --code-bg: #0d1117;
+                --border: #30363d;
+                --success: #238636;
+                --warning: #f0883e;
+                --info: #58a6ff;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "Segoe UI", system-ui, sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                line-height: 1.6;
+            }
+            .container {
+                display: flex;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 280px;
+                background-color: var(--bg-secondary);
+                border-right: 1px solid var(--border);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+            .sidebar-header {
+                padding: 0 20px 20px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 20px;
+            }
+            .sidebar-header h1 {
+                font-size: 1.4rem;
+                color: var(--accent);
+                margin-bottom: 5px;
+            }
+            .sidebar-header .version {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+            }
+            .nav-section {
+                margin-bottom: 15px;
+            }
+            .nav-section-title {
+                padding: 10px 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+            .nav-link {
+                display: block;
+                padding: 8px 20px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.95rem;
+            }
+            .nav-link:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--accent-hover);
+            }
+            .nav-link.active {
+                background-color: var(--bg-tertiary);
+                border-left: 3px solid var(--accent);
+            }
+            .content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 40px;
+                max-width: 900px;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--text-primary);
+            }
+            h2 {
+                font-size: 1.8rem;
+                margin: 40px 0 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+            h3 {
+                font-size: 1.4rem;
+                margin: 30px 0 15px;
+                color: var(--accent);
+            }
+            h4 {
+                font-size: 1.1rem;
+                margin: 25px 0 10px;
+                color: var(--text-primary);
+            }
+            p {
+                margin-bottom: 15px;
+                color: var(--text-primary);
+            }
+            a {
+                color: var(--info);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            pre {
+                background-color: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                overflow-x: auto;
+                margin: 20px 0;
+            }
+            code {
+                font-family: "Fira Code", "Consolas", monospace;
+                font-size: 0.9rem;
+                color: #e6edf3;
+            }
+            code.inline {
+                background-color: var(--code-bg);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            th,
+            td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            th {
+                background-color: var(--bg-tertiary);
+                font-weight: 600;
+                color: var(--accent);
+            }
+            tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            ul,
+            ol {
+                margin: 15px 0;
+                padding-left: 30px;
+            }
+            li {
+                margin-bottom: 8px;
+            }
+            .method {
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                border-left: 4px solid var(--accent);
+            }
+            .method-header {
+                margin-bottom: 15px;
+            }
+            .method-name {
+                font-family: "Fira Code", monospace;
+                font-size: 1.2rem;
+                color: var(--accent);
+                font-weight: 600;
+            }
+            .method-signature {
+                font-family: "Fira Code", monospace;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                margin-top: 5px;
+            }
+            .method-description {
+                margin-bottom: 15px;
+            }
+            .parameters,
+            .returns {
+                margin: 15px 0;
+            }
+            .parameters h4,
+            .returns h4 {
+                color: var(--info);
+                margin-bottom: 10px;
+            }
+            .alert {
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid;
+            }
+            .alert-info {
+                background-color: rgba(88, 166, 255, 0.1);
+                border-color: var(--info);
+            }
+            .alert-warning {
+                background-color: rgba(240, 136, 62, 0.1);
+                border-color: var(--warning);
+            }
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    width: 100%;
+                    position: relative;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .content {
+                    margin-left: 0;
+                    padding: 20px;
+                }
+                .container {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h1>ASCII World</h1>
+                    <div class="version">v0.1.0</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="index.html" class="nav-link">Overview</a>
+                    <a href="getting-started.html" class="nav-link"
+                        >Quick Start</a
+                    >
+                    <a href="examples.html" class="nav-link">Examples</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">API Reference</div>
+                    <a href="core.html" class="nav-link">Core</a>
+                    <a href="ecs.html" class="nav-link">ECS</a>
+                    <a href="display.html" class="nav-link">Display</a>
+                    <a href="world.html" class="nav-link">World</a>
+                    <a href="time.html" class="nav-link">Time</a>
+                    <a href="physics.html" class="nav-link">Physics</a>
+                    <a href="items.html" class="nav-link">Items</a>
+                    <a href="content.html" class="nav-link">Content</a>
+                    <a href="config.html" class="nav-link active"
+                        >Configuration</a
+                    >
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Guides</div>
+                    <a href="modding-guide.html" class="nav-link"
+                        >Modding Guide</a
+                    >
+                </div>
+            </nav>
+
+            <main class="content">
+                <h1>Configuration</h1>
+                <p>
+                    Global configuration management for world defaults, action
+                    costs, and debug settings. Use the Config singleton to
+                    access and modify engine settings.
+                </p>
+
+                <h2>Config</h2>
+                <p>
+                    Singleton configuration manager providing access to all
+                    engine settings.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">Config.getInstance()</div>
+                        <div class="method-signature">
+                            static getInstance(): Config
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Get the singleton Config instance.
+                    </div>
+                    <pre><code>import { Config } from 'ascii-world';
+
+const config = Config.getInstance();
+console.log(config.world.width);  // 1000</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">config.world</div>
+                        <div class="method-signature">
+                            get world(): typeof WORLD_DEFAULTS
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Access world configuration defaults.
+                    </div>
+                    <pre><code>const config = Config.getInstance();
+console.log(`World size: ${config.world.width}x${config.world.height}`);
+console.log(`Chunk size: ${config.world.chunkSize}`);
+console.log(`Max active chunks: ${config.world.maxActiveChunks}`);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">config.actions</div>
+                        <div class="method-signature">
+                            get actions(): typeof ACTION_COSTS
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Access action cost definitions.
+                    </div>
+                    <pre><code>const config = Config.getInstance();
+console.log(`Move cost: ${config.actions.MOVE}`);
+console.log(`Attack cost: ${config.actions.ATTACK}`);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">config.debug</div>
+                        <div class="method-signature">
+                            get debug(): boolean<br />set debug(value: boolean)
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Enable or disable debug mode for verbose logging.
+                    </div>
+                    <pre><code>// Enable debug mode
+Config.getInstance().debug = true;
+
+// Check debug status
+if (Config.getInstance().debug) {
+    console.log('Debug mode enabled');
+}</code></pre>
+                </div>
+
+                <h2>WORLD_DEFAULTS</h2>
+                <p>
+                    Default world generation and update settings. Located in
+                    <code>src/config/WorldDefaults.ts</code>.
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Value</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>width</code></td>
+                            <td>1000</td>
+                            <td>World width in tiles</td>
+                        </tr>
+                        <tr>
+                            <td><code>height</code></td>
+                            <td>1000</td>
+                            <td>World height in tiles</td>
+                        </tr>
+                        <tr>
+                            <td><code>chunkSize</code></td>
+                            <td>64</td>
+                            <td>Tiles per chunk (64x64)</td>
+                        </tr>
+                        <tr>
+                            <td><code>chunkCount</code></td>
+                            <td>{ x: 16, y: 16 }</td>
+                            <td>Computed: ceil(width/chunkSize)</td>
+                        </tr>
+                        <tr>
+                            <td><code>maxActiveChunks</code></td>
+                            <td>9</td>
+                            <td>3x3 grid around player</td>
+                        </tr>
+                        <tr>
+                            <td><code>fullUpdateDistance</code></td>
+                            <td>1</td>
+                            <td>Chunks updated every turn (distance 0-1)</td>
+                        </tr>
+                        <tr>
+                            <td><code>courseUpdateSchedule</code></td>
+                            <td>Array</td>
+                            <td>Distance-based update intervals</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>CourseUpdateSchedule</h3>
+                <p>
+                    Defines how often distant chunks are updated to save
+                    performance.
+                </p>
+                <pre><code>interface CourseUpdateLevel {
+    minDist: number;      // Minimum chunk distance
+    maxDist: number;      // Maximum chunk distance
+    interval: number;     // Turns between updates
+}
+
+// Default schedule:
+[
+    { minDist: 2, maxDist: 3, interval: 5 },      // Distance 2-3: every 5 turns
+    { minDist: 4, maxDist: 6, interval: 20 },     // Distance 4-6: every 20 turns
+    { minDist: 7, maxDist: Infinity, interval: 100 }  // Distance 7+: every 100 turns
+]</code></pre>
+
+                <h2>ACTION_COSTS</h2>
+                <p>
+                    Base action costs in ticks for the turn system. Located in
+                    <code>src/config/ActionCosts.ts</code>. Actual cost is
+                    divided by actor speed (speed 100 = normal).
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Cost</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>MOVE</code></td>
+                            <td>100</td>
+                            <td>Movement to adjacent tile</td>
+                        </tr>
+                        <tr>
+                            <td><code>ATTACK</code></td>
+                            <td>100</td>
+                            <td>Melee or ranged attack</td>
+                        </tr>
+                        <tr>
+                            <td><code>CRAFT</code></td>
+                            <td>300</td>
+                            <td>Crafting an item</td>
+                        </tr>
+                        <tr>
+                            <td><code>WAIT</code></td>
+                            <td>50</td>
+                            <td>Wait/pass turn</td>
+                        </tr>
+                        <tr>
+                            <td><code>INTERACT</code></td>
+                            <td>100</td>
+                            <td>Interact with object/door</td>
+                        </tr>
+                        <tr>
+                            <td><code>PICKUP</code></td>
+                            <td>50</td>
+                            <td>Pick up item from ground</td>
+                        </tr>
+                        <tr>
+                            <td><code>DROP</code></td>
+                            <td>25</td>
+                            <td>Drop item on ground</td>
+                        </tr>
+                        <tr>
+                            <td><code>USE</code></td>
+                            <td>100</td>
+                            <td>Use item (potion, scroll, etc.)</td>
+                        </tr>
+                        <tr>
+                            <td><code>EQUIP</code></td>
+                            <td>50</td>
+                            <td>Equip gear</td>
+                        </tr>
+                        <tr>
+                            <td><code>UNEQUIP</code></td>
+                            <td>25</td>
+                            <td>Unequip gear</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Action Cost Calculation</h3>
+                <p>Final action cost is adjusted by actor speed:</p>
+                <pre><code>// Formula: cost = baseCost / (speed / 100)
+const baseCost = ACTION_COSTS.MOVE;  // 100
+
+// Speed 100 (normal): 100 / 1 = 100 ticks
+// Speed 50 (slow): 100 / 0.5 = 200 ticks
+// Speed 200 (fast): 100 / 2 = 50 ticks
+
+function calculateCost(baseCost: number, speed: number): number {
+    return Math.floor(baseCost / (speed / 100));
+}</code></pre>
+
+                <h2>Modifying Configuration</h2>
+                <p>
+                    To customize engine behavior, create your own configuration
+                    files or modify values at runtime:
+                </p>
+
+                <h3>Custom World Settings</h3>
+                <pre><code>// Create a smaller world for testing
+import { Config } from 'ascii-world';
+
+const config = Config.getInstance();
+
+// Note: These should be set before creating the World
+// as they are used during initialization
+(config as any)._config.world = {
+    ...config.world,
+    width: 500,
+    height: 500,
+    chunkSize: 32,
+    maxActiveChunks: 4  // 2x2 grid for smaller worlds
+};</code></pre>
+
+                <h3>Custom Action Costs</h3>
+                <pre><code>// Make combat faster
+const config = Config.getInstance();
+(config as any)._config.actions = {
+    ...config.actions,
+    ATTACK: 75,   // Faster attacks
+    MOVE: 100,    // Normal movement
+    CRAFT: 200    // Faster crafting
+};</code></pre>
+
+                <h2>GameConfig Interface</h2>
+                <p>Complete configuration structure:</p>
+                <pre><code>interface GameConfig {
+    world: {
+        width: number;
+        height: number;
+        chunkSize: number;
+        chunkCount: { x: number; y: number };
+        maxActiveChunks: number;
+        fullUpdateDistance: number;
+        courseUpdateSchedule: CourseUpdateLevel[];
+    };
+    actions: {
+        [actionType: string]: number;
+    };
+    debug: boolean;
+}</code></pre>
+
+                <h2>Best Practices</h2>
+                <ul>
+                    <li>
+                        <strong>Set config early:</strong> Modify configuration
+                        before creating World or other systems
+                    </li>
+                    <li>
+                        <strong>Use constants:</strong> Import WORLD_DEFAULTS
+                        and ACTION_COSTS as starting points
+                    </li>
+                    <li>
+                        <strong>Test with debug:</strong> Enable
+                        <code>config.debug = true</code> during development
+                    </li>
+                    <li>
+                        <strong>Balance costs:</strong> Action costs directly
+                        affect game pace and feel
+                    </li>
+                    <li>
+                        <strong>Chunk sizing:</strong> Larger chunks use more
+                        memory but reduce chunk management overhead
+                    </li>
+                </ul>
+
+                <h2>Complete Example</h2>
+                <pre><code>import { Config, Engine, World, ECSWorld } from 'ascii-world';
+import { WORLD_DEFAULTS } from 'ascii-world/config';
+
+// Customize configuration before game initialization
+const config = Config.getInstance();
+config.debug = true;  // Enable debug logging
+
+// Create engine with custom settings
+const engine = new Engine();
+await engine.initialize();
+
+// Create ECS world
+const ecsWorld = new ECSWorld();
+
+// Create world (uses config values)
+const world = new World(
+    config.world.width,      // 1000
+    config.world.height,     // 1000
+    config.world.chunkSize,  // 64
+    ecsWorld
+);
+
+// Check action costs
+console.log(`Move cost: ${config.actions.MOVE} ticks`);
+console.log(`Craft cost: ${config.actions.CRAFT} ticks`);
+
+// Debug info
+if (config.debug) {
+    console.log('World configuration:', config.world);
+    console.log('Active chunk grid:',
+        Math.sqrt(config.world.maxActiveChunks), 'x',
+        Math.sqrt(config.world.maxActiveChunks)
+    );
+}</code></pre>
+
+                <h2>Configuration File Locations</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>src/config/WorldDefaults.ts</code></td>
+                            <td>
+                                World size, chunk settings, update schedules
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>src/config/ActionCosts.ts</code></td>
+                            <td>Action tick costs for turn system</td>
+                        </tr>
+                        <tr>
+                            <td><code>src/core/Config.ts</code></td>
+                            <td>Config singleton and GameConfig interface</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-info">
+                    <strong>Performance Tip:</strong> For very large worlds
+                    (2000x2000+), consider increasing
+                    <code>maxActiveChunks</code> to maintain smooth performance
+                    around the player while keeping distant chunks dormant.
+                </div>
+
+                <div class="footer">
+                    <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>

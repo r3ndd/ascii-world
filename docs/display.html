@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Display Module - ASCII World Engine</title>
+        <style>
+            :root {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #eaeaea;
+                --text-secondary: #a0a0a0;
+                --accent: #e94560;
+                --accent-hover: #ff6b6b;
+                --code-bg: #0d1117;
+                --border: #30363d;
+                --success: #238636;
+                --warning: #f0883e;
+                --info: #58a6ff;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "Segoe UI", system-ui, sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                line-height: 1.6;
+            }
+            .container {
+                display: flex;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 280px;
+                background-color: var(--bg-secondary);
+                border-right: 1px solid var(--border);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+            .sidebar-header {
+                padding: 0 20px 20px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 20px;
+            }
+            .sidebar-header h1 {
+                font-size: 1.4rem;
+                color: var(--accent);
+                margin-bottom: 5px;
+            }
+            .sidebar-header .version {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+            }
+            .nav-section {
+                margin-bottom: 15px;
+            }
+            .nav-section-title {
+                padding: 10px 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+            .nav-link {
+                display: block;
+                padding: 8px 20px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.95rem;
+            }
+            .nav-link:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--accent-hover);
+            }
+            .nav-link.active {
+                background-color: var(--bg-tertiary);
+                border-left: 3px solid var(--accent);
+            }
+            .content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 40px;
+                max-width: 900px;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--text-primary);
+            }
+            h2 {
+                font-size: 1.8rem;
+                margin: 40px 0 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+            h3 {
+                font-size: 1.4rem;
+                margin: 30px 0 15px;
+                color: var(--accent);
+            }
+            h4 {
+                font-size: 1.1rem;
+                margin: 25px 0 10px;
+                color: var(--text-primary);
+            }
+            p {
+                margin-bottom: 15px;
+                color: var(--text-primary);
+            }
+            a {
+                color: var(--info);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            pre {
+                background-color: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                overflow-x: auto;
+                margin: 20px 0;
+            }
+            code {
+                font-family: "Fira Code", "Consolas", monospace;
+                font-size: 0.9rem;
+                color: #e6edf3;
+            }
+            code.inline {
+                background-color: var(--code-bg);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            th,
+            td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            th {
+                background-color: var(--bg-tertiary);
+                font-weight: 600;
+                color: var(--accent);
+            }
+            tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            ul,
+            ol {
+                margin: 15px 0;
+                padding-left: 30px;
+            }
+            li {
+                margin-bottom: 8px;
+            }
+            .method {
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                border-left: 4px solid var(--accent);
+            }
+            .method-header {
+                margin-bottom: 15px;
+            }
+            .method-name {
+                font-family: "Fira Code", monospace;
+                font-size: 1.2rem;
+                color: var(--accent);
+                font-weight: 600;
+            }
+            .method-signature {
+                font-family: "Fira Code", monospace;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                margin-top: 5px;
+            }
+            .method-description {
+                margin-bottom: 15px;
+            }
+            .parameters,
+            .returns {
+                margin: 15px 0;
+            }
+            .parameters h4,
+            .returns h4 {
+                color: var(--info);
+                margin-bottom: 10px;
+            }
+            .alert {
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid;
+            }
+            .alert-info {
+                background-color: rgba(88, 166, 255, 0.1);
+                border-color: var(--info);
+            }
+            .alert-warning {
+                background-color: rgba(240, 136, 62, 0.1);
+                border-color: var(--warning);
+            }
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    width: 100%;
+                    position: relative;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .content {
+                    margin-left: 0;
+                    padding: 20px;
+                }
+                .container {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h1>ASCII World</h1>
+                    <div class="version">v0.1.0</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="index.html" class="nav-link">Overview</a>
+                    <a href="getting-started.html" class="nav-link"
+                        >Quick Start</a
+                    >
+                    <a href="examples.html" class="nav-link">Examples</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">API Reference</div>
+                    <a href="core.html" class="nav-link">Core</a>
+                    <a href="ecs.html" class="nav-link">ECS</a>
+                    <a href="display.html" class="nav-link active">Display</a>
+                    <a href="world.html" class="nav-link">World</a>
+                    <a href="time.html" class="nav-link">Time</a>
+                    <a href="physics.html" class="nav-link">Physics</a>
+                    <a href="items.html" class="nav-link">Items</a>
+                    <a href="content.html" class="nav-link">Content</a>
+                    <a href="config.html" class="nav-link">Configuration</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Guides</div>
+                    <a href="modding-guide.html" class="nav-link"
+                        >Modding Guide</a
+                    >
+                </div>
+            </nav>
+
+            <main class="content">
+                <h1>Display Module</h1>
+                <p>
+                    Rendering and viewport management using rot.js. Provides the
+                    DisplayManager for low-level drawing, Camera for viewport
+                    control, and Renderer for high-level scene composition.
+                </p>
+
+                <h2>DisplayManager</h2>
+                <p>
+                    Wrapper around rot.js Display class for rendering ASCII
+                    characters to the screen.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new DisplayManager()</div>
+                        <div class="method-signature">
+                            constructor(config: DisplayConfig)
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Creates a new display manager with the specified
+                        configuration.
+                    </div>
+                    <div class="parameters">
+                        <h4>DisplayConfig Options</h4>
+                        <table>
+                            <tr>
+                                <th>Option</th>
+                                <th>Type</th>
+                                <th>Default</th>
+                                <th>Description</th>
+                            </tr>
+                            <tr>
+                                <td>width</td>
+                                <td>number</td>
+                                <td>required</td>
+                                <td>Display width in tiles</td>
+                            </tr>
+                            <tr>
+                                <td>height</td>
+                                <td>number</td>
+                                <td>required</td>
+                                <td>Display height in tiles</td>
+                            </tr>
+                            <tr>
+                                <td>fontSize</td>
+                                <td>number</td>
+                                <td>16</td>
+                                <td>Font size in pixels</td>
+                            </tr>
+                            <tr>
+                                <td>fontFamily</td>
+                                <td>string</td>
+                                <td>'monospace'</td>
+                                <td>Font family</td>
+                            </tr>
+                            <tr>
+                                <td>fg</td>
+                                <td>string</td>
+                                <td>'#cccccc'</td>
+                                <td>Default foreground color</td>
+                            </tr>
+                            <tr>
+                                <td>bg</td>
+                                <td>string</td>
+                                <td>'#000000'</td>
+                                <td>Default background color</td>
+                            </tr>
+                            <tr>
+                                <td>spacing</td>
+                                <td>number</td>
+                                <td>1</td>
+                                <td>Tile spacing factor</td>
+                            </tr>
+                            <tr>
+                                <td>forceSquareRatio</td>
+                                <td>boolean</td>
+                                <td>true</td>
+                                <td>Force square tiles</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <pre><code>const display = new DisplayManager({
+    width: 80,
+    height: 25,
+    fontSize: 16,
+    fontFamily: 'monospace',
+    fg: '#cccccc',
+    bg: '#000000',
+    forceSquareRatio: true
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getContainer()</div>
+                        <div class="method-signature">
+                            getContainer(): HTMLElement | null
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Returns the canvas container element to add to the DOM.
+                    </div>
+                    <pre><code>const container = display.getContainer();
+if (container) {
+    document.body.appendChild(container);
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">draw()</div>
+                        <div class="method-signature">
+                            draw(x: number, y: number, ch: string | string[],
+                            fg?: string, bg?: string): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Draws a character or characters at the specified
+                        position.
+                    </div>
+                    <pre><code>// Draw a single character
+display.draw(10, 5, '@', '#ffffff', '#000000');
+
+// Draw with default colors
+display.draw(15, 8, '#');</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">drawText()</div>
+                        <div class="method-signature">
+                            drawText(x: number, y: number, text: string,
+                            maxWidth?: number): number
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Draws text starting at the specified position. Returns
+                        the number of lines drawn.
+                    </div>
+                    <pre><code>// Draw text
+display.drawText(1, 1, "Welcome to ASCII World!");
+
+// With max width (wraps text)
+display.drawText(1, 3, "This is a very long message...", 40);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">clear()</div>
+                        <div class="method-signature">clear(): void</div>
+                    </div>
+                    <div class="method-description">
+                        Clears the entire display.
+                    </div>
+                </div>
+
+                <h2>Camera</h2>
+                <p>
+                    Manages the viewport into the game world, handling
+                    world-to-screen coordinate conversion.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new Camera()</div>
+                        <div class="method-signature">
+                            constructor(viewportSize: Size, worldBounds: {
+                            width: number; height: number })
+                        </div>
+                    </div>
+                    <pre><code>const camera = new Camera(
+    { width: 80, height: 25 },     // Viewport size
+    { width: 1000, height: 1000 }  // World bounds
+);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">setPosition()</div>
+                        <div class="method-signature">
+                            setPosition(x: number, y: number): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Centers the camera on the specified world position (with
+                        bounds clamping).
+                    </div>
+                    <pre><code>// Camera will center on entity position
+camera.setPosition(playerX, playerY);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">worldToScreen()</div>
+                        <div class="method-signature">
+                            worldToScreen(worldX: number, worldY: number):
+                            Position | null
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Converts world coordinates to screen coordinates.
+                        Returns null if outside viewport.
+                    </div>
+                    <pre><code>const screenPos = camera.worldToScreen(500, 500);
+if (screenPos) {
+    display.draw(screenPos.x, screenPos.y, '@');
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">screenToWorld()</div>
+                        <div class="method-signature">
+                            screenToWorld(screenX: number, screenY: number):
+                            Position
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Converts screen coordinates to world coordinates.
+                    </div>
+                    <pre><code>const worldPos = camera.screenToWorld(mouseX, mouseY);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">isInViewport()</div>
+                        <div class="method-signature">
+                            isInViewport(worldX: number, worldY: number):
+                            boolean
+                        </div>
+                    </div>
+                    <pre><code>if (camera.isInViewport(entityX, entityY)) {
+    // Entity is visible, can render it
+}</code></pre>
+                </div>
+
+                <h2>Renderer</h2>
+                <p>
+                    High-level rendering orchestrator that manages renderable
+                    objects and coordinates rendering.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new Renderer()</div>
+                        <div class="method-signature">
+                            constructor(displayManager: DisplayManager, camera:
+                            Camera)
+                        </div>
+                    </div>
+                    <pre><code>const renderer = new Renderer(display, camera);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">addRenderable()</div>
+                        <div class="method-signature">
+                            addRenderable(renderable: Renderable): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Adds a renderable object to be drawn each frame.
+                    </div>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">removeRenderable()</div>
+                        <div class="method-signature">
+                            removeRenderable(renderable: Renderable): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Removes a renderable object.
+                    </div>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">render()</div>
+                        <div class="method-signature">render(): void</div>
+                    </div>
+                    <div class="method-description">
+                        Renders all visible renderables. Clears the display
+                        first.
+                    </div>
+                    <pre><code>// In your game loop
+function gameLoop() {
+    renderer.render();
+    requestAnimationFrame(gameLoop);
+}</code></pre>
+                </div>
+
+                <h2>Renderable Interface</h2>
+                <p>
+                    Interface for objects that can be rendered by the Renderer.
+                </p>
+                <pre><code>interface Renderable {
+    getChar(): string;
+    getForeground(): string;
+    getBackground(): string;
+    getPosition(): Position;
+    isVisible(): boolean;
+}</code></pre>
+
+                <h3>Example Implementation</h3>
+                <pre><code>class EntityRenderer implements Renderable {
+    private entity: Entity;
+
+    constructor(entity: Entity) {
+        this.entity = entity;
+    }
+
+    getChar(): string {
+        const renderable = this.entity.getComponent&lt;RenderableComponent&gt;('renderable');
+        return renderable?.char || '?';
+    }
+
+    getForeground(): string {
+        const renderable = this.entity.getComponent&lt;RenderableComponent&gt;('renderable');
+        return renderable?.fg || '#ffffff';
+    }
+
+    getBackground(): string {
+        const renderable = this.entity.getComponent&lt;RenderableComponent&gt;('renderable');
+        return renderable?.bg || '#000000';
+    }
+
+    getPosition(): Position {
+        const pos = this.entity.getComponent&lt;PositionComponent&gt;('position');
+        return pos ? { x: pos.x, y: pos.y } : { x: 0, y: 0 };
+    }
+
+    isVisible(): boolean {
+        return true;
+    }
+}
+
+// Usage
+const playerRenderer = new EntityRenderer(player);
+renderer.addRenderable(playerRenderer);</code></pre>
+
+                <h2>Complete Example</h2>
+                <pre><code>import {
+    DisplayManager,
+    Camera,
+    Renderer,
+    createPosition,
+    createRenderable
+} from 'ascii-world';
+
+// Setup display
+const display = new DisplayManager({
+    width: 80,
+    height: 25,
+    fontSize: 16,
+    forceSquareRatio: true
+});
+
+// Add to DOM
+document.body.appendChild(display.getContainer()!);
+
+// Create camera (centered on player)
+const camera = new Camera(
+    { width: 80, height: 25 },
+    { width: 1000, height: 1000 }
+);
+
+// Create renderer
+const renderer = new Renderer(display, camera);
+
+// Create player entity
+const player = ecsWorld.createEntity()
+    .addComponent(createPosition(500, 500))
+    .addComponent(createRenderable('@', '#ffffff'));
+
+// Add to renderer
+const playerRenderable = new EntityRenderer(player);
+renderer.addRenderable(playerRenderable);
+
+// Game loop
+function gameLoop() {
+    // Update camera to follow player
+    const pos = player.getComponent&lt;PositionComponent&gt;('position');
+    camera.setPosition(pos.x, pos.y);
+
+    // Render everything
+    renderer.render();
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();</code></pre>
+
+                <div class="alert alert-info">
+                    <strong>Tip:</strong> The DisplayManager is a thin wrapper
+                    around rot.js Display. For advanced features like tile
+                    graphics or hex grids, you can access the underlying rot.js
+                    Display via <code>displayManager.getDisplay()</code>.
+                </div>
+
+                <div class="footer">
+                    <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>

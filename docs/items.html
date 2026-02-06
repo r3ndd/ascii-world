@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Items Module - ASCII World Engine</title>
+        <style>
+            :root {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #eaeaea;
+                --text-secondary: #a0a0a0;
+                --accent: #e94560;
+                --accent-hover: #ff6b6b;
+                --code-bg: #0d1117;
+                --border: #30363d;
+                --success: #238636;
+                --warning: #f0883e;
+                --info: #58a6ff;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "Segoe UI", system-ui, sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                line-height: 1.6;
+            }
+            .container {
+                display: flex;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 280px;
+                background-color: var(--bg-secondary);
+                border-right: 1px solid var(--border);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+            .sidebar-header {
+                padding: 0 20px 20px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 20px;
+            }
+            .sidebar-header h1 {
+                font-size: 1.4rem;
+                color: var(--accent);
+                margin-bottom: 5px;
+            }
+            .sidebar-header .version {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+            }
+            .nav-section {
+                margin-bottom: 15px;
+            }
+            .nav-section-title {
+                padding: 10px 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+            .nav-link {
+                display: block;
+                padding: 8px 20px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.95rem;
+            }
+            .nav-link:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--accent-hover);
+            }
+            .nav-link.active {
+                background-color: var(--bg-tertiary);
+                border-left: 3px solid var(--accent);
+            }
+            .content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 40px;
+                max-width: 900px;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--text-primary);
+            }
+            h2 {
+                font-size: 1.8rem;
+                margin: 40px 0 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+            h3 {
+                font-size: 1.4rem;
+                margin: 30px 0 15px;
+                color: var(--accent);
+            }
+            h4 {
+                font-size: 1.1rem;
+                margin: 25px 0 10px;
+                color: var(--text-primary);
+            }
+            p {
+                margin-bottom: 15px;
+                color: var(--text-primary);
+            }
+            a {
+                color: var(--info);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            pre {
+                background-color: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                overflow-x: auto;
+                margin: 20px 0;
+            }
+            code {
+                font-family: "Fira Code", "Consolas", monospace;
+                font-size: 0.9rem;
+                color: #e6edf3;
+            }
+            code.inline {
+                background-color: var(--code-bg);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            th,
+            td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            th {
+                background-color: var(--bg-tertiary);
+                font-weight: 600;
+                color: var(--accent);
+            }
+            tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            ul,
+            ol {
+                margin: 15px 0;
+                padding-left: 30px;
+            }
+            li {
+                margin-bottom: 8px;
+            }
+            .method {
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                border-left: 4px solid var(--accent);
+            }
+            .method-header {
+                margin-bottom: 15px;
+            }
+            .method-name {
+                font-family: "Fira Code", monospace;
+                font-size: 1.2rem;
+                color: var(--accent);
+                font-weight: 600;
+            }
+            .method-signature {
+                font-family: "Fira Code", monospace;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                margin-top: 5px;
+            }
+            .method-description {
+                margin-bottom: 15px;
+            }
+            .parameters,
+            .returns {
+                margin: 15px 0;
+            }
+            .parameters h4,
+            .returns h4 {
+                color: var(--info);
+                margin-bottom: 10px;
+            }
+            .alert {
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid;
+            }
+            .alert-info {
+                background-color: rgba(88, 166, 255, 0.1);
+                border-color: var(--info);
+            }
+            .alert-warning {
+                background-color: rgba(240, 136, 62, 0.1);
+                border-color: var(--warning);
+            }
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    width: 100%;
+                    position: relative;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .content {
+                    margin-left: 0;
+                    padding: 20px;
+                }
+                .container {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h1>ASCII World</h1>
+                    <div class="version">v0.1.0</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="index.html" class="nav-link">Overview</a>
+                    <a href="getting-started.html" class="nav-link"
+                        >Quick Start</a
+                    >
+                    <a href="examples.html" class="nav-link">Examples</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">API Reference</div>
+                    <a href="core.html" class="nav-link">Core</a>
+                    <a href="ecs.html" class="nav-link">ECS</a>
+                    <a href="display.html" class="nav-link">Display</a>
+                    <a href="world.html" class="nav-link">World</a>
+                    <a href="time.html" class="nav-link">Time</a>
+                    <a href="physics.html" class="nav-link">Physics</a>
+                    <a href="items.html" class="nav-link active">Items</a>
+                    <a href="content.html" class="nav-link">Content</a>
+                    <a href="config.html" class="nav-link">Configuration</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Guides</div>
+                    <a href="modding-guide.html" class="nav-link"
+                        >Modding Guide</a
+                    >
+                </div>
+            </nav>
+
+            <main class="content">
+                <h1>Items Module</h1>
+                <p>
+                    Item system with templates, inventory management, stacking,
+                    equipment, and durability. Supports weight/volume
+                    constraints and serialization for save/load.
+                </p>
+
+                <h2>ItemCategory</h2>
+                <p>
+                    Enumeration of item categories for organization and
+                    filtering.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>WEAPON</code></td>
+                            <td>Melee and ranged weapons</td>
+                        </tr>
+                        <tr>
+                            <td><code>ARMOR</code></td>
+                            <td>Protective equipment</td>
+                        </tr>
+                        <tr>
+                            <td><code>CONSUMABLE</code></td>
+                            <td>Food, potions, medical items</td>
+                        </tr>
+                        <tr>
+                            <td><code>TOOL</code></td>
+                            <td>Crafting and utility tools</td>
+                        </tr>
+                        <tr>
+                            <td><code>MATERIAL</code></td>
+                            <td>Raw crafting materials</td>
+                        </tr>
+                        <tr>
+                            <td><code>CONTAINER</code></td>
+                            <td>Bags, boxes, storage</td>
+                        </tr>
+                        <tr>
+                            <td><code>MISC</code></td>
+                            <td>Miscellaneous items</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>ItemTemplate</h2>
+                <p>
+                    Blueprint for creating item instances. Templates define the
+                    base properties of an item type.
+                </p>
+                <pre><code>interface ItemTemplate {
+    id: string;                    // Unique template identifier
+    name: string;                  // Display name
+    description: string;           // Flavor text
+    category: ItemCategory;        // Item category
+    character: string;             // ASCII display character
+    foreground: string;            // Text color (hex)
+    background?: string;           // Background color (hex)
+    properties: ItemProperties;    // Physical properties
+    tags?: string[];               // Optional tags for filtering
+}</code></pre>
+
+                <h2>ItemProperties</h2>
+                <p>Physical and gameplay properties of an item.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>weight</code></td>
+                            <td>number</td>
+                            <td>Weight in kilograms</td>
+                        </tr>
+                        <tr>
+                            <td><code>volume</code></td>
+                            <td>number</td>
+                            <td>Volume in liters</td>
+                        </tr>
+                        <tr>
+                            <td><code>durability</code></td>
+                            <td>number?</td>
+                            <td>Current durability (optional)</td>
+                        </tr>
+                        <tr>
+                            <td><code>maxDurability</code></td>
+                            <td>number?</td>
+                            <td>Maximum durability (optional)</td>
+                        </tr>
+                        <tr>
+                            <td><code>stackable</code></td>
+                            <td>boolean?</td>
+                            <td>Can stack with identical items</td>
+                        </tr>
+                        <tr>
+                            <td><code>maxStack</code></td>
+                            <td>number?</td>
+                            <td>Maximum stack size</td>
+                        </tr>
+                        <tr>
+                            <td><code>value</code></td>
+                            <td>number?</td>
+                            <td>Base monetary value</td>
+                        </tr>
+                        <tr>
+                            <td><code>quality</code></td>
+                            <td>number?</td>
+                            <td>Quality level 1-100</td>
+                        </tr>
+                        <tr>
+                            <td><code>metadata</code></td>
+                            <td>object?</td>
+                            <td>Custom properties</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Item</h2>
+                <p>
+                    Represents an item instance in the game world. Items can
+                    exist on the ground, in inventories, or be equipped.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">id</div>
+                        <div class="method-signature">get id(): string</div>
+                    </div>
+                    <div class="method-description">
+                        Unique instance identifier.
+                    </div>
+                    <pre><code>console.log(item.id);  // "item_1"</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">name</div>
+                        <div class="method-signature">get name(): string</div>
+                    </div>
+                    <pre><code>console.log(item.name);  // "Iron Sword"</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">quantity</div>
+                        <div class="method-signature">
+                            get quantity(): number<br />set quantity(value:
+                            number)
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Number of items in this stack. Emits
+                        <code>item:quantityChanged</code> event on change.
+                    </div>
+                    <pre><code>item.quantity += 5;  // Add 5 to stack</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">weight</div>
+                        <div class="method-signature">get weight(): number</div>
+                    </div>
+                    <div class="method-description">
+                        Total weight including quantity (weight * quantity).
+                    </div>
+                    <pre><code>console.log(item.weight);  // 3.0 kg for 2 swords at 1.5kg each</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">volume</div>
+                        <div class="method-signature">get volume(): number</div>
+                    </div>
+                    <div class="method-description">
+                        Total volume including quantity (volume * quantity).
+                    </div>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">damage()</div>
+                        <div class="method-signature">
+                            damage(amount: number): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Apply damage to item durability. Emits
+                        <code>item:damaged</code> or
+                        <code>item:broken</code> events.
+                    </div>
+                    <pre><code>item.damage(10);  // Reduce durability by 10
+if (item.durability <= 0) {
+    console.log('Item broke!');
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">repair()</div>
+                        <div class="method-signature">
+                            repair(amount: number): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Repair item durability. Cannot exceed maxDurability.
+                        Emits <code>item:repaired</code> event.
+                    </div>
+                    <pre><code>item.repair(25);  // Restore 25 durability</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">isStackable()</div>
+                        <div class="method-signature">
+                            isStackable(): boolean
+                        </div>
+                    </div>
+                    <pre><code>if (item.isStackable()) {
+    // Can stack with other items
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">isEquipped()</div>
+                        <div class="method-signature">
+                            isEquipped(): boolean
+                        </div>
+                    </div>
+                    <pre><code>if (item.isEquipped()) {
+    console.log(`${item.name} is equipped`);
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">setEquipped()</div>
+                        <div class="method-signature">
+                            setEquipped(equipped: boolean): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Set equipped status. Emits
+                        <code>item:equippedChanged</code> event.
+                    </div>
+                    <pre><code>item.setEquipped(true);  // Equip item</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">canStackWith()</div>
+                        <div class="method-signature">
+                            canStackWith(other: Item): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Check if this item can stack with another (same
+                        template, quality).
+                    </div>
+                    <pre><code>if (itemA.canStackWith(itemB)) {
+    itemA.quantity += itemB.quantity;
+}</code></pre>
+                </div>
+
+                <h2>ItemManager</h2>
+                <p>
+                    Central registry for item templates and active item
+                    instances. Handles item spawning and lifecycle.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new ItemManager()</div>
+                        <div class="method-signature">
+                            constructor(eventBus: EventBus)
+                        </div>
+                    </div>
+                    <pre><code>const itemManager = new ItemManager(eventBus);
+// Auto-registers default templates (sword_iron, potion_health, etc.)</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">registerTemplate()</div>
+                        <div class="method-signature">
+                            registerTemplate(template: ItemTemplate): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Register a new item template. Emits
+                        <code>item:templateRegistered</code> event.
+                    </div>
+                    <pre><code>itemManager.registerTemplate({
+    id: 'excalibur',
+    name: 'Excalibur',
+    description: 'Legendary sword of the king',
+    category: ItemCategory.WEAPON,
+    character: '/',
+    foreground: '#ffd700',
+    properties: {
+        weight: 2.0,
+        volume: 3,
+        durability: 200,
+        maxDurability: 200,
+        value: 10000
+    }
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getTemplate()</div>
+                        <div class="method-signature">
+                            getTemplate(id: string): ItemTemplate | undefined
+                        </div>
+                    </div>
+                    <pre><code>const template = itemManager.getTemplate('sword_iron');</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">spawnItem()</div>
+                        <div class="method-signature">
+                            spawnItem(templateId: string, quantity?: number,
+                            location?: Position): Item | null
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Create a new item instance from a template. Emits
+                        <code>item:spawned</code> event.
+                    </div>
+                    <pre><code>// Spawn a sword on the ground at position
+const sword = itemManager.spawnItem('sword_iron', 1, { x: 100, y: 200 });
+
+// Spawn a stack of potions
+const potions = itemManager.spawnItem('potion_health', 5);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getItem()</div>
+                        <div class="method-signature">
+                            getItem(id: string): Item | undefined
+                        </div>
+                    </div>
+                    <pre><code>const item = itemManager.getItem('item_1');</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">removeItem()</div>
+                        <div class="method-signature">
+                            removeItem(id: string): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Remove an item instance. Emits
+                        <code>item:removed</code> event.
+                    </div>
+                    <pre><code>itemManager.removeItem('item_1');</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getItemsAt()</div>
+                        <div class="method-signature">
+                            getItemsAt(location: Position): Item[]
+                        </div>
+                    </div>
+                    <pre><code>const items = itemManager.getItemsAt({ x: 100, y: 200 });
+for (const item of items) {
+    console.log(`Found ${item.name} on ground`);
+}</code></pre>
+                </div>
+
+                <h2>Inventory</h2>
+                <p>
+                    Manages items for a container entity with weight/volume
+                    constraints and automatic stacking.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new Inventory()</div>
+                        <div class="method-signature">
+                            constructor(ownerId: EntityId, capacity: number,
+                            volumeCapacity: number, itemManager: ItemManager,
+                            eventBus: EventBus)
+                        </div>
+                    </div>
+                    <pre><code>const inventory = new Inventory(
+    playerEntity.id,
+    50,     // 50kg weight limit
+    30,     // 30L volume limit
+    itemManager,
+    eventBus
+);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">currentWeight</div>
+                        <div class="method-signature">
+                            get currentWeight(): number
+                        </div>
+                    </div>
+                    <pre><code>console.log(`${inventory.currentWeight} / ${inventory.weightCapacity} kg`);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">currentVolume</div>
+                        <div class="method-signature">
+                            get currentVolume(): number
+                        </div>
+                    </div>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">remainingWeight</div>
+                        <div class="method-signature">
+                            get remainingWeight(): number
+                        </div>
+                    </div>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">canAddItem()</div>
+                        <div class="method-signature">
+                            canAddItem(item: Item): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Check if item can fit in inventory (weight and volume).
+                    </div>
+                    <pre><code>if (inventory.canAddItem(heavyItem)) {
+    inventory.addItem(heavyItem);
+} else {
+    console.log('Too heavy!');
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">addItem()</div>
+                        <div class="method-signature">
+                            addItem(item: Item): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Add item to inventory. Automatically stacks if possible.
+                        Emits <code>inventory:itemAdded</code> or
+                        <code>inventory:stacked</code> events.
+                    </div>
+                    <pre><code>if (inventory.addItem(sword)) {
+    console.log('Item added to inventory');
+} else {
+    console.log('Inventory full!');
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">removeItem()</div>
+                        <div class="method-signature">
+                            removeItem(itemId: string): Item | null
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Remove item from inventory. Emits
+                        <code>inventory:itemRemoved</code> event.
+                    </div>
+                    <pre><code>const item = inventory.removeItem('item_1');</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">dropItem()</div>
+                        <div class="method-signature">
+                            dropItem(itemId: string, location: Position): Item |
+                            null
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Remove item from inventory and place on ground. Emits
+                        <code>inventory:itemDropped</code> event.
+                    </div>
+                    <pre><code>const droppedItem = inventory.dropItem('item_1', { x: 100, y: 200 });</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">transferItem()</div>
+                        <div class="method-signature">
+                            transferItem(itemId: string, targetInventory:
+                            Inventory): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Move item to another inventory. Emits
+                        <code>inventory:itemTransferred</code> event.
+                    </div>
+                    <pre><code>// Give item to another entity
+inventory.transferItem('item_1', otherInventory);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">equipItem()</div>
+                        <div class="method-signature">
+                            equipItem(itemId: string): boolean
+                        </div>
+                    </div>
+                    <pre><code>inventory.equipItem('item_1');  // Mark item as equipped</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">unequipItem()</div>
+                        <div class="method-signature">
+                            unequipItem(itemId: string): boolean
+                        </div>
+                    </div>
+                    <pre><code>inventory.unequipItem('item_1');  // Mark item as unequipped</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getEquippedItems()</div>
+                        <div class="method-signature">
+                            getEquippedItems(): Item[]
+                        </div>
+                    </div>
+                    <pre><code>const equipped = inventory.getEquippedItems();
+console.log(`Equipped ${equipped.length} items`);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getItemsByCategory()</div>
+                        <div class="method-signature">
+                            getItemsByCategory(category: ItemCategory): Item[]
+                        </div>
+                    </div>
+                    <pre><code>const weapons = inventory.getItemsByCategory(ItemCategory.WEAPON);</code></pre>
+                </div>
+
+                <h2>InventoryManager</h2>
+                <p>Manages all inventories in the game world.</p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">createInventory()</div>
+                        <div class="method-signature">
+                            createInventory(ownerId: EntityId, capacity: number,
+                            volumeCapacity: number): Inventory
+                        </div>
+                    </div>
+                    <pre><code>const inv = inventoryManager.createInventory(entity.id, 50, 30);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getInventory()</div>
+                        <div class="method-signature">
+                            getInventory(ownerId: EntityId): Inventory |
+                            undefined
+                        </div>
+                    </div>
+                    <pre><code>const playerInv = inventoryManager.getInventory(playerEntity.id);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">removeInventory()</div>
+                        <div class="method-signature">
+                            removeInventory(ownerId: EntityId): boolean
+                        </div>
+                    </div>
+                    <pre><code>inventoryManager.removeInventory(entity.id);  // Drop all items</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">transferItem()</div>
+                        <div class="method-signature">
+                            transferItem(fromOwnerId: EntityId, toOwnerId:
+                            EntityId, itemId: string): boolean
+                        </div>
+                    </div>
+                    <pre><code>// Transfer between entities by ID
+inventoryManager.transferItem(player.id, chest.id, 'item_1');</code></pre>
+                </div>
+
+                <h2>Complete Example</h2>
+                <pre><code>import { ItemManager, InventoryManager, ItemCategory } from 'ascii-world';
+
+// Create managers
+const itemManager = new ItemManager(eventBus);
+const inventoryManager = new InventoryManager(itemManager, eventBus);
+
+// Register custom item template
+itemManager.registerTemplate({
+    id: 'magic_sword',
+    name: 'Magic Sword',
+    description: 'A sword glowing with magical energy',
+    category: ItemCategory.WEAPON,
+    character: '/',
+    foreground: '#00ffff',
+    properties: {
+        weight: 1.5,
+        volume: 3,
+        durability: 100,
+        maxDurability: 100,
+        value: 500
+    }
+});
+
+// Create player inventory
+const playerInv = inventoryManager.createInventory(playerEntity.id, 50, 30);
+
+// Spawn and add items
+const sword = itemManager.spawnItem('magic_sword', 1);
+if (playerInv.addItem(sword)) {
+    playerInv.equipItem(sword.id);
+    console.log(`Equipped ${sword.name}!`);
+}
+
+// Stackable items
+const arrows = itemManager.spawnItem('arrow', 20, { x: 100, y: 200 });
+if (playerInv.addItem(arrows)) {
+    console.log(`Picked up ${arrows.quantity} arrows`);
+}
+
+// Check inventory status
+console.log(`Weight: ${playerInv.currentWeight}/${playerInv.weightCapacity} kg`);
+console.log(`Items: ${playerInv.getItemCount()}`);
+
+// Get all weapons
+const weapons = playerInv.getItemsByCategory(ItemCategory.WEAPON);
+for (const weapon of weapons) {
+    console.log(`Weapon: ${weapon.name} (Durability: ${weapon.durability})`);
+}</code></pre>
+
+                <h2>Events</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Payload</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>item:templateRegistered</code></td>
+                            <td>{ templateId }</td>
+                            <td>New template registered</td>
+                        </tr>
+                        <tr>
+                            <td><code>item:spawned</code></td>
+                            <td>{ itemId, templateId, quantity, location? }</td>
+                            <td>Item instance created</td>
+                        </tr>
+                        <tr>
+                            <td><code>item:removed</code></td>
+                            <td>{ itemId }</td>
+                            <td>Item instance destroyed</td>
+                        </tr>
+                        <tr>
+                            <td><code>item:quantityChanged</code></td>
+                            <td>{ itemId, oldValue, newValue }</td>
+                            <td>Stack quantity changed</td>
+                        </tr>
+                        <tr>
+                            <td><code>item:damaged</code></td>
+                            <td>{ itemId, damage, remainingDurability }</td>
+                            <td>Item took damage</td>
+                        </tr>
+                        <tr>
+                            <td><code>item:broken</code></td>
+                            <td>{ itemId }</td>
+                            <td>Item durability reached 0</td>
+                        </tr>
+                        <tr>
+                            <td><code>item:repaired</code></td>
+                            <td>{ itemId, amount, durability }</td>
+                            <td>Item was repaired</td>
+                        </tr>
+                        <tr>
+                            <td><code>item:equippedChanged</code></td>
+                            <td>{ itemId, equipped }</td>
+                            <td>Equip status changed</td>
+                        </tr>
+                        <tr>
+                            <td><code>inventory:itemAdded</code></td>
+                            <td>{ ownerId, itemId, weight, volume }</td>
+                            <td>Item added to inventory</td>
+                        </tr>
+                        <tr>
+                            <td><code>inventory:itemRemoved</code></td>
+                            <td>{ ownerId, itemId, weight, volume }</td>
+                            <td>Item removed from inventory</td>
+                        </tr>
+                        <tr>
+                            <td><code>inventory:stacked</code></td>
+                            <td>
+                                { ownerId, targetItemId, sourceItemId, quantity
+                                }
+                            </td>
+                            <td>Items stacked together</td>
+                        </tr>
+                        <tr>
+                            <td><code>inventory:itemDropped</code></td>
+                            <td>{ ownerId, itemId, location }</td>
+                            <td>Item dropped on ground</td>
+                        </tr>
+                        <tr>
+                            <td><code>inventory:itemTransferred</code></td>
+                            <td>{ fromOwnerId, toOwnerId, itemId }</td>
+                            <td>Item moved between inventories</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-info">
+                    <strong>Default Templates:</strong> ItemManager
+                    automatically registers sword_iron, potion_health,
+                    wood_plank, and backpack templates on initialization.
+                </div>
+
+                <div class="footer">
+                    <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>

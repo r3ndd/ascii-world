@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ECS Module - ASCII World Engine</title>
+        <style>
+            :root {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #eaeaea;
+                --text-secondary: #a0a0a0;
+                --accent: #e94560;
+                --accent-hover: #ff6b6b;
+                --code-bg: #0d1117;
+                --border: #30363d;
+                --success: #238636;
+                --warning: #f0883e;
+                --info: #58a6ff;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "Segoe UI", system-ui, sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                line-height: 1.6;
+            }
+            .container {
+                display: flex;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 280px;
+                background-color: var(--bg-secondary);
+                border-right: 1px solid var(--border);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+            .sidebar-header {
+                padding: 0 20px 20px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 20px;
+            }
+            .sidebar-header h1 {
+                font-size: 1.4rem;
+                color: var(--accent);
+                margin-bottom: 5px;
+            }
+            .sidebar-header .version {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+            }
+            .nav-section {
+                margin-bottom: 15px;
+            }
+            .nav-section-title {
+                padding: 10px 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+            .nav-link {
+                display: block;
+                padding: 8px 20px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.95rem;
+            }
+            .nav-link:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--accent-hover);
+            }
+            .nav-link.active {
+                background-color: var(--bg-tertiary);
+                border-left: 3px solid var(--accent);
+            }
+            .content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 40px;
+                max-width: 900px;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--text-primary);
+            }
+            h2 {
+                font-size: 1.8rem;
+                margin: 40px 0 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+            h3 {
+                font-size: 1.4rem;
+                margin: 30px 0 15px;
+                color: var(--accent);
+            }
+            h4 {
+                font-size: 1.1rem;
+                margin: 25px 0 10px;
+                color: var(--text-primary);
+            }
+            p {
+                margin-bottom: 15px;
+                color: var(--text-primary);
+            }
+            a {
+                color: var(--info);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            pre {
+                background-color: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                overflow-x: auto;
+                margin: 20px 0;
+            }
+            code {
+                font-family: "Fira Code", "Consolas", monospace;
+                font-size: 0.9rem;
+                color: #e6edf3;
+            }
+            code.inline {
+                background-color: var(--code-bg);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            th,
+            td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            th {
+                background-color: var(--bg-tertiary);
+                font-weight: 600;
+                color: var(--accent);
+            }
+            tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            ul,
+            ol {
+                margin: 15px 0;
+                padding-left: 30px;
+            }
+            li {
+                margin-bottom: 8px;
+            }
+            .method {
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                border-left: 4px solid var(--accent);
+            }
+            .method-header {
+                margin-bottom: 15px;
+            }
+            .method-name {
+                font-family: "Fira Code", monospace;
+                font-size: 1.2rem;
+                color: var(--accent);
+                font-weight: 600;
+            }
+            .method-signature {
+                font-family: "Fira Code", monospace;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                margin-top: 5px;
+            }
+            .method-description {
+                margin-bottom: 15px;
+            }
+            .parameters,
+            .returns {
+                margin: 15px 0;
+            }
+            .parameters h4,
+            .returns h4 {
+                color: var(--info);
+                margin-bottom: 10px;
+            }
+            .alert {
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid;
+            }
+            .alert-info {
+                background-color: rgba(88, 166, 255, 0.1);
+                border-color: var(--info);
+            }
+            .alert-warning {
+                background-color: rgba(240, 136, 62, 0.1);
+                border-color: var(--warning);
+            }
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    width: 100%;
+                    position: relative;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .content {
+                    margin-left: 0;
+                    padding: 20px;
+                }
+                .container {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h1>ASCII World</h1>
+                    <div class="version">v0.1.0</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="index.html" class="nav-link">Overview</a>
+                    <a href="getting-started.html" class="nav-link"
+                        >Quick Start</a
+                    >
+                    <a href="examples.html" class="nav-link">Examples</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">API Reference</div>
+                    <a href="core.html" class="nav-link">Core</a>
+                    <a href="ecs.html" class="nav-link active">ECS</a>
+                    <a href="display.html" class="nav-link">Display</a>
+                    <a href="world.html" class="nav-link">World</a>
+                    <a href="time.html" class="nav-link">Time</a>
+                    <a href="physics.html" class="nav-link">Physics</a>
+                    <a href="items.html" class="nav-link">Items</a>
+                    <a href="content.html" class="nav-link">Content</a>
+                    <a href="config.html" class="nav-link">Configuration</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Guides</div>
+                    <a href="modding-guide.html" class="nav-link"
+                        >Modding Guide</a
+                    >
+                </div>
+            </nav>
+
+            <main class="content">
+                <h1>ECS Module</h1>
+                <p>
+                    Entity Component System (ECS) architecture for flexible game
+                    object composition. Entities are containers for components,
+                    and systems process entities with specific component
+                    combinations.
+                </p>
+
+                <h2>ECSWorld</h2>
+                <p>
+                    The central coordinator that manages entities and systems.
+                    Provides entity lifecycle management and efficient queries.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new ECSWorld()</div>
+                        <div class="method-signature">
+                            constructor(eventBus?: EventBus)
+                        </div>
+                    </div>
+                    <pre><code>import { ECSWorld } from 'ascii-world';
+
+const ecsWorld = new ECSWorld();
+// Or with custom event bus:
+const ecsWorld = new ECSWorld(customEventBus);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">createEntity()</div>
+                        <div class="method-signature">
+                            createEntity(): Entity
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Creates a new entity with a unique auto-incrementing ID.
+                    </div>
+                    <pre><code>const player = ecsWorld.createEntity();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">removeEntity()</div>
+                        <div class="method-signature">
+                            removeEntity(entityId: EntityId): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Removes an entity and notifies all systems. Returns true
+                        if successful.
+                    </div>
+                    <pre><code>ecsWorld.removeEntity(player.id);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">queryEntities()</div>
+                        <div class="method-signature">
+                            queryEntities(query: Query): Entity[]
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Queries entities based on component filters. Results are
+                        cached for performance.
+                    </div>
+                    <div class="parameters">
+                        <h4>Query Options</h4>
+                        <ul>
+                            <li>
+                                <code>all</code> - Entity must have ALL these
+                                components
+                            </li>
+                            <li>
+                                <code>any</code> - Entity must have at least ONE
+                                of these components
+                            </li>
+                            <li>
+                                <code>none</code> - Entity must have NONE of
+                                these components
+                            </li>
+                        </ul>
+                    </div>
+                    <pre><code>// Find all entities with position and health
+const combatants = ecsWorld.queryEntities({
+    all: ['position', 'health']
+});
+
+// Find all visible renderable entities
+const visible = ecsWorld.queryEntities({
+    all: ['position', 'renderable'],
+    none: ['invisible']
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">addSystem()</div>
+                        <div class="method-signature">
+                            addSystem(system: System): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Adds a system to the world. Systems are sorted by
+                        priority (lower = earlier).
+                    </div>
+                    <pre><code>ecsWorld.addSystem(new MovementSystem());
+ecsWorld.addSystem(new CombatSystem());</code></pre>
+                </div>
+
+                <h2>Entity</h2>
+                <p>
+                    A game object container. Entities have no behavior
+                    themselves - all functionality comes from components.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">addComponent()</div>
+                        <div class="method-signature">
+                            addComponent&lt;T extends Component&gt;(component:
+                            T): Entity
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Adds a component to the entity. Returns the entity for
+                        chaining. Overwrites existing components of the same
+                        type.
+                    </div>
+                    <pre><code>entity
+    .addComponent(createPosition(10, 20))
+    .addComponent(createHealth(100, 100))
+    .addComponent(createRenderable('@', '#ffffff'));</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getComponent()</div>
+                        <div class="method-signature">
+                            getComponent&lt;T&gt;(type: string): T | undefined
+                        </div>
+                    </div>
+                    <pre><code>const position = entity.getComponent&lt;PositionComponent&gt;('position');
+if (position) {
+    console.log(`Entity is at (${position.x}, ${position.y})`);
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">hasComponent()</div>
+                        <div class="method-signature">
+                            hasComponent(type: string): boolean
+                        </div>
+                    </div>
+                    <pre><code>if (entity.hasComponent('health')) {
+    // Entity has health component
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">removeComponent()</div>
+                        <div class="method-signature">
+                            removeComponent(type: string): boolean
+                        </div>
+                    </div>
+                    <pre><code>entity.removeComponent('buff');</code></pre>
+                </div>
+
+                <h2>System</h2>
+                <p>
+                    Systems process entities with specific component
+                    combinations. Implement the System interface or extend
+                    BaseSystem.
+                </p>
+
+                <pre><code>import { System, Entity } from 'ascii-world';
+
+class MovementSystem implements System {
+    readonly name = 'MovementSystem';
+    readonly priority = 10;
+
+    query = {
+        all: ['position', 'velocity']
+    };
+
+    update(entities: Entity[], deltaTime: number): void {
+        for (const entity of entities) {
+            const pos = entity.getComponent&lt;PositionComponent&gt;('position');
+            const vel = entity.getComponent&lt;VelocityComponent&gt;('velocity');
+
+            if (pos && vel) {
+                pos.x += vel.vx * deltaTime;
+                pos.y += vel.vy * deltaTime;
+            }
+        }
+    }
+
+    onEntityAdded?(entity: Entity): void {
+        console.log(`Entity ${entity.id} added to MovementSystem`);
+    }
+
+    onEntityRemoved?(entity: Entity): void {
+        console.log(`Entity ${entity.id} removed from MovementSystem`);
+    }
+}</code></pre>
+
+                <h3>BaseSystem</h3>
+                <p>Convenience abstract class for creating systems:</p>
+                <pre><code>import { BaseSystem, Entity } from 'ascii-world';
+
+class HealthSystem extends BaseSystem {
+    readonly name = 'HealthSystem';
+    readonly priority = 5;
+    query = { all: ['health'] };
+
+    update(entities: Entity[], deltaTime: number): void {
+        for (const entity of entities) {
+            const health = entity.getComponent&lt;HealthComponent&gt;('health');
+            if (health && health.current <= 0) {
+                // Handle death
+            }
+        }
+    }
+}</code></pre>
+
+                <h2>Built-in Components</h2>
+
+                <h3>Position Component</h3>
+                <pre><code>interface PositionComponent extends Component {
+    type: 'position';
+    x: number;
+    y: number;
+}
+
+// Factory function
+const pos = createPosition(10, 20);
+entity.addComponent(pos);</code></pre>
+
+                <h3>Health Component</h3>
+                <pre><code>interface HealthComponent extends Component {
+    type: 'health';
+    current: number;
+    max: number;
+}
+
+const health = createHealth(100, 100);
+entity.addComponent(health);</code></pre>
+
+                <h3>Speed Component</h3>
+                <pre><code>interface SpeedComponent extends Component {
+    type: 'speed';
+    value: number;  // 100 = normal speed
+}
+
+const speed = createSpeed(150);  // 50% faster than normal</code></pre>
+
+                <h3>Actor Component</h3>
+                <pre><code>interface ActorComponent extends Component {
+    type: 'actor';
+    isPlayer: boolean;
+    energy: number;
+    nextAction?: string;
+}
+
+const actor = createActor(true);  // true = is player</code></pre>
+
+                <h3>Renderable Component</h3>
+                <pre><code>interface RenderableComponent extends Component {
+    type: 'renderable';
+    char: string;
+    fg: string;
+    bg?: string;
+}
+
+const renderable = createRenderable('@', '#ffffff', '#000000');</code></pre>
+
+                <h2>Component Factories</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Function</th>
+                            <th>Signature</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>createPosition</code></td>
+                            <td><code>(x, y)</code></td>
+                            <td>Position in world coordinates</td>
+                        </tr>
+                        <tr>
+                            <td><code>createVelocity</code></td>
+                            <td><code>(vx, vy)</code></td>
+                            <td>Velocity vector</td>
+                        </tr>
+                        <tr>
+                            <td><code>createHealth</code></td>
+                            <td><code>(current, max)</code></td>
+                            <td>Health points</td>
+                        </tr>
+                        <tr>
+                            <td><code>createSpeed</code></td>
+                            <td><code>(value)</code></td>
+                            <td>Speed value (100 = normal)</td>
+                        </tr>
+                        <tr>
+                            <td><code>createActor</code></td>
+                            <td><code>(isPlayer?)</code></td>
+                            <td>Actor for turn system</td>
+                        </tr>
+                        <tr>
+                            <td><code>createRenderable</code></td>
+                            <td><code>(char, fg, bg?)</code></td>
+                            <td>Visual representation</td>
+                        </tr>
+                        <tr>
+                            <td><code>createInventoryComponent</code></td>
+                            <td><code>(capacity, volume)</code></td>
+                            <td>Inventory for items</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Events</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Data</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ecs:entityCreated</code></td>
+                            <td><code>{ entityId }</code></td>
+                            <td>New entity created</td>
+                        </tr>
+                        <tr>
+                            <td><code>ecs:entityRemoved</code></td>
+                            <td><code>{ entityId }</code></td>
+                            <td>Entity removed</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-info">
+                    <strong>Performance Tip:</strong> Entity queries are cached.
+                    The cache is invalidated when entities are added, removed,
+                    or when components change. For best performance, minimize
+                    entity churn in hot paths.
+                </div>
+
+                <div class="footer">
+                    <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Time Module - ASCII World Engine</title>
+        <style>
+            :root {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #eaeaea;
+                --text-secondary: #a0a0a0;
+                --accent: #e94560;
+                --accent-hover: #ff6b6b;
+                --code-bg: #0d1117;
+                --border: #30363d;
+                --success: #238636;
+                --warning: #f0883e;
+                --info: #58a6ff;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "Segoe UI", system-ui, sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                line-height: 1.6;
+            }
+            .container {
+                display: flex;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 280px;
+                background-color: var(--bg-secondary);
+                border-right: 1px solid var(--border);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+            .sidebar-header {
+                padding: 0 20px 20px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 20px;
+            }
+            .sidebar-header h1 {
+                font-size: 1.4rem;
+                color: var(--accent);
+                margin-bottom: 5px;
+            }
+            .sidebar-header .version {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+            }
+            .nav-section {
+                margin-bottom: 15px;
+            }
+            .nav-section-title {
+                padding: 10px 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+            .nav-link {
+                display: block;
+                padding: 8px 20px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.95rem;
+            }
+            .nav-link:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--accent-hover);
+            }
+            .nav-link.active {
+                background-color: var(--bg-tertiary);
+                border-left: 3px solid var(--accent);
+            }
+            .content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 40px;
+                max-width: 900px;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--text-primary);
+            }
+            h2 {
+                font-size: 1.8rem;
+                margin: 40px 0 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+            h3 {
+                font-size: 1.4rem;
+                margin: 30px 0 15px;
+                color: var(--accent);
+            }
+            h4 {
+                font-size: 1.1rem;
+                margin: 25px 0 10px;
+                color: var(--text-primary);
+            }
+            p {
+                margin-bottom: 15px;
+                color: var(--text-primary);
+            }
+            a {
+                color: var(--info);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            pre {
+                background-color: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                overflow-x: auto;
+                margin: 20px 0;
+            }
+            code {
+                font-family: "Fira Code", "Consolas", monospace;
+                font-size: 0.9rem;
+                color: #e6edf3;
+            }
+            code.inline {
+                background-color: var(--code-bg);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            th,
+            td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            th {
+                background-color: var(--bg-tertiary);
+                font-weight: 600;
+                color: var(--accent);
+            }
+            tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            ul,
+            ol {
+                margin: 15px 0;
+                padding-left: 30px;
+            }
+            li {
+                margin-bottom: 8px;
+            }
+            .method {
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                border-left: 4px solid var(--accent);
+            }
+            .method-header {
+                margin-bottom: 15px;
+            }
+            .method-name {
+                font-family: "Fira Code", monospace;
+                font-size: 1.2rem;
+                color: var(--accent);
+                font-weight: 600;
+            }
+            .method-signature {
+                font-family: "Fira Code", monospace;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                margin-top: 5px;
+            }
+            .method-description {
+                margin-bottom: 15px;
+            }
+            .parameters,
+            .returns {
+                margin: 15px 0;
+            }
+            .parameters h4,
+            .returns h4 {
+                color: var(--info);
+                margin-bottom: 10px;
+            }
+            .alert {
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid;
+            }
+            .alert-info {
+                background-color: rgba(88, 166, 255, 0.1);
+                border-color: var(--info);
+            }
+            .alert-warning {
+                background-color: rgba(240, 136, 62, 0.1);
+                border-color: var(--warning);
+            }
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    width: 100%;
+                    position: relative;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .content {
+                    margin-left: 0;
+                    padding: 20px;
+                }
+                .container {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h1>ASCII World</h1>
+                    <div class="version">v0.1.0</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="index.html" class="nav-link">Overview</a>
+                    <a href="getting-started.html" class="nav-link"
+                        >Quick Start</a
+                    >
+                    <a href="examples.html" class="nav-link">Examples</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">API Reference</div>
+                    <a href="core.html" class="nav-link">Core</a>
+                    <a href="ecs.html" class="nav-link">ECS</a>
+                    <a href="display.html" class="nav-link">Display</a>
+                    <a href="world.html" class="nav-link">World</a>
+                    <a href="time.html" class="nav-link active">Time</a>
+                    <a href="physics.html" class="nav-link">Physics</a>
+                    <a href="items.html" class="nav-link">Items</a>
+                    <a href="content.html" class="nav-link">Content</a>
+                    <a href="config.html" class="nav-link">Configuration</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Guides</div>
+                    <a href="modding-guide.html" class="nav-link"
+                        >Modding Guide</a
+                    >
+                </div>
+            </nav>
+
+            <main class="content">
+                <h1>Time Module</h1>
+                <p>
+                    Turn management and deferred updates using rot.js
+                    Scheduler.Speed. Implements a speed-based turn system where
+                    faster actors act more frequently.
+                </p>
+
+                <h2>TurnManager</h2>
+                <p>
+                    Manages the turn loop using rot.js Scheduler.Speed for
+                    variable actor speeds.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new TurnManager()</div>
+                        <div class="method-signature">
+                            constructor(ecsWorld: ECSWorld, eventBus: EventBus,
+                            speedSystem: SpeedSystem)
+                        </div>
+                    </div>
+                    <pre><code>const turnManager = new TurnManager(ecsWorld, eventBus, new SpeedSystem());</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">registerActor()</div>
+                        <div class="method-signature">
+                            registerActor(actor: Actor, isPlayer?: boolean):
+                            void
+                        </div>
+                    </div>
+                    <pre><code>turnManager.registerActor(playerActor, true);  // Player
+turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">start()</div>
+                        <div class="method-signature">
+                            async start(): Promise&lt;void&gt;
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Starts the turn loop. Runs continuously until stop() is
+                        called.
+                    </div>
+                    <pre><code>await turnManager.start();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">stop()</div>
+                        <div class="method-signature">stop(): void</div>
+                    </div>
+                    <pre><code>turnManager.stop();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">setPlayerActionCallback()</div>
+                        <div class="method-signature">
+                            setPlayerActionCallback(callback: () =>
+                            Promise&lt;void&gt;): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Sets the callback function called when it's the player's
+                        turn.
+                    </div>
+                    <pre><code>turnManager.setPlayerActionCallback(async () => {
+    await waitForPlayerInput();
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getCurrentTurn()</div>
+                        <div class="method-signature">
+                            getCurrentTurn(): number
+                        </div>
+                    </div>
+                    <pre><code>console.log(`Turn ${turnManager.getCurrentTurn()}`);</code></pre>
+                </div>
+
+                <h2>Actor Interface</h2>
+                <p>
+                    Actors participate in the turn system. Implement this
+                    interface for any entity that takes turns.
+                </p>
+                <pre><code>interface Actor {
+    entityId: EntityId;
+    getSpeed(): number;
+    act(): Promise&lt;void&gt; | void;
+}</code></pre>
+
+                <h3>Example Actor Implementation</h3>
+                <pre><code>class EntityActor implements Actor {
+    entityId: EntityId;
+    private entity: Entity;
+    private ai: AISystem;
+
+    constructor(entity: Entity, ai: AISystem) {
+        this.entity = entity;
+        this.entityId = entity.id;
+        this.ai = ai;
+    }
+
+    getSpeed(): number {
+        const speed = this.entity.getComponent&lt;SpeedComponent&gt;('speed');
+        return speed?.value || 100;
+    }
+
+    async act(): Promise&lt;void&gt; {
+        await this.ai.takeTurn(this.entity);
+    }
+}</code></pre>
+
+                <h2>Speed System</h2>
+                <p>
+                    Calculates action costs based on actor speed. Speed 100 is
+                    normal, higher is faster, lower is slower.
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Speed</th>
+                            <th>Action Cost Multiplier</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>200</td>
+                            <td>0.5x</td>
+                            <td>Fast (acts twice as often)</td>
+                        </tr>
+                        <tr>
+                            <td>100</td>
+                            <td>1.0x</td>
+                            <td>Normal</td>
+                        </tr>
+                        <tr>
+                            <td>50</td>
+                            <td>2.0x</td>
+                            <td>Slow (acts half as often)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">calculateActionCost()</div>
+                        <div class="method-signature">
+                            calculateActionCost(baseCost: number, speed:
+                            number): number
+                        </div>
+                    </div>
+                    <pre><code>const cost = speedSystem.calculateActionCost(100, 150);
+// Returns 67 (100 * 100 / 150)</code></pre>
+                </div>
+
+                <h2>Actions</h2>
+                <p>
+                    Factory methods for creating actions with speed-adjusted
+                    costs.
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Base Cost</th>
+                            <th>Factory Method</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Move</td>
+                            <td>100</td>
+                            <td><code>Action.createMoveAction(speed)</code></td>
+                        </tr>
+                        <tr>
+                            <td>Attack</td>
+                            <td>100</td>
+                            <td>
+                                <code>Action.createAttackAction(speed)</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Craft</td>
+                            <td>300</td>
+                            <td>
+                                <code>Action.createCraftAction(speed)</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Wait</td>
+                            <td>50</td>
+                            <td><code>Action.createWaitAction(speed)</code></td>
+                        </tr>
+                        <tr>
+                            <td>Interact</td>
+                            <td>100</td>
+                            <td>
+                                <code>Action.createInteractAction(speed)</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Pickup</td>
+                            <td>50</td>
+                            <td>
+                                <code>Action.createPickupAction(speed)</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Drop</td>
+                            <td>25</td>
+                            <td><code>Action.createDropAction(speed)</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Deferred Updates</h2>
+                <p>
+                    Handle "catch-up" for entities in inactive chunks when they
+                    re-enter the active zone.
+                </p>
+
+                <h3>DeferredUpdateSystem</h3>
+                <pre><code>const deferredSystem = new DeferredUpdateSystem(ecsWorld, eventBus);
+
+// Queue an entity for catch-up
+deferredSystem.queueCatchUp(entityId, missedTurns);
+
+// Process all queued updates
+deferredSystem.processAll();</code></pre>
+
+                <h3>CatchUpCalculator</h3>
+                <p>
+                    Calculates accumulated effects over missed turns (hunger,
+                    regeneration, etc.).
+                </p>
+                <pre><code>const results = CatchUpCalculator.calculate(entity, 50, 100);
+console.log(results.healthDelta);   // Health regenerated
+console.log(results.hungerDelta);   // Hunger accumulated
+console.log(results.events);        // Summary events</code></pre>
+
+                <h2>Events</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Data</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>turn:actorRegistered</code></td>
+                            <td><code>{ entityId, isPlayer }</code></td>
+                            <td>Actor added to turn system</td>
+                        </tr>
+                        <tr>
+                            <td><code>turn:actorRemoved</code></td>
+                            <td><code>{ entityId }</code></td>
+                            <td>Actor removed</td>
+                        </tr>
+                        <tr>
+                            <td><code>turn:started</code></td>
+                            <td><code>{ turn }</code></td>
+                            <td>Turn loop started</td>
+                        </tr>
+                        <tr>
+                            <td><code>turn:stopped</code></td>
+                            <td><code>{ turn }</code></td>
+                            <td>Turn loop stopped</td>
+                        </tr>
+                        <tr>
+                            <td><code>turn:begin</code></td>
+                            <td><code>{ entityId, turn, isPlayer }</code></td>
+                            <td>Turn started for actor</td>
+                        </tr>
+                        <tr>
+                            <td><code>turn:end</code></td>
+                            <td><code>{ entityId, turn, isPlayer }</code></td>
+                            <td>Turn completed</td>
+                        </tr>
+                        <tr>
+                            <td><code>deferred:catchUpComplete</code></td>
+                            <td>
+                                <code>{ entityId, missedTurns, events }</code>
+                            </td>
+                            <td>Catch-up processed</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Complete Example</h2>
+                <pre><code>import {
+    TurnManager,
+    SpeedSystem,
+    Action,
+    globalEventBus
+} from 'ascii-world';
+
+// Create turn manager
+const turnManager = new TurnManager(ecsWorld, globalEventBus, new SpeedSystem());
+
+// Create player actor
+class PlayerActor implements Actor {
+    entityId = player.id;
+
+    getSpeed(): number {
+        const speed = player.getComponent&lt;SpeedComponent&gt;('speed');
+        return speed?.value || 100;
+    }
+
+    async act(): Promise&lt;void&gt; {
+        // Player turn - wait for input
+        await new Promise(resolve => {
+            document.addEventListener('keydown', function handler(e) {
+                if (handleInput(e)) {
+                    document.removeEventListener('keydown', handler);
+                    resolve(undefined);
+                }
+            });
+        });
+    }
+}
+
+// Register player
+const playerActor = new PlayerActor();
+turnManager.registerActor(playerActor, true);
+
+// Start turn loop
+turnManager.start();</code></pre>
+
+                <div class="alert alert-info">
+                    <strong>Tip:</strong> Use the SpeedSystem to create varied
+                    gameplay. Fast enemies feel frantic, while slow enemies give
+                    players time to react.
+                </div>
+
+                <div class="footer">
+                    <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>

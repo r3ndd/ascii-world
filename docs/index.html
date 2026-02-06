@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ASCII World Engine Documentation</title>
+        <style>
+            :root {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #eaeaea;
+                --text-secondary: #a0a0a0;
+                --accent: #e94560;
+                --accent-hover: #ff6b6b;
+                --code-bg: #0d1117;
+                --border: #30363d;
+                --success: #238636;
+                --warning: #f0883e;
+                --info: #58a6ff;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    "Segoe UI",
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                line-height: 1.6;
+            }
+
+            .container {
+                display: flex;
+                min-height: 100vh;
+            }
+
+            /* Sidebar Navigation */
+            .sidebar {
+                width: 280px;
+                background-color: var(--bg-secondary);
+                border-right: 1px solid var(--border);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+
+            .sidebar-header {
+                padding: 0 20px 20px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 20px;
+            }
+
+            .sidebar-header h1 {
+                font-size: 1.4rem;
+                color: var(--accent);
+                margin-bottom: 5px;
+            }
+
+            .sidebar-header .version {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+            }
+
+            .nav-section {
+                margin-bottom: 15px;
+            }
+
+            .nav-section-title {
+                padding: 10px 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+
+            .nav-link {
+                display: block;
+                padding: 8px 20px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.95rem;
+            }
+
+            .nav-link:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--accent-hover);
+            }
+
+            .nav-link.active {
+                background-color: var(--bg-tertiary);
+                border-left: 3px solid var(--accent);
+            }
+
+            /* Main Content */
+            .content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 40px;
+                max-width: 900px;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--text-primary);
+            }
+
+            h2 {
+                font-size: 1.8rem;
+                margin: 40px 0 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+
+            h3 {
+                font-size: 1.4rem;
+                margin: 30px 0 15px;
+                color: var(--accent);
+            }
+
+            h4 {
+                font-size: 1.1rem;
+                margin: 25px 0 10px;
+                color: var(--text-primary);
+            }
+
+            p {
+                margin-bottom: 15px;
+                color: var(--text-primary);
+            }
+
+            a {
+                color: var(--info);
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+            /* Code Blocks */
+            pre {
+                background-color: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                overflow-x: auto;
+                margin: 20px 0;
+            }
+
+            code {
+                font-family: "Fira Code", "Consolas", monospace;
+                font-size: 0.9rem;
+                color: #e6edf3;
+            }
+
+            code.inline {
+                background-color: var(--code-bg);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+
+            /* Tables */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+
+            th,
+            td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+
+            th {
+                background-color: var(--bg-tertiary);
+                font-weight: 600;
+                color: var(--accent);
+            }
+
+            tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+
+            /* Lists */
+            ul,
+            ol {
+                margin: 15px 0;
+                padding-left: 30px;
+            }
+
+            li {
+                margin-bottom: 8px;
+            }
+
+            /* Cards */
+            .card-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+                margin: 30px 0;
+            }
+
+            .card {
+                background-color: var(--bg-secondary);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                transition:
+                    transform 0.2s ease,
+                    border-color 0.2s ease;
+            }
+
+            .card:hover {
+                transform: translateY(-2px);
+                border-color: var(--accent);
+            }
+
+            .card h3 {
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+
+            .card p {
+                color: var(--text-secondary);
+                font-size: 0.95rem;
+                margin-bottom: 0;
+            }
+
+            /* Feature List */
+            .feature-list {
+                list-style: none;
+                padding: 0;
+            }
+
+            .feature-list li {
+                padding: 10px 0;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .feature-list li:last-child {
+                border-bottom: none;
+            }
+
+            .feature-list li::before {
+                content: "✓";
+                color: var(--success);
+                font-weight: bold;
+            }
+
+            /* Method/Class Documentation */
+            .method {
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                border-left: 4px solid var(--accent);
+            }
+
+            .method-header {
+                margin-bottom: 15px;
+            }
+
+            .method-name {
+                font-family: "Fira Code", monospace;
+                font-size: 1.2rem;
+                color: var(--accent);
+                font-weight: 600;
+            }
+
+            .method-signature {
+                font-family: "Fira Code", monospace;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                margin-top: 5px;
+            }
+
+            .method-description {
+                margin-bottom: 15px;
+            }
+
+            .parameters,
+            .returns {
+                margin: 15px 0;
+            }
+
+            .parameters h4,
+            .returns h4 {
+                color: var(--info);
+                margin-bottom: 10px;
+            }
+
+            /* Mobile Responsive */
+            @media (max-width: 768px) {
+                .sidebar {
+                    width: 100%;
+                    position: relative;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+
+                .content {
+                    margin-left: 0;
+                    padding: 20px;
+                }
+
+                .container {
+                    flex-direction: column;
+                }
+            }
+
+            /* Search Box */
+            .search-box {
+                padding: 0 20px 20px;
+            }
+
+            .search-box input {
+                width: 100%;
+                padding: 10px;
+                background-color: var(--bg-tertiary);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                color: var(--text-primary);
+                font-size: 0.9rem;
+            }
+
+            .search-box input:focus {
+                outline: none;
+                border-color: var(--accent);
+            }
+
+            /* Alert Boxes */
+            .alert {
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid;
+            }
+
+            .alert-info {
+                background-color: rgba(88, 166, 255, 0.1);
+                border-color: var(--info);
+            }
+
+            .alert-warning {
+                background-color: rgba(240, 136, 62, 0.1);
+                border-color: var(--warning);
+            }
+
+            .alert-success {
+                background-color: rgba(35, 134, 54, 0.1);
+                border-color: var(--success);
+            }
+
+            /* Badge */
+            .badge {
+                display: inline-block;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+            }
+
+            .badge-typescript {
+                background-color: #3178c6;
+                color: white;
+            }
+
+            .badge-rotjs {
+                background-color: #e94560;
+                color: white;
+            }
+
+            /* Quick Links */
+            .quick-links {
+                display: flex;
+                gap: 15px;
+                flex-wrap: wrap;
+                margin: 20px 0;
+            }
+
+            .quick-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 20px;
+                background-color: var(--bg-tertiary);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            .quick-link:hover {
+                background-color: var(--accent);
+                color: white;
+                text-decoration: none;
+            }
+
+            /* Footer */
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h1>ASCII World</h1>
+                    <div class="version">v0.1.0</div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="index.html" class="nav-link active">Overview</a>
+                    <a href="getting-started.html" class="nav-link"
+                        >Quick Start</a
+                    >
+                    <a href="examples.html" class="nav-link">Examples</a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">API Reference</div>
+                    <a href="core.html" class="nav-link">Core</a>
+                    <a href="ecs.html" class="nav-link">ECS</a>
+                    <a href="display.html" class="nav-link">Display</a>
+                    <a href="world.html" class="nav-link">World</a>
+                    <a href="time.html" class="nav-link">Time</a>
+                    <a href="physics.html" class="nav-link">Physics</a>
+                    <a href="items.html" class="nav-link">Items</a>
+                    <a href="content.html" class="nav-link">Content</a>
+                    <a href="config.html" class="nav-link">Configuration</a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Guides</div>
+                    <a href="modding-guide.html" class="nav-link"
+                        >Modding Guide</a
+                    >
+                </div>
+            </nav>
+
+            <main class="content">
+                <h1>ASCII World Engine</h1>
+
+                <p>
+                    <strong>ASCII World</strong> is a 2D ASCII game engine built
+                    on top of
+                    <a
+                        href="https://ondras.github.io/rot.js/doc/"
+                        target="_blank"
+                        >rot.js</a
+                    >, designed for creating open-world survival games in the
+                    style of CDDA (Cataclysm: Dark Days Ahead).
+                </p>
+
+                <div class="quick-links">
+                    <a href="getting-started.html" class="quick-link"
+                        >🚀 Quick Start</a
+                    >
+                    <a href="examples.html" class="quick-link">📚 Examples</a>
+                    <a href="modding-guide.html" class="quick-link"
+                        >🧩 Modding</a
+                    >
+                </div>
+
+                <h2>Features</h2>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Entity Component System</h3>
+                        <p>
+                            Modern ECS architecture for flexible game object
+                            composition and efficient queries with caching.
+                        </p>
+                    </div>
+                    <div class="card">
+                        <h3>Chunk-Based World</h3>
+                        <p>
+                            64x64 tile chunks with distance-based updates for
+                            optimal performance in large worlds.
+                        </p>
+                    </div>
+                    <div class="card">
+                        <h3>Turn-Based Combat</h3>
+                        <p>
+                            Speed-based turn system using rot.js Scheduler.Speed
+                            for variable actor speeds.
+                        </p>
+                    </div>
+                    <div class="card">
+                        <h3>Procedural Generation</h3>
+                        <p>
+                            Built-in generators for wilderness, dungeons, caves,
+                            and cities with pluggable architecture.
+                        </p>
+                    </div>
+                    <div class="card">
+                        <h3>Mod Support</h3>
+                        <p>
+                            Load JSON content packs and JavaScript mods with
+                            dependency resolution.
+                        </p>
+                    </div>
+                    <div class="card">
+                        <h3>Save/Load System</h3>
+                        <p>
+                            JSON-based persistence with compression support and
+                            save slot management.
+                        </p>
+                    </div>
+                </div>
+
+                <h2>Quick Example</h2>
+
+                <pre><code>import { Engine, ECSWorld, World, DisplayManager, Camera, Renderer } from 'ascii-world';
+
+// Initialize the engine
+const engine = new Engine();
+await engine.initialize();
+
+// Create ECS world
+const ecsWorld = new ECSWorld();
+
+// Setup display
+const display = new DisplayManager({
+    width: 80,
+    height: 25,
+    fontSize: 16
+});
+
+// Create game world
+const gameWorld = new World(1000, 1000, 64, ecsWorld);
+gameWorld.initialize();
+
+// Create player entity
+const player = ecsWorld.createEntity()
+    .addComponent(createPosition(500, 500))
+    .addComponent(createHealth(100, 100))
+    .addComponent(createSpeed(100))
+    .addComponent(createRenderable('@', '#ffffff'));
+
+engine.start();</code></pre>
+
+                <h2>Architecture Overview</h2>
+
+                <p>
+                    The engine is organized into distinct modules, each handling
+                    a specific aspect of game development:
+                </p>
+
+                <ul class="feature-list">
+                    <li>
+                        <strong>Core</strong> - Engine initialization,
+                        configuration, and event bus
+                    </li>
+                    <li>
+                        <strong>ECS</strong> - Entity Component System for game
+                        objects
+                    </li>
+                    <li>
+                        <strong>Display</strong> - Rendering and viewport
+                        management via rot.js
+                    </li>
+                    <li>
+                        <strong>World</strong> - Chunk management, terrain, and
+                        map systems
+                    </li>
+                    <li>
+                        <strong>Time</strong> - Turn management and deferred
+                        updates
+                    </li>
+                    <li>
+                        <strong>Physics</strong> - Movement, collision, FOV,
+                        lighting, pathfinding
+                    </li>
+                    <li>
+                        <strong>Items</strong> - Item system with templates,
+                        inventory, and equipment
+                    </li>
+                    <li>
+                        <strong>Content</strong> - Mod loading, world
+                        generation, and content packs
+                    </li>
+                </ul>
+
+                <h2>Default World Configuration</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>World Size</td>
+                            <td>1000x1000 tiles</td>
+                            <td>Total world dimensions</td>
+                        </tr>
+                        <tr>
+                            <td>Chunk Size</td>
+                            <td>64x64 tiles</td>
+                            <td>Tiles per chunk</td>
+                        </tr>
+                        <tr>
+                            <td>Total Chunks</td>
+                            <td>256 (16x16)</td>
+                            <td>Chunk grid for 1000x1000 world</td>
+                        </tr>
+                        <tr>
+                            <td>Active Chunks</td>
+                            <td>9 (3x3)</td>
+                            <td>Chunks updated each turn around player</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Dependencies</h2>
+
+                <ul>
+                    <li>
+                        <span class="badge badge-rotjs">rot.js</span> ^2.2.0 -
+                        Rendering, FOV, scheduling, pathfinding
+                    </li>
+                    <li>
+                        <span class="badge badge-typescript">TypeScript</span>
+                        ^5.0.0 - Type safety and modern JS features
+                    </li>
+                </ul>
+
+                <div class="alert alert-info">
+                    <strong>Note:</strong> This engine is built specifically
+                    around the rot.js framework. All rendering, field of view,
+                    lighting, and pathfinding use rot.js implementations.
+                </div>
+
+                <h2>Next Steps</h2>
+
+                <p>
+                    Ready to start building? Check out the
+                    <a href="getting-started.html">Getting Started Guide</a>
+                    for installation instructions and your first game, or browse
+                    the
+                    <a href="examples.html">Examples</a> for common patterns and
+                    use cases.
+                </p>
+
+                <div class="footer">
+                    <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>
