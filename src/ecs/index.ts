@@ -285,3 +285,6 @@ export function createActor(isPlayer: boolean = false): ActorComponent {
 export function createRenderable(char: string, fg: string, bg?: string): RenderableComponent {
   return { type: 'renderable', char, fg, bg };
 }
+
+// Re-export entity factory
+export { EntityFactory, PlayerOptions, NPCOptions } from './EntityFactory';

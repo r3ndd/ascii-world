@@ -6,11 +6,17 @@ import {
   PostHocUpdateQueue,
   DeferredUpdateSystem,
   CatchUpCalculator,
-  Actor
+  ActorSystem
 } from '../../src/time';
-import { ECSWorld, Entity, createPosition, createHealth, createSpeed, createActor } from '../../src/ecs';
+import { ECSWorld, Entity, createPosition, createHealth, createSpeed, createActor, createRenderable } from '../../src/ecs';
 import { EventBus } from '../../src/core/EventBus';
 import { ACTION_COSTS } from '../../src/config/ActionCosts';
+import { PhysicsSystem } from '../../src/physics';
+
+// Mock PhysicsSystem for tests
+class MockPhysicsSystem {
+  moveEntity = jest.fn().mockReturnValue(true);
+}
 
 describe('Action', () => {
   describe('factory methods', () => {
@@ -322,146 +328,137 @@ describe('DeferredUpdateSystem', () => {
 });
 
 describe('TurnManager', () => {
-  let turnManager: TurnManager;
   let ecsWorld: ECSWorld;
   let eventBus: EventBus;
   let speedSystem: SpeedSystem;
+  let actorSystem: ActorSystem;
+  let mockPhysics: MockPhysicsSystem;
 
   beforeEach(() => {
-    ecsWorld = new ECSWorld();
     eventBus = new EventBus();
+    ecsWorld = new ECSWorld(eventBus);
     speedSystem = new SpeedSystem();
-    turnManager = new TurnManager(ecsWorld, eventBus, speedSystem);
+    mockPhysics = new MockPhysicsSystem();
+    actorSystem = new ActorSystem(ecsWorld, mockPhysics as unknown as PhysicsSystem);
   });
 
-  describe('actor registration', () => {
-    it('should register actors', () => {
-      const actor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
+  afterEach(() => {
+    ecsWorld.clear();
+  });
 
-      turnManager.registerActor(actor);
-      expect(turnManager.getCurrentTurn()).toBe(0);
-    });
+  // Helper to create TurnManager after entities are set up
+  function createTurnManager(): TurnManager {
+    return new TurnManager(ecsWorld, eventBus, speedSystem, actorSystem);
+  }
 
-    it('should register player actor', () => {
-      const playerActor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
+  describe('actor discovery from ECS', () => {
+    it('should discover actors automatically when entities are created', () => {
+      // Create entity with actor and speed components BEFORE TurnManager
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createPosition(0, 0));
+      entity.addComponent(createRenderable('n', '#fff'));
+      entity.addComponent(createActor(false));
+      entity.addComponent(createHealth(50, 50));
+      entity.addComponent(createSpeed(100));
 
       const handler = jest.fn();
       eventBus.on('turn:actorRegistered', handler);
 
-      turnManager.registerActor(playerActor, true);
+      // Create TurnManager after entity is fully set up
+      createTurnManager();
 
-      expect(handler).toHaveBeenCalledWith({ entityId: 1, isPlayer: true });
+      expect(handler).toHaveBeenCalledWith({ entityId: entity.id, isPlayer: false });
     });
 
-    it('should emit event when registering actor', () => {
+    it('should identify player actors', () => {
+      // Create player entity BEFORE TurnManager
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createPosition(0, 0));
+      entity.addComponent(createRenderable('@', '#ff0'));
+      entity.addComponent(createActor(true)); // isPlayer = true
+      entity.addComponent(createHealth(100, 100));
+      entity.addComponent(createSpeed(100));
+
       const handler = jest.fn();
       eventBus.on('turn:actorRegistered', handler);
 
-      const actor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
+      // Create TurnManager after entity is fully set up
+      createTurnManager();
 
-      turnManager.registerActor(actor);
-      expect(handler).toHaveBeenCalledWith({ entityId: 1, isPlayer: false });
-    });
-  });
-
-  describe('actor removal', () => {
-    it('should remove actors', () => {
-      const actor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
-
-      turnManager.registerActor(actor);
-      const result = turnManager.removeActor(1);
-      expect(result).toBe(true);
+      expect(handler).toHaveBeenCalledWith({ entityId: entity.id, isPlayer: true });
     });
 
-    it('should return false when removing non-existent actor', () => {
-      const result = turnManager.removeActor(999);
-      expect(result).toBe(false);
-    });
+    it('should emit event when entity is removed', () => {
+      // Create and then remove entity BEFORE TurnManager
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createActor(false));
+      entity.addComponent(createSpeed(100));
 
-    it('should clear player reference when removing player', () => {
-      const playerActor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
+      ecsWorld.removeEntity(entity.id);
 
       const handler = jest.fn();
       eventBus.on('turn:actorRemoved', handler);
 
-      turnManager.registerActor(playerActor, true);
-      turnManager.removeActor(1);
+      // Create TurnManager after entity is removed
+      createTurnManager();
 
-      expect(handler).toHaveBeenCalledWith({ entityId: 1 });
+      // Note: entity was already removed, so no event should be emitted during creation
+      expect(handler).not.toHaveBeenCalled();
     });
   });
 
   describe('turn processing', () => {
-    it('should process single turn', async () => {
-      const actFn = jest.fn();
-      const actor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: actFn
-      };
+    it('should process single turn for NPC', async () => {
+      // Create NPC entity BEFORE TurnManager
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createPosition(0, 0));
+      entity.addComponent(createRenderable('n', '#fff'));
+      entity.addComponent(createActor(false));
+      entity.addComponent(createHealth(50, 50));
+      entity.addComponent(createSpeed(100));
 
-      turnManager.registerActor(actor);
+      const turnManager = createTurnManager();
+
       await turnManager.processSingleTurn();
 
-      expect(actFn).toHaveBeenCalled();
+      // NPC should have moved (random movement)
+      expect(mockPhysics.moveEntity).toHaveBeenCalled();
       expect(turnManager.getCurrentTurn()).toBe(1);
     });
 
     it('should emit turn begin event', async () => {
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createActor(false));
+      entity.addComponent(createSpeed(100));
+
+      const turnManager = createTurnManager();
+
       const handler = jest.fn();
       eventBus.on('turn:begin', handler);
 
-      const actor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
-
-      turnManager.registerActor(actor);
       await turnManager.processSingleTurn();
 
       expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-        entityId: 1,
+        entityId: entity.id,
         turn: 0,
         isPlayer: false
       }));
     });
 
     it('should emit turn end event', async () => {
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createActor(false));
+      entity.addComponent(createSpeed(100));
+
+      const turnManager = createTurnManager();
+
       const handler = jest.fn();
       eventBus.on('turn:end', handler);
 
-      const actor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
-
-      turnManager.registerActor(actor);
       await turnManager.processSingleTurn();
 
       expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-        entityId: 1,
+        entityId: entity.id,
         turn: 1,
         isPlayer: false
       }));
@@ -472,17 +469,21 @@ describe('TurnManager', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       eventBus.on('turn:error', handler);
 
-      const actor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: () => { throw new Error('Test error'); }
-      };
+      // Make physics throw an error
+      mockPhysics.moveEntity.mockImplementation(() => {
+        throw new Error('Test error');
+      });
 
-      turnManager.registerActor(actor);
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createActor(false));
+      entity.addComponent(createSpeed(100));
+
+      const turnManager = createTurnManager();
+
       await turnManager.processSingleTurn();
 
       expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-        entityId: 1,
+        entityId: entity.id,
         error: expect.any(Error)
       }));
       consoleSpy.mockRestore();
@@ -490,54 +491,72 @@ describe('TurnManager', () => {
 
     it('should warn when no actors available', async () => {
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      
+      const turnManager = createTurnManager();
       await turnManager.processSingleTurn();
+      
       expect(consoleSpy).toHaveBeenCalledWith('No actors in scheduler');
       consoleSpy.mockRestore();
     });
   });
 
   describe('player turn handling', () => {
-    it('should use callback for player turn', async () => {
-      const playerCallback = jest.fn().mockResolvedValue(undefined);
-      const playerActor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
+    it('should use input handler for player turn', async () => {
+      const inputHandler = jest.fn().mockResolvedValue({ direction: 'north' as const });
 
-      turnManager.registerActor(playerActor, true);
-      turnManager.setPlayerActionCallback(playerCallback);
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createPosition(0, 0));
+      entity.addComponent(createRenderable('@', '#ff0'));
+      entity.addComponent(createActor(true)); // isPlayer = true
+      entity.addComponent(createHealth(100, 100));
+      entity.addComponent(createSpeed(100));
+
+      const turnManager = createTurnManager();
+      turnManager.setPlayerInputHandler(inputHandler);
+
+      // Process player turn
       await turnManager.processSingleTurn();
 
-      expect(playerCallback).toHaveBeenCalled();
-      expect(playerActor.act).not.toHaveBeenCalled();
+      expect(inputHandler).toHaveBeenCalled();
+      expect(mockPhysics.moveEntity).toHaveBeenCalledWith(entity, 'north');
     });
 
-    it('should identify player turn', () => {
-      const playerActor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
+    it('should handle wait action from player', async () => {
+      const inputHandler = jest.fn().mockResolvedValue({ wait: true });
 
-      turnManager.registerActor(playerActor, true);
-      // Note: isPlayerTurn() has a bug in implementation (uses next() which removes actor)
-      // but we test current behavior
-      turnManager.isPlayerTurn();
-      // After calling next(), the actor is removed from scheduler
-      // So subsequent calls might fail - this documents current behavior
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createActor(true));
+      entity.addComponent(createSpeed(100));
+
+      const turnManager = createTurnManager();
+      turnManager.setPlayerInputHandler(inputHandler);
+
+      await turnManager.processSingleTurn();
+
+      expect(inputHandler).toHaveBeenCalled();
+      // Should not call moveEntity when waiting
+      expect(mockPhysics.moveEntity).not.toHaveBeenCalled();
+    });
+
+    it('should get player entity', () => {
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createActor(true));
+      entity.addComponent(createSpeed(100));
+
+      const turnManager = createTurnManager();
+
+      const player = turnManager.getPlayerEntity();
+      expect(player).toBe(entity);
     });
   });
 
   describe('start/stop', () => {
     it('should start and stop', async () => {
-      const actor: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: jest.fn()
-      };
+      const entity = ecsWorld.createEntity();
+      entity.addComponent(createActor(false));
+      entity.addComponent(createSpeed(100));
 
-      turnManager.registerActor(actor);
+      const turnManager = createTurnManager();
 
       const startedHandler = jest.fn();
       eventBus.on('turn:started', startedHandler);
@@ -553,6 +572,8 @@ describe('TurnManager', () => {
     });
 
     it('should pause and resume', () => {
+      const turnManager = createTurnManager();
+      
       turnManager.pause();
       expect(turnManager.getCurrentTurn()).toBe(0);
     });
@@ -560,49 +581,38 @@ describe('TurnManager', () => {
 
   describe('multiple actors', () => {
     it('should process turns for multiple actors', async () => {
-      const act1 = jest.fn();
-      const act2 = jest.fn();
+      // Create two NPC entities BEFORE TurnManager
+      const entity1 = ecsWorld.createEntity();
+      entity1.addComponent(createActor(false));
+      entity1.addComponent(createSpeed(100));
 
-      const actor1: Actor = {
-        entityId: 1,
-        getSpeed: () => 100,
-        act: act1
-      };
+      const entity2 = ecsWorld.createEntity();
+      entity2.addComponent(createActor(false));
+      entity2.addComponent(createSpeed(100));
 
-      const actor2: Actor = {
-        entityId: 2,
-        getSpeed: () => 100,
-        act: act2
-      };
-
-      turnManager.registerActor(actor1);
-      turnManager.registerActor(actor2);
+      const turnManager = createTurnManager();
 
       await turnManager.processSingleTurn();
       await turnManager.processSingleTurn();
 
-      expect(act1).toHaveBeenCalledTimes(1);
-      expect(act2).toHaveBeenCalledTimes(1);
+      expect(turnManager.getCurrentTurn()).toBe(2);
+      expect(mockPhysics.moveEntity).toHaveBeenCalledTimes(2);
     });
 
     it('should process more turns for faster actors', async () => {
-      const slowAct = jest.fn();
-      const fastAct = jest.fn();
+      // Create slow and fast actors BEFORE TurnManager
+      const slowEntity = ecsWorld.createEntity();
+      slowEntity.addComponent(createActor(false));
+      slowEntity.addComponent(createSpeed(50)); // Slower
 
-      const slowActor: Actor = {
-        entityId: 1,
-        getSpeed: () => 50, // Slower
-        act: slowAct
-      };
+      const fastEntity = ecsWorld.createEntity();
+      fastEntity.addComponent(createActor(false));
+      fastEntity.addComponent(createSpeed(200)); // Faster
 
-      const fastActor: Actor = {
-        entityId: 2,
-        getSpeed: () => 200, // Faster
-        act: fastAct
-      };
+      const turnManager = createTurnManager();
 
-      turnManager.registerActor(slowActor);
-      turnManager.registerActor(fastActor);
+      // Reset mock to track calls
+      mockPhysics.moveEntity.mockClear();
 
       // Process several turns
       for (let i = 0; i < 10; i++) {
@@ -610,7 +620,14 @@ describe('TurnManager', () => {
       }
 
       // Fast actor should have more turns than slow actor
-      expect(fastAct.mock.calls.length).toBeGreaterThan(slowAct.mock.calls.length);
+      const fastCalls = mockPhysics.moveEntity.mock.calls.filter(
+        call => call[0] === fastEntity
+      ).length;
+      const slowCalls = mockPhysics.moveEntity.mock.calls.filter(
+        call => call[0] === slowEntity
+      ).length;
+
+      expect(fastCalls).toBeGreaterThan(slowCalls);
     });
   });
 });

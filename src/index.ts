@@ -1,10 +1,10 @@
 /**
  * ASCII World Game Engine
- * 
+ *
  * Main entry point for the engine.
  */
 
-export { Engine } from './core/Engine';
+export { Engine, EngineConfig, UIConfig } from './core/Engine';
 export { Config } from './core/Config';
 export { EventBus, globalEventBus } from './core/EventBus';
 export { Position, Size, Bounds, Direction, ChunkCoord } from './core/Types';
@@ -24,6 +24,9 @@ export {
   createActor,
   createRenderable
 } from './ecs';
+
+// Entity Factory exports
+export { EntityFactory, PlayerOptions, NPCOptions } from './ecs/EntityFactory';
 
 // Display exports
 export {

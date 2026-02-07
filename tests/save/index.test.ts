@@ -14,7 +14,8 @@ import { World, TERRAIN } from '../../src/world';
 import { ECSWorld, createPosition, createHealth } from '../../src/ecs';
 import { EventBus } from '../../src/core/EventBus';
 import { ItemManager, InventoryManager } from '../../src/items';
-import { TurnManager, SpeedSystem } from '../../src/time';
+import { TurnManager, SpeedSystem, ActorSystem } from '../../src/time';
+import { PhysicsSystem } from '../../src/physics';
 
 // Mock localStorage for testing
 class MockLocalStorage {
@@ -361,7 +362,9 @@ describe('SaveManager', () => {
     world.initialize();
     itemManager = new ItemManager(eventBus);
     inventoryManager = new InventoryManager(itemManager, eventBus);
-    turnManager = new TurnManager(ecsWorld, eventBus, new SpeedSystem());
+    const speedSystem = new SpeedSystem();
+    const actorSystem = new ActorSystem(ecsWorld, {} as PhysicsSystem);
+    turnManager = new TurnManager(ecsWorld, eventBus, speedSystem, actorSystem);
   });
 
   describe('create save', () => {

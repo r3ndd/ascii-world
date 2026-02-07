@@ -7,6 +7,12 @@ import * as ROT from 'rot-js';
 import { Entity, EntityId, ECSWorld } from '../ecs';
 import { ACTION_COSTS } from '../config/ActionCosts';
 import { EventBus } from '../core/EventBus';
+import { ActorSystem, PlayerBehavior, NPCBehavior, ActorBehavior } from './ActorSystem';
+import { Direction } from '../core/Types';
+
+// Re-export actor system
+export { ActorSystem, PlayerBehavior, NPCBehavior };
+export type { ActorBehavior };
 
 // Speed-based actor interface for rot.js
 export interface Actor {
@@ -113,50 +119,121 @@ export class SpeedSystem {
   }
 }
 
+// Actor wrapper for rot.js scheduler
+class ActorWrapper implements Actor {
+  entityId: EntityId;
+  private entity: Entity;
+  private actorSystem: ActorSystem;
+
+  constructor(entity: Entity, actorSystem: ActorSystem) {
+    this.entityId = entity.id;
+    this.entity = entity;
+    this.actorSystem = actorSystem;
+  }
+
+  getSpeed(): number {
+    return this.actorSystem.getSpeed(this.entity);
+  }
+
+  act(): Promise<void> | void {
+    return this.actorSystem.act(this.entity);
+  }
+}
+
 // Turn manager using rot.js Scheduler.Speed
 export class TurnManager {
   private scheduler: InstanceType<typeof ROT.Scheduler.Speed<Actor>>;
   private eventBus: EventBus;
   private isRunning: boolean = false;
   private currentTurn: number = 0;
-  private actors: Map<EntityId, Actor> = new Map();
-  private playerActor: Actor | null = null;
-  private turnCallback: (() => Promise<void>) | null = null;
+  private ecsWorld: ECSWorld;
+  private actorSystem: ActorSystem;
+  private actorWrappers: Map<EntityId, ActorWrapper> = new Map();
+  private playerEntityId: EntityId | null = null;
 
-  constructor(_ecsWorld: ECSWorld, eventBus: EventBus, _speedSystem: SpeedSystem) {
+  constructor(ecsWorld: ECSWorld, eventBus: EventBus, _speedSystem: SpeedSystem, actorSystem: ActorSystem) {
     this.scheduler = new ROT.Scheduler.Speed<Actor>();
     this.eventBus = eventBus;
+    this.ecsWorld = ecsWorld;
+    this.actorSystem = actorSystem;
+
+    // Register for entity creation/removal events
+    this.eventBus.on('ecs:entityCreated', ({ entityId }: { entityId: EntityId }) => {
+      this.handleEntityCreated(entityId);
+    });
+
+    this.eventBus.on('ecs:entityRemoved', ({ entityId }: { entityId: EntityId }) => {
+      this.handleEntityRemoved(entityId);
+    });
+
+    // Scan for existing actors
+    this.scanForActors();
   }
 
-  registerActor(actor: Actor, isPlayer: boolean = false): void {
-    this.actors.set(actor.entityId, actor);
-    this.scheduler.add(actor, true); // Repeat = true
-    
-    if (isPlayer) {
-      this.playerActor = actor;
+  private scanForActors(): void {
+    const actors = this.ecsWorld.queryEntities({ all: ['actor', 'speed'] });
+    for (const entity of actors) {
+      this.registerActorEntity(entity);
     }
-
-    this.eventBus.emit('turn:actorRegistered', { entityId: actor.entityId, isPlayer });
   }
 
-  removeActor(entityId: EntityId): boolean {
-    const actor = this.actors.get(entityId);
-    if (actor) {
-      this.scheduler.remove(actor);
-      this.actors.delete(entityId);
+  private handleEntityCreated(entityId: EntityId): void {
+    // Check immediately - if components are already added, great
+    // If not, the entity will be picked up by scanForNewActors later
+    const entity = this.ecsWorld.getEntity(entityId);
+    if (entity && entity.hasComponents('actor', 'speed')) {
+      this.registerActorEntity(entity);
+    }
+  }
+
+  /**
+   * Scan for any new actors that were added since last scan.
+   * Call this after creating entities to ensure they're registered.
+   */
+  scanForNewActors(): void {
+    const actors = this.ecsWorld.queryEntities({ all: ['actor', 'speed'] });
+    for (const entity of actors) {
+      if (!this.actorWrappers.has(entity.id)) {
+        this.registerActorEntity(entity);
+      }
+    }
+  }
+
+  private handleEntityRemoved(entityId: EntityId): void {
+    const wrapper = this.actorWrappers.get(entityId);
+    if (wrapper) {
+      this.scheduler.remove(wrapper);
+      this.actorWrappers.delete(entityId);
       
-      if (this.playerActor === actor) {
-        this.playerActor = null;
+      if (this.playerEntityId === entityId) {
+        this.playerEntityId = null;
       }
       
       this.eventBus.emit('turn:actorRemoved', { entityId });
-      return true;
     }
-    return false;
   }
 
-  setPlayerActionCallback(callback: () => Promise<void>): void {
-    this.turnCallback = callback;
+  private registerActorEntity(entity: Entity): void {
+    const wrapper = new ActorWrapper(entity, this.actorSystem);
+    this.actorWrappers.set(entity.id, wrapper);
+    this.scheduler.add(wrapper, true); // Repeat = true
+
+    const actor = entity.getComponent<{ type: 'actor'; isPlayer: boolean }>('actor');
+    const isPlayer = actor?.isPlayer ?? false;
+
+    if (isPlayer) {
+      this.playerEntityId = entity.id;
+    }
+
+    this.eventBus.emit('turn:actorRegistered', { entityId: entity.id, isPlayer });
+  }
+
+  setPlayerInputHandler(handler: () => Promise<{ direction?: Direction; wait?: boolean }>): void {
+    this.actorSystem.setPlayerInputHandler(handler);
+  }
+
+  getPlayerEntity(): Entity | undefined {
+    return this.playerEntityId ? this.ecsWorld.getEntity(this.playerEntityId) : undefined;
   }
 
   async start(): Promise<void> {
@@ -183,7 +260,7 @@ export class TurnManager {
       return;
     }
 
-    const isPlayerTurn = actor === this.playerActor;
+    const isPlayerTurn = actor.entityId === this.playerEntityId;
     
     this.eventBus.emit('turn:begin', { 
       entityId: actor.entityId, 
@@ -192,12 +269,7 @@ export class TurnManager {
     });
 
     try {
-      // Execute actor's turn
-      if (isPlayerTurn && this.turnCallback) {
-        await this.turnCallback();
-      } else {
-        await actor.act();
-      }
+      await actor.act();
     } catch (error) {
       console.error(`Error during actor ${actor.entityId} turn:`, error);
       this.eventBus.emit('turn:error', { entityId: actor.entityId, error });
@@ -223,10 +295,9 @@ export class TurnManager {
   isPlayerTurn(): boolean {
     const nextActor = this.scheduler.next();
     if (nextActor) {
-      // Put it back
-      const isPlayer = nextActor === this.playerActor;
-      // Re-add to maintain order - this is a bit hacky but needed to peek
-      return isPlayer;
+      // Put it back - this is a bit hacky but needed to peek
+      // The scheduler doesn't have a peek method, so we rely on the callback
+      return nextActor.entityId === this.playerEntityId;
     }
     return false;
   }

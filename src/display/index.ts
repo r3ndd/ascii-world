@@ -154,40 +154,48 @@ export interface Renderable {
   isVisible(): boolean;
 }
 
+import { ECSWorld } from '../ecs';
+
 export class Renderer {
   private displayManager: DisplayManager;
   private camera: Camera;
-  private renderables: Set<Renderable> = new Set();
+  private ecsWorld: ECSWorld;
+  private fovSystem: { isVisible: (x: number, y: number) => boolean } | null = null;
 
-  constructor(displayManager: DisplayManager, camera: Camera) {
+  constructor(displayManager: DisplayManager, camera: Camera, ecsWorld: ECSWorld) {
     this.displayManager = displayManager;
     this.camera = camera;
+    this.ecsWorld = ecsWorld;
   }
 
-  addRenderable(renderable: Renderable): void {
-    this.renderables.add(renderable);
-  }
-
-  removeRenderable(renderable: Renderable): void {
-    this.renderables.delete(renderable);
+  setFOVSystem(fovSystem: { isVisible: (x: number, y: number) => boolean }): void {
+    this.fovSystem = fovSystem;
   }
 
   render(): void {
-    this.displayManager.clear();
+    // Query entities with renderable components
+    const entities = this.ecsWorld.queryEntities({ all: ['position', 'renderable'] });
 
-    for (const renderable of this.renderables) {
-      if (!renderable.isVisible()) continue;
+    for (const entity of entities) {
+      const position = entity.getComponent<{ type: 'position'; x: number; y: number; z: number }>('position');
+      const renderable = entity.getComponent<{ type: 'renderable'; char: string; fg: string; bg?: string }>('renderable');
 
-      const pos = renderable.getPosition();
-      if (this.camera.isInViewport(pos.x, pos.y)) {
-        const screenPos = this.camera.worldToScreen(pos.x, pos.y);
+      if (!position || !renderable) continue;
+
+      // Check FOV visibility if FOV system is set
+      if (this.fovSystem && !this.fovSystem.isVisible(position.x, position.y)) {
+        continue;
+      }
+
+      if (this.camera.isInViewport(position.x, position.y)) {
+        const screenPos = this.camera.worldToScreen(position.x, position.y);
         if (screenPos) {
           this.displayManager.draw(
             screenPos.x,
             screenPos.y,
-            renderable.getChar(),
-            renderable.getForeground(),
-            renderable.getBackground()
+            renderable.char,
+            renderable.fg,
+            renderable.bg
           );
         }
       }
@@ -204,5 +212,9 @@ export class Renderer {
 
   getDisplayManager(): DisplayManager {
     return this.displayManager;
+  }
+
+  getECSWorld(): ECSWorld {
+    return this.ecsWorld;
   }
 }
