@@ -165,9 +165,6 @@ export class Engine {
       e.preventDefault();
       resolveInput({ direction, wait });
       resolveInput = null;
-      
-      // Trigger render after input
-      this.render();
     });
   }
 
@@ -301,6 +298,11 @@ export class Engine {
 
   start(): void {
     this.isRunning = true;
+    
+    // Setup render on turn end to ensure we render after each action completes
+    this.eventBus.on('turn:end', () => {
+      this.render();
+    });
     
     // Initial render
     this.render();
