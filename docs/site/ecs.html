@@ -680,6 +680,167 @@ const renderable = createRenderable('@', '#ffffff', '#000000');</code></pre>
                     </tbody>
                 </table>
 
+                <h2>EntityFactory</h2>
+                <p>
+                    Factory class for creating pre-configured player and NPC entities.
+                    Use these factory methods for quick entity creation with all
+                    required components already attached.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">EntityFactory.createPlayer()</div>
+                        <div class="method-signature">
+                            static createPlayer(world: ECSWorld, options?: PlayerOptions): Entity
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Creates a player entity with all standard components.
+                        The player is given a '@' character and white color by default.
+                    </div>
+                    <div class="parameters">
+                        <h4>PlayerOptions</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>name</code></td>
+                                    <td><code>string</code></td>
+                                    <td>'Player'</td>
+                                    <td>Player name</td>
+                                </tr>
+                                <tr>
+                                    <td><code>position</code></td>
+                                    <td><code>{ x, y, z? }</code></td>
+                                    <td>{ 500, 500, 0 }</td>
+                                    <td>Starting position</td>
+                                </tr>
+                                <tr>
+                                    <td><code>health</code></td>
+                                    <td><code>number</code></td>
+                                    <td>100</td>
+                                    <td>Current/max health</td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxHealth</code></td>
+                                    <td><code>number</code></td>
+                                    <td>100</td>
+                                    <td>Maximum health</td>
+                                </tr>
+                                <tr>
+                                    <td><code>speed</code></td>
+                                    <td><code>number</code></td>
+                                    <td>100</td>
+                                    <td>Speed value (100 = normal)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>character</code></td>
+                                    <td><code>string</code></td>
+                                    <td>'@'</td>
+                                    <td>Display character</td>
+                                </tr>
+                                <tr>
+                                    <td><code>color</code></td>
+                                    <td><code>string</code></td>
+                                    <td>'#ffffff'</td>
+                                    <td>Display color</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <pre><code class="language-typescript">import { EntityFactory } from 'ascii-world';
+
+const player = EntityFactory.createPlayer(ecsWorld, {
+    name: 'Hero',
+    health: 100,
+    speed: 120
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">EntityFactory.createNPC()</div>
+                        <div class="method-signature">
+                            static createNPC(world: ECSWorld, options?: NPCOptions): Entity
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Creates an NPC entity with all standard components.
+                    </div>
+                    <div class="parameters">
+                        <h4>NPCOptions</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>name</code></td>
+                                    <td><code>string</code></td>
+                                    <td>'NPC'</td>
+                                    <td>NPC name</td>
+                                </tr>
+                                <tr>
+                                    <td><code>position</code></td>
+                                    <td><code>{ x, y, z? }</code></td>
+                                    <td>{ 0, 0, 0 }</td>
+                                    <td>Starting position</td>
+                                </tr>
+                                <tr>
+                                    <td><code>health</code></td>
+                                    <td><code>number</code></td>
+                                    <td>50</td>
+                                    <td>Current/max health</td>
+                                </tr>
+                                <tr>
+                                    <td><code>speed</code></td>
+                                    <td><code>number</code></td>
+                                    <td>100</td>
+                                    <td>Speed value</td>
+                                </tr>
+                                <tr>
+                                    <td><code>character</code></td>
+                                    <td><code>string</code></td>
+                                    <td>'n'</td>
+                                    <td>Display character</td>
+                                </tr>
+                                <tr>
+                                    <td><code>color</code></td>
+                                    <td><code>string</code></td>
+                                    <td>'#ffff00'</td>
+                                    <td>Display color</td>
+                                </tr>
+                                <tr>
+                                    <td><code>behavior</code></td>
+                                    <td><code>'passive' | 'aggressive'</code></td>
+                                    <td>'passive'</td>
+                                    <td>AI behavior type</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <pre><code class="language-typescript">const goblin = EntityFactory.createNPC(ecsWorld, {
+    name: 'Goblin',
+    character: 'g',
+    color: '#00aa00',
+    position: { x: 45, y: 45 },
+    health: 30,
+    behavior: 'aggressive'
+});</code></pre>
+                </div>
+
                 <h2>Events</h2>
                 <table>
                     <thead>

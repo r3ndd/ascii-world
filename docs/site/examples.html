@@ -555,95 +555,42 @@
 
                 <div class="step">
                     <div class="step-title">src/main.ts</div>
-                    <pre><code class="language-typescript">import {
-    Engine,
-    ECSWorld,
-    DisplayManager,
-    Camera,
-    Renderer,
-    createPosition,
-    createRenderable
-} from 'ascii-world';
-
-// Game state
-let playerX = 40;
-let playerY = 12;
+                    <pre><code class="language-typescript">import { Engine } from 'ascii-world';
 
 async function init() {
-    // Initialize engine
-    const engine = new Engine();
-    await engine.initialize();
-
-    // Setup display (80x25 tiles)
-    const display = new DisplayManager({
-        width: 80,
-        height: 25,
-        fontSize: 16,
-        fontFamily: 'monospace',
-        fg: '#cccccc',
-        bg: '#000000',
-        forceSquareRatio: true
+    // Create engine with display configuration
+    const engine = new Engine({
+        display: {
+            width: 80,
+            height: 25,
+            fontSize: 16,
+            fontFamily: 'monospace',
+            fg: '#cccccc',
+            bg: '#000000',
+            forceSquareRatio: true
+        },
+        playerStartPosition: { x: 40, y: 12 }
     });
 
+    // Initialize - sets up all systems automatically
+    await engine.initialize();
+
     // Add display to DOM
-    const container = display.getContainer();
+    const container = engine.getContainer();
     if (container) {
         document.body.appendChild(container);
     }
 
-    // Create camera and renderer
-    const camera = new Camera(
-        { width: 80, height: 25 },
-        { width: 80, height: 25 }
-    );
-    const renderer = new Renderer(display, camera);
+    // Create player - automatically rendered with default '@' character
+    const player = engine.createPlayer({
+        name: 'Hero',
+        health: 100,
+        maxHealth: 100,
+        speed: 100
+    });
 
-    // Create player entity in ECS
-    const ecsWorld = new ECSWorld();
-    const player = ecsWorld.createEntity()
-        .addComponent(createPosition(playerX, playerY))
-        .addComponent(createRenderable('@', '#ffffff'));
-
-    // Handle input
-    const handleInput = (e: KeyboardEvent) => {
-        switch(e.key) {
-            case 'ArrowUp':
-            case 'w':
-                playerY = Math.max(0, playerY - 1);
-                break;
-            case 'ArrowDown':
-            case 's':
-                playerY = Math.min(24, playerY + 1);
-                break;
-            case 'ArrowLeft':
-            case 'a':
-                playerX = Math.max(0, playerX - 1);
-                break;
-            case 'ArrowRight':
-            case 'd':
-                playerX = Math.min(79, playerX + 1);
-                break;
-        }
-
-        // Update player position
-        const pos = player.getComponent('position');
-        if (pos) {
-            pos.x = playerX;
-            pos.y = playerY;
-        }
-    };
-
-    document.addEventListener('keydown', handleInput);
-
-    // Render loop
-    const gameLoop = () => {
-        renderer.render();
-        requestAnimationFrame(gameLoop);
-    };
-
-    // Start
+    // Start the game (enables input handling)
     engine.start();
-    gameLoop();
 }
 
 // Initialize when DOM is ready
@@ -775,57 +722,43 @@ export class InputHandler {
 
                 <div class="step">
                     <div class="step-title">src/main.ts (UPDATED)</div>
-                    <pre><code class="language-typescript">import {
-    Engine,
-    ECSWorld,
-    World,
-    DisplayManager,
-    Camera,
-    Renderer,
-    PhysicsSystem,
-    createPosition,
-    createRenderable,
-    TERRAIN,
-    globalEventBus
-} from 'ascii-world';
+                    <pre><code class="language-typescript">import { Engine, TERRAIN } from 'ascii-world';
 import { TerrainRenderer } from './world/TerrainRenderer';
-import { InputHandler, Direction } from './InputHandler';
 
 async function init() {
-    // Initialize engine
-    const engine = new Engine();
-    await engine.initialize();
-
-    // Create ECS world
-    const ecsWorld = new ECSWorld();
-
-    // Setup display
-    const display = new DisplayManager({
-        width: 80,
-        height: 25,
-        fontSize: 16,
-        fontFamily: 'monospace',
-        fg: '#cccccc',
-        bg: '#000000',
-        forceSquareRatio: true
+    // Create engine with configuration
+    const engine = new Engine({
+        display: {
+            width: 80,
+            height: 25,
+            fontSize: 16,
+            fontFamily: 'monospace',
+            fg: '#cccccc',
+            bg: '#000000',
+            forceSquareRatio: true
+        },
+        playerStartPosition: { x: 50, y: 50 }
     });
 
-    const container = display.getContainer();
+    // Initialize - sets up all systems including ECS, World, Renderer, Physics
+    await engine.initialize();
+
+    // Add display to DOM
+    const container = engine.getContainer();
     if (container) {
         document.body.appendChild(container);
     }
 
-    // Create world (100x100 tiles for this example)
-    const gameWorld = new World(100, 100, 64, ecsWorld);
-    gameWorld.initialize();
+    // Access the world through the engine
+    const gameWorld = engine.world;
 
     // Generate simple terrain - floor with some walls
-    for (let y = 0; y < 100; y++) {
-        for (let x = 0; x < 100; x++) {
+    for (let y = 0; y &lt; 100; y++) {
+        for (let x = 0; x &lt; 100; x++) {
             // Create walls around the edges
             if (x === 0 || x === 99 || y === 0 || y === 99) {
                 gameWorld.setTerrain(x, y, TERRAIN.WALL);
-            } else if (Math.random() < 0.05) {
+            } else if (Math.random() &lt; 0.05) {
                 // Random walls (5% chance)
                 gameWorld.setTerrain(x, y, TERRAIN.WALL);
             } else {
@@ -834,60 +767,43 @@ async function init() {
         }
     }
 
-    // Create camera
-    const camera = new Camera(
-        { width: 80, height: 25 },
-        { width: 100, height: 100 }
-    );
-
-    // Create renderers
-    const entityRenderer = new Renderer(display, camera);
-    const terrainRenderer = new TerrainRenderer(gameWorld, display, camera);
-
-    // Create player at center
-    const player = ecsWorld.createEntity()
-        .addComponent(createPosition(50, 50))
-        .addComponent(createRenderable('@', '#ffffff'));
-
-    // Setup camera to follow player
-    const playerPos = player.getComponent('position') as { x: number; y: number };
-    camera.setPosition(playerPos.x, playerPos.y);
-
-    // Physics system for collision
-    const physics = new PhysicsSystem(gameWorld, ecsWorld, globalEventBus);
-
-    // Input handling
-    new InputHandler({
-        onMove: (direction: Direction) => {
-            const result = physics.moveEntity(player, direction);
-            if (result.success) {
-                // Update camera to follow player
-                const pos = player.getComponent('position') as { x: number; y: number };
-                camera.setPosition(pos.x, pos.y);
-            }
-        }
+    // Create player - automatically rendered and has collision
+    const player = engine.createPlayer({
+        name: 'Hero',
+        health: 100,
+        position: { x: 50, y: 50 }
     });
 
-    // Render loop
-    const gameLoop = () => {
-        // Clear display
-        display.clear();
+    // Input handling is built-in! WASD/Arrow keys move the player
+    // Physics system is already set up with collision detection
+    // Camera automatically follows the player
 
-        // Render terrain first
+    // For custom terrain rendering, you can still access the renderer
+    const terrainRenderer = new TerrainRenderer(
+        gameWorld,
+        engine.displayManager,
+        engine.camera
+    );
+
+    // Override the default render to include terrain
+    const originalRender = engine.render.bind(engine);
+    engine.render = () =&gt; {
+        engine.displayManager.clear();
         terrainRenderer.render();
-
-        // Then render entities on top
-        entityRenderer.render();
-
-        requestAnimationFrame(gameLoop);
+        originalRender();
     };
 
-    // Start
+    // Start the game
     engine.start();
-    gameLoop();
 }
 
 document.addEventListener('DOMContentLoaded', init);</code></pre>
+
+                    <div class="alert alert-info">
+                        <strong>New in v0.2.0:</strong> The Engine now handles input,
+                        physics, and rendering automatically. Just create the engine,
+                        create entities, and start!
+                    </div>
                 </div>
 
                 <div class="alert alert-success">

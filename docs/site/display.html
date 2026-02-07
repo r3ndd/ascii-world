@@ -591,8 +591,10 @@ if (screenPos) {
 
                 <h2>Renderer</h2>
                 <p>
-                    High-level rendering orchestrator that manages renderable
-                    objects and coordinates rendering.
+                    High-level rendering orchestrator that queries ECS entities
+                    with renderable components and renders them. The Renderer
+                    automatically discovers entities with both 'position' and
+                    'renderable' components.
                 </p>
 
                 <div class="method">
@@ -600,34 +602,29 @@ if (screenPos) {
                         <div class="method-name">new Renderer()</div>
                         <div class="method-signature">
                             constructor(displayManager: DisplayManager, camera:
-                            Camera)
+                            Camera, ecsWorld: ECSWorld)
                         </div>
                     </div>
-                    <pre><code class="language-typescript">const renderer = new Renderer(display, camera);</code></pre>
+                    <div class="alert alert-warning">
+                        <strong>Breaking Change (v0.2.0):</strong> Renderer now requires
+                        an ECSWorld instance to query entities automatically. The old
+                        manual renderable management has been removed.
+                    </div>
+                    <pre><code class="language-typescript">const renderer = new Renderer(display, camera, ecsWorld);</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
-                        <div class="method-name">addRenderable()</div>
+                        <div class="method-name">setFOVSystem()</div>
                         <div class="method-signature">
-                            addRenderable(renderable: Renderable): void
+                            setFOVSystem(fovSystem: { isVisible: (x: number, y: number) => boolean }): void
                         </div>
                     </div>
                     <div class="method-description">
-                        Adds a renderable object to be drawn each frame.
+                        Sets the FOV system to determine which entities are visible.
+                        Only entities in visible FOV cells will be rendered.
                     </div>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">removeRenderable()</div>
-                        <div class="method-signature">
-                            removeRenderable(renderable: Renderable): void
-                        </div>
-                    </div>
-                    <div class="method-description">
-                        Removes a renderable object.
-                    </div>
+                    <pre><code class="language-typescript">renderer.setFOVSystem(fovSystem);</code></pre>
                 </div>
 
                 <div class="method">
@@ -636,8 +633,8 @@ if (screenPos) {
                         <div class="method-signature">render(): void</div>
                     </div>
                     <div class="method-description">
-                        Renders all visible renderables. Clears the display
-                        first.
+                        Queries all entities with 'position' and 'renderable' components
+                        and renders them if visible. Uses FOV system if configured.
                     </div>
                     <pre><code class="language-typescript">// In your game loop
 function gameLoop() {
@@ -646,60 +643,50 @@ function gameLoop() {
 }</code></pre>
                 </div>
 
-                <h2>Renderable Interface</h2>
+                <h3>How It Works</h3>
                 <p>
-                    Interface for objects that can be rendered by the Renderer.
+                    The Renderer automatically queries ECS for entities with the
+                    required components:
                 </p>
-                <pre><code class="language-typescript">interface Renderable {
-    getChar(): string;
-    getForeground(): string;
-    getBackground(): string;
-    getPosition(): Position;
-    isVisible(): boolean;
+                <pre><code class="language-typescript">// Renderer queries entities like this internally:
+const entities = ecsWorld.queryEntities({ all: ['position', 'renderable'] });
+
+for (const entity of entities) {
+    const position = entity.getComponent&lt;{ type: 'position'; x: number; y: number }&gt;('position');
+    const renderable = entity.getComponent&lt;{ type: 'renderable'; char: string; fg: string; bg?: string }&gt;('renderable');
+
+    if (position && renderable) {
+        // Check if visible in FOV
+        if (fovSystem?.isVisible(position.x, position.y)) {
+            // Render at screen position
+            const screenPos = camera.worldToScreen(position.x, position.y);
+            if (screenPos) {
+                display.draw(screenPos.x, screenPos.y, renderable.char, renderable.fg, renderable.bg);
+            }
+        }
+    }
 }</code></pre>
 
-                <h3>Example Implementation</h3>
-                <pre><code class="language-typescript">class EntityRenderer implements Renderable {
-    private entity: Entity;
+                <h3>Migrating from Old API</h3>
+                <p>
+                    If you were using manual renderable registration, simply ensure
+                    your entities have the required components:
+                </p>
+                <pre><code class="language-typescript">// OLD way (no longer supported):
+renderer.addRenderable(playerRenderer);
 
-    constructor(entity: Entity) {
-        this.entity = entity;
-    }
-
-    getChar(): string {
-        const renderable = this.entity.getComponent&lt;RenderableComponent&gt;('renderable');
-        return renderable?.char || '?';
-    }
-
-    getForeground(): string {
-        const renderable = this.entity.getComponent&lt;RenderableComponent&gt;('renderable');
-        return renderable?.fg || '#ffffff';
-    }
-
-    getBackground(): string {
-        const renderable = this.entity.getComponent&lt;RenderableComponent&gt;('renderable');
-        return renderable?.bg || '#000000';
-    }
-
-    getPosition(): Position {
-        const pos = this.entity.getComponent&lt;PositionComponent&gt;('position');
-        return pos ? { x: pos.x, y: pos.y } : { x: 0, y: 0 };
-    }
-
-    isVisible(): boolean {
-        return true;
-    }
-}
-
-// Usage
-const playerRenderer = new EntityRenderer(player);
-renderer.addRenderable(playerRenderer);</code></pre>
+// NEW way - just create entities with components:
+const player = ecsWorld.createEntity()
+    .addComponent(createPosition(500, 500))
+    .addComponent(createRenderable('@', '#ffffff'));
+// Renderer will automatically find and render this entity</code></pre>
 
                 <h2>Complete Example</h2>
                 <pre><code class="language-typescript">import {
     DisplayManager,
     Camera,
     Renderer,
+    ECSWorld,
     createPosition,
     createRenderable
 } from 'ascii-world';
@@ -715,31 +702,37 @@ const display = new DisplayManager({
 // Add to DOM
 document.body.appendChild(display.getContainer()!);
 
+// Create ECS world
+const ecsWorld = new ECSWorld();
+
 // Create camera (centered on player)
 const camera = new Camera(
     { width: 80, height: 25 },
     { width: 1000, height: 1000 }
 );
 
-// Create renderer
-const renderer = new Renderer(display, camera);
+// Create renderer (requires ECSWorld)
+const renderer = new Renderer(display, camera, ecsWorld);
 
-// Create player entity
+// Create player entity - automatically rendered!
 const player = ecsWorld.createEntity()
     .addComponent(createPosition(500, 500))
     .addComponent(createRenderable('@', '#ffffff'));
 
-// Add to renderer
-const playerRenderable = new EntityRenderer(player);
-renderer.addRenderable(playerRenderable);
+// Create NPC - also automatically rendered!
+const npc = ecsWorld.createEntity()
+    .addComponent(createPosition(510, 500))
+    .addComponent(createRenderable('n', '#ffff00'));
 
 // Game loop
 function gameLoop() {
     // Update camera to follow player
-    const pos = player.getComponent&lt;PositionComponent&gt;('position');
-    camera.setPosition(pos.x, pos.y);
+    const pos = player.getComponent&lt;{ type: 'position'; x: number; y: number }&gt;('position');
+    if (pos) {
+        camera.setPosition(pos.x, pos.y);
+    }
 
-    // Render everything
+    // Render everything (queries ECS automatically)
     renderer.render();
 
     requestAnimationFrame(gameLoop);

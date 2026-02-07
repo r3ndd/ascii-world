@@ -472,139 +472,61 @@ npm install /path/to/ascii-world</code></pre>
                     <div class="step-title">Your First Game</div>
                 </div>
                 <p>Create <code>src/main.ts</code> with this minimal game:</p>
-                <pre><code class="language-typescript">import {
-    Engine,
-    ECSWorld,
-    World,
-    DisplayManager,
-    Camera,
-    Renderer,
-    TurnManager,
-    SpeedSystem,
-    PhysicsSystem,
-    FOVSystem,
-    globalEventBus,
-    createPosition,
-    createHealth,
-    createSpeed,
-    createActor,
-    createRenderable,
-    createInventoryComponent
-} from 'ascii-world';
+                <pre><code class="language-typescript">import { Engine } from 'ascii-world';
 
 async function init() {
-    // Initialize engine
-    const engine = new Engine();
-    await engine.initialize();
-
-    // Create ECS world
-    const ecsWorld = new ECSWorld();
-
-    // Setup display (80x25 tiles)
-    const display = new DisplayManager({
-        width: 80,
-        height: 25,
-        fontSize: 16,
-        fontFamily: 'monospace',
-        fg: '#cccccc',
-        bg: '#000000',
-        forceSquareRatio: true
+    // Create engine with display configuration
+    const engine = new Engine({
+        display: {
+            width: 80,
+            height: 25,
+            fontSize: 16,
+            fontFamily: 'monospace',
+            fg: '#cccccc',
+            bg: '#000000',
+            forceSquareRatio: true
+        },
+        playerStartPosition: { x: 500, y: 500 },
+        fovRadius: 15
     });
 
+    // Initialize the engine (sets up all systems automatically)
+    await engine.initialize();
+
     // Add display to DOM
-    const container = display.getContainer();
+    const container = engine.getContainer();
     if (container) {
         document.body.appendChild(container);
     }
 
-    // Create camera and renderer
-    const camera = new Camera(
-        { width: 80, height: 25 },
-        { width: 1000, height: 1000 }
-    );
-    const renderer = new Renderer(display, camera);
+    // Create player entity with default components
+    const player = engine.createPlayer({
+        name: 'Hero',
+        health: 100,
+        maxHealth: 100,
+        speed: 100
+    });
 
-    // Create game world
-    const gameWorld = new World(1000, 1000, 64, ecsWorld);
-    gameWorld.initialize();
+    // Create an NPC
+    const npc = engine.createNPC({
+        name: 'Villager',
+        character: 'v',
+        color: '#ffff00',
+        position: { x: 510, y: 500 }
+    });
 
-    // Create player entity
-    const player = ecsWorld.createEntity()
-        .addComponent(createPosition(500, 500))
-        .addComponent(createHealth(100, 100))
-        .addComponent(createSpeed(100))
-        .addComponent(createActor(true))  // true = is player
-        .addComponent(createRenderable('@', '#ffffff'))
-        .addComponent(createInventoryComponent(50, 30));
-
-    // Setup camera to follow player
-    const playerPos = player.getComponent('position') as { x: number; y: number };
-    camera.setPosition(playerPos.x, playerPos.y);
-
-    // Initialize turn manager
-    const turnManager = new TurnManager(ecsWorld, globalEventBus, new SpeedSystem());
-
-    // Handle player input
-    const handleInput = async () => {
-        return new Promise<void>((resolve) => {
-            const onKeyDown = (e: KeyboardEvent) => {
-                const physics = new PhysicsSystem(gameWorld, ecsWorld, globalEventBus);
-
-                switch(e.key) {
-                    case 'ArrowUp':
-                    case 'w':
-                        physics.moveEntity(player, 'north');
-                        break;
-                    case 'ArrowDown':
-                    case 's':
-                        physics.moveEntity(player, 'south');
-                        break;
-                    case 'ArrowLeft':
-                    case 'a':
-                        physics.moveEntity(player, 'west');
-                        break;
-                    case 'ArrowRight':
-                    case 'd':
-                        physics.moveEntity(player, 'east');
-                        break;
-                }
-
-                // Update camera to follow player
-                const pos = player.getComponent('position') as { x: number; y: number };
-                camera.setPosition(pos.x, pos.y);
-
-                document.removeEventListener('keydown', onKeyDown);
-                resolve();
-            };
-
-            document.addEventListener('keydown', onKeyDown);
-        });
-    };
-
-    // Set player action callback
-    turnManager.setPlayerActionCallback(handleInput);
-
-    // Game loop
-    const gameLoop = () => {
-        // Render visible tiles
-        const fov = new FOVSystem(gameWorld);
-        const pos = player.getComponent('position') as { x: number; y: number };
-        fov.computeFOV(pos.x, pos.y, 10);
-
-        // Render world
-        renderer.render();
-
-        requestAnimationFrame(gameLoop);
-    };
-
-    // Start the game
+    // Start the game (enables turn system and input handling)
     engine.start();
-    turnManager.start();
-    gameLoop();
 }
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', init);</code></pre>
+
+                <div class="alert alert-info">
+                    <strong>New in v0.2.0:</strong> The Engine now automatically manages all subsystems. 
+                    No need to manually create ECSWorld, DisplayManager, TurnManager, etc. 
+                    Just configure and go!
+                </div>
             </div>
 
             <div class="step">
@@ -613,12 +535,12 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
                     <div class="step-title">HTML Setup</div>
                 </div>
                 <p>Create <code>index.html</code>:</p>
-                <pre><code class="language-typescript">&lt;!DOCTYPE html&gt;
+                <pre><code class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html lang="en"&gt;
 &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
     &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title>My ASCII Game&lt;/title&gt;
+    &lt;title&gt;My ASCII Game&lt;/title&gt;
     &lt;style&gt;
         body {
             margin: 0;
@@ -635,7 +557,7 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
     &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
-    &lt;script src="./dist/main.js"&gt;&lt;/script&gt;
+    &lt;script type="module" src="/src/main.ts"&gt;&lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;</code></pre>
             </div>
@@ -647,14 +569,16 @@ document.addEventListener('DOMContentLoaded', init);</code></pre>
                 </div>
                 <p>Build your project:</p>
                 <pre><code class="language-typescript">npm run build</code></pre>
-                <p>Or use a bundler like Vite for development:</p>
+                <p>Or use Vite for development (recommended):</p>
                 <pre><code class="language-typescript">npx vite</code></pre>
                 <p>Open your browser and navigate to the development server. You should see your game running with:</p>
                 <ul>
                     <li>A black background with ASCII tiles</li>
-                    <li>Your player character (@) in the center</li>
+                    <li>Your player character (@) at the start position</li>
                     <li>Ability to move with arrow keys or WASD</li>
                     <li>Camera following the player</li>
+                    <li>An NPC (v) nearby</li>
+                    <li>Press Space to wait a turn</li>
                 </ul>
             </div>
 

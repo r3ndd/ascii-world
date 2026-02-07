@@ -363,19 +363,63 @@
                 <p>
                     The main entry point for the game engine. Manages
                     initialization, lifecycle, and coordinates between all
-                    systems.
+                    systems. The Engine now comes pre-configured with all necessary
+                    subsystems (ECS, Display, Turn Management, Physics, etc.).
                 </p>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">new Engine()</div>
-                        <div class="method-signature">constructor()</div>
+                        <div class="method-signature">
+                            constructor(config: EngineConfig)
+                        </div>
                     </div>
                     <div class="method-description">
-                        Creates a new Engine instance. Uses the global event bus
-                        and loads configuration automatically.
+                        Creates a new Engine instance with the specified configuration.
+                        The engine automatically initializes all subsystems.
                     </div>
-                    <pre><code class="language-typescript">const engine = new Engine();</code></pre>
+                    <div class="parameters">
+                        <h4>EngineConfig Properties</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>display</code></td>
+                                    <td><code>DisplayConfig</code></td>
+                                    <td>Display settings (width, height, fontSize, etc.)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>playerStartPosition</code></td>
+                                    <td><code>{ x, y, z? }</code></td>
+                                    <td>Optional starting position for player (default: 500, 500, 0)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>fovRadius</code></td>
+                                    <td><code>number</code></td>
+                                    <td>Field of view radius (default: 15)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <pre><code class="language-typescript">const engine = new Engine({
+    display: {
+        width: 80,
+        height: 25,
+        fontSize: 16,
+        fontFamily: 'monospace',
+        fg: '#cccccc',
+        bg: '#000000',
+        forceSquareRatio: true
+    },
+    playerStartPosition: { x: 500, y: 500 },
+    fovRadius: 15
+});</code></pre>
                 </div>
 
                 <div class="method">
@@ -386,10 +430,65 @@
                         </div>
                     </div>
                     <div class="method-description">
-                        Initializes the engine, loading configuration and
-                        emitting initialization events.
+                        Initializes the engine and all subsystems (ECS, Display,
+                        World, Turn Manager, Physics, FOV). Emits the 'engine:initialized' event.
                     </div>
                     <pre><code class="language-typescript">await engine.initialize();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">createPlayer()</div>
+                        <div class="method-signature">
+                            createPlayer(options?: PlayerOptions): Entity
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Creates a player entity with all required components (position,
+                        health, speed, actor, renderable, inventory). Automatically
+                        registers the player with the turn system.
+                    </div>
+                    <pre><code class="language-typescript">const player = engine.createPlayer({
+    name: 'Hero',
+    health: 100,
+    maxHealth: 100,
+    speed: 100
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">createNPC()</div>
+                        <div class="method-signature">
+                            createNPC(options?: NPCOptions): Entity
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Creates an NPC entity with components. Automatically
+                        registers with the turn system.
+                    </div>
+                    <pre><code class="language-typescript">const npc = engine.createNPC({
+    name: 'Goblin',
+    character: 'g',
+    color: '#00aa00',
+    position: { x: 510, y: 500 }
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getContainer()</div>
+                        <div class="method-signature">
+                            getContainer(): HTMLElement | null
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Returns the display container element for adding to the DOM.
+                    </div>
+                    <pre><code class="language-typescript">const container = engine.getContainer();
+if (container) {
+    document.body.appendChild(container);
+}</code></pre>
                 </div>
 
                 <div class="method">
@@ -398,7 +497,8 @@
                         <div class="method-signature">start(): void</div>
                     </div>
                     <div class="method-description">
-                        Starts the engine and emits the 'engine:started' event.
+                        Starts the engine, enables the turn system, and begins
+                        processing input. Emits the 'engine:started' event.
                     </div>
                     <pre><code class="language-typescript">engine.start();</code></pre>
                 </div>
@@ -409,9 +509,55 @@
                         <div class="method-signature">stop(): void</div>
                     </div>
                     <div class="method-description">
-                        Stops the engine and emits the 'engine:stopped' event.
+                        Stops the engine and the turn system. Emits the 'engine:stopped' event.
                     </div>
                     <pre><code class="language-typescript">engine.stop();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">render()</div>
+                        <div class="method-signature">render(): void</div>
+                    </div>
+                    <div class="method-description">
+                        Manually trigger a render of the current game state.
+                        Called automatically after each turn.
+                    </div>
+                    <pre><code class="language-typescript">engine.render();</code></pre>
+                </div>
+
+                <h3>Accessing Subsystems</h3>
+                <p>
+                    The Engine exposes all initialized subsystems as public properties
+                    for advanced use cases:
+                </p>
+                <pre><code class="language-typescript">// ECS World
+const ecsWorld = engine.ecsWorld;
+
+// Display
+const display = engine.displayManager;
+
+// Camera
+const camera = engine.camera;
+
+// Renderer
+const renderer = engine.renderer;
+
+// World
+const world = engine.world;
+
+// Turn Management
+const turnManager = engine.turnManager;
+const speedSystem = engine.speedSystem;
+
+// Physics & FOV
+const physics = engine.physicsSystem;
+const fov = engine.fovSystem;</code></pre>
+
+                <div class="alert alert-warning">
+                    <strong>Breaking Change (v0.2.0):</strong> Engine now requires an
+                    <code>EngineConfig</code> object in the constructor. The old
+                    parameterless constructor is no longer supported.
                 </div>
 
                 <h2>EventBus</h2>

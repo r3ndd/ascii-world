@@ -368,10 +368,20 @@
                         <div class="method-name">new TurnManager()</div>
                         <div class="method-signature">
                             constructor(ecsWorld: ECSWorld, eventBus: EventBus,
-                            speedSystem: SpeedSystem)
+                            speedSystem: SpeedSystem, actorSystem: ActorSystem)
                         </div>
                     </div>
-                    <pre><code class="language-typescript">const turnManager = new TurnManager(ecsWorld, eventBus, new SpeedSystem());</code></pre>
+                    <div class="alert alert-warning">
+                        <strong>Breaking Change (v0.2.0):</strong> TurnManager now requires
+                        an ActorSystem as the 4th constructor parameter.
+                    </div>
+                    <pre><code class="language-typescript">const actorSystem = new ActorSystem(ecsWorld, physicsSystem);
+const turnManager = new TurnManager(
+    ecsWorld,
+    eventBus,
+    new SpeedSystem(),
+    actorSystem
+);</code></pre>
                 </div>
 
                 <div class="method">
@@ -382,8 +392,63 @@
                             void
                         </div>
                     </div>
+                    <div class="method-description">
+                        Registers an actor with the turn system. Note: When using
+                        the Engine class, actors are automatically discovered and
+                        registered via scanForNewActors().
+                    </div>
                     <pre><code class="language-typescript">turnManager.registerActor(playerActor, true);  // Player
-turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
+ turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">scanForNewActors()</div>
+                        <div class="method-signature">
+                            scanForNewActors(): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Scans the ECS world for entities with both 'actor' and 'speed'
+                        components, automatically registering them with the turn system.
+                        Call this after creating new entities that should participate in
+                        the turn loop.
+                    </div>
+                    <pre><code class="language-typescript">// Create new NPC
+const npc = engine.createNPC({ name: 'Bandit', position: { x: 10, y: 10 } });
+
+// Automatically register with turn system
+engine.turnManager.scanForNewActors();</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">setPlayerInputHandler()</div>
+                        <div class="method-signature">
+                            setPlayerInputHandler(handler: () => Promise&lt;{ direction?: Direction; wait?: boolean }&gt;): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Sets the input handler function called when it's the player's turn.
+                        The handler should return a Promise that resolves with the player's
+                        action (direction to move, or wait flag).
+                    </div>
+                    <pre><code class="language-typescript">turnManager.setPlayerInputHandler(() => {
+    return new Promise((resolve) => {
+        // Wait for keyboard input
+        document.addEventListener('keydown', function handler(e) {
+            switch(e.key) {
+                case 'ArrowUp': resolve({ direction: 'north' }); break;
+                case 'ArrowDown': resolve({ direction: 'south' }); break;
+                case 'ArrowLeft': resolve({ direction: 'west' }); break;
+                case 'ArrowRight': resolve({ direction: 'east' }); break;
+                case ' ': resolve({ wait: true }); break;
+                default: return; // Ignore other keys
+            }
+            document.removeEventListener('keydown', handler);
+        });
+    });
+});</code></pre>
                 </div>
 
                 <div class="method">
@@ -467,6 +532,49 @@ turnManager.registerActor(enemyActor, false);  // NPC</code></pre>
         await this.ai.takeTurn(this.entity);
     }
 }</code></pre>
+
+                <h2>ActorSystem</h2>
+                <p>
+                    ECS-based system that automatically manages actor behavior for entities
+                    with actor and speed components. Handles player input and NPC AI.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new ActorSystem()</div>
+                        <div class="method-signature">
+                            constructor(ecsWorld: ECSWorld, physicsSystem: PhysicsSystem)
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">const actorSystem = new ActorSystem(ecsWorld, physicsSystem);
+ecsWorld.addSystem(actorSystem);</code></pre>
+                </div>
+
+                <h3>Actor Behaviors</h3>
+                <p>
+                    The ActorSystem implements different behaviors based on the entity:
+                </p>
+
+                <h4>PlayerBehavior</h4>
+                <p>
+                    Handles player-controlled entities. Waits for input from the
+                    configured input handler and moves the player accordingly.
+                </p>
+                <pre><code class="language-typescript">// Player behavior is automatically applied to entities with:
+// - actor component where isPlayer = true
+// - speed component
+// - position component</code></pre>
+
+                <h4>NPCBehavior</h4>
+                <p>
+                    Handles NPC entities. Can be passive or aggressive based on
+                    the entity's behavior type.
+                </p>
+                <pre><code class="language-typescript">// Passive NPCs simply wait
+// Aggressive NPCs will track and attack the player
+
+// Behavior is controlled by the 'behavior' component property
+entity.addComponent(createNPCBehavior('passive'));  // or 'aggressive'</code></pre>
 
                 <h2>Speed System</h2>
                 <p>
