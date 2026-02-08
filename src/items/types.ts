@@ -45,27 +45,3 @@ export interface ItemTemplate {
   properties: ItemProperties;   // Item properties
   tags?: string[];              // Item tags
 }
-
-/**
- * Legacy item instance data - for save migration
- * @deprecated Use ECS entities with ItemComponent instead
- */
-export interface ItemInstance {
-  id: string;                   // Unique instance ID
-  templateId: string;           // Reference to item template
-  name: string;                 // Display name
-  description: string;          // Description text
-  category: ItemCategory;       // Item category
-  character: string;            // Display character
-  foreground: string;           // Foreground color
-  background?: string;          // Background color
-  quantity: number;             // Stack quantity
-  properties: ItemProperties; // Item properties
-  equipped?: boolean;           // Is equipped?
-  location?: {                  // World position if on ground
-    x: number;
-    y: number;
-    z?: number;
-  };
-  containerId?: number;       // Entity ID holding this item
-}

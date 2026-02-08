@@ -25,6 +25,3 @@ export * from './systems';
 export { ItemManager } from './ItemManager';
 export { Inventory, InventoryComponent, createInventoryComponent } from './Inventory';
 export { InventoryManager } from './InventoryManager';
-
-// Re-export legacy types for backward compatibility
-export { ItemInstance } from './types';

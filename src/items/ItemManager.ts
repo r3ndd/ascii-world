@@ -6,10 +6,10 @@
 import { Entity, ECSWorld, createPosition, createRenderable } from '../ecs';
 import { EventBus } from '../core/EventBus';
 import { Position, EntityId } from '../core/Types';
-import { ItemTemplate, ItemCategory, ItemProperties, ItemInstance } from './types';
+import { ItemTemplate, ItemCategory, ItemProperties } from './types';
 import { createItemComponent, createItemTemplateComponent } from './components';
 
-export { ItemTemplate, ItemCategory, ItemProperties, ItemInstance };
+export { ItemTemplate, ItemCategory, ItemProperties };
 
 /**
  * Item manager - handles templates and entity creation
@@ -20,6 +20,7 @@ export class ItemManager {
 
   constructor(eventBus: EventBus) {
     this.eventBus = eventBus;
+    this.registerDefaultTemplates();
   }
 
   /**
@@ -182,6 +183,7 @@ export class ItemManager {
    */
   clear(): void {
     this.templates.clear();
+    this.registerDefaultTemplates();
   }
 
   /**
