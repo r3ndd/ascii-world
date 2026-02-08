@@ -6,7 +6,7 @@
 import { World, Chunk, Tile, TERRAIN, ChunkEntity } from '../world';
 import { Entity, EntityId, Component, ECSWorld } from '../ecs';
 import { EventBus } from '../core/EventBus';
-import { ItemManager, InventoryManager, ItemInstance, ItemTemplate } from '../items';
+import { ItemManager, InventoryManager, ItemTemplate } from '../items';
 import { TurnManager } from '../time';
 import { Position } from '../core/Types';
 
@@ -27,15 +27,13 @@ export interface SaveData {
   metadata: SaveMetadata;
   world: SerializedWorld;
   entities: SerializedEntity[];
-  items: {
-    templates: ItemTemplate[];
-    instances: ItemInstance[];
-  };
+  // Items are now ECS entities - included in entities above
+  templates: ItemTemplate[];
   inventories: {
     ownerId: EntityId;
     capacity: number;
     volumeCapacity: number;
-    itemIds: string[];
+    itemIds: EntityId[];  // Changed from string[] to EntityId[]
   }[];
   turn: {
     currentTurn: number;
@@ -173,17 +171,14 @@ export class SaveManager {
       // Serialize all systems
       const serializedWorld = WorldSerializer.serialize(world);
       const serializedEntities = EntitySerializer.serializeAll(ecsWorld);
-      const serializedItems = {
-        templates: itemManager.getAllTemplates(),
-        instances: itemManager.serializeItems()
-      };
+      const serializedTemplates = itemManager.getAllTemplates();
       const serializedInventories = inventoryManager.serializeInventories();
 
       // Calculate checksum
       const dataString = JSON.stringify({
         world: serializedWorld,
         entities: serializedEntities,
-        items: serializedItems,
+        templates: serializedTemplates,
         inventories: serializedInventories
       });
       const checksum = this.calculateChecksum(dataString);
@@ -205,7 +200,7 @@ export class SaveManager {
         metadata,
         world: serializedWorld,
         entities: serializedEntities,
-        items: serializedItems,
+        templates: serializedTemplates,
         inventories: serializedInventories,
         turn: {
           currentTurn: turnManager.getCurrentTurn()
@@ -257,7 +252,7 @@ export class SaveManager {
       const dataString = JSON.stringify({
         world: saveData.world,
         entities: saveData.entities,
-        items: saveData.items,
+        templates: saveData.templates,
         inventories: saveData.inventories
       });
       const checksum = this.calculateChecksum(dataString);
@@ -268,12 +263,11 @@ export class SaveManager {
       }
 
       // Load templates first (required for items)
-      for (const template of saveData.items.templates) {
+      for (const template of saveData.templates) {
         itemManager.registerTemplate(template);
       }
 
-      // Load items
-      itemManager.deserializeItems(saveData.items.instances);
+      // Load items - they are now ECS entities in saveData.entities
 
       // Load inventories
       inventoryManager.deserializeInventories(saveData.inventories);

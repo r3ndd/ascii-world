@@ -4,7 +4,7 @@
  */
 
 import { EventBus } from '../core/EventBus';
-import { ItemTemplate } from '../items';
+import { ItemTemplate, ItemManager } from '../items';
 import { MapMetadata, World, TERRAIN, TerrainType } from '../world';
 import { ECSWorld, Entity } from '../ecs';
 import { createPosition, createHealth, createSpeed, createRenderable } from '../ecs';
@@ -866,7 +866,7 @@ export interface ModAPI {
   registerTerrain: (definition: TerrainDefinition) => void;
   registerGenerator: (name: string, generator: ChunkGenerator) => void;
   createEntity: (templateId: string, x: number, y: number, ecsWorld: ECSWorld) => Entity | null;
-  spawnItem: (templateId: string, quantity: number, x: number, y: number, itemManager: any) => any;
+  spawnItem: (templateId: string, quantity: number, x: number, y: number, ecsWorld: ECSWorld, itemManager: ItemManager) => Entity | null;
 }
 
 export interface Mod {
@@ -940,19 +940,18 @@ export class ModLoader {
         
         return entity;
       },
-      spawnItem: (templateId, quantity, x, y, itemManager) => {
-        if (itemManager && itemManager.spawnItem) {
-          const item = itemManager.spawnItem(templateId, quantity, { x, y });
+      spawnItem: (templateId, quantity, x, y, ecsWorld, itemManager) => {
+        const item = itemManager.spawnItem(ecsWorld, templateId, quantity, { x, y });
+        if (item) {
           this.eventBus.emit('mod:itemSpawned', {
-            itemId: item?.id,
+            itemId: item.id,
             templateId,
             quantity,
             x,
             y
           });
-          return item;
         }
-        return null;
+        return item;
       }
     };
   }

@@ -74,5 +74,8 @@ export {
 export { WORLD_DEFAULTS } from './config/WorldDefaults';
 export { ACTION_COSTS } from './config/ActionCosts';
 
+// Items exports
+export * from './items';
+
 // Version
 export const VERSION = '0.1.0';
