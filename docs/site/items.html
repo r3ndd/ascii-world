@@ -226,6 +226,10 @@
                 background-color: rgba(240, 136, 62, 0.1);
                 border-color: var(--warning);
             }
+            .alert-success {
+                background-color: rgba(35, 134, 54, 0.1);
+                border-color: var(--success);
+            }
             /* Page TOC - Right side navigation */
             .page-toc {
                 position: fixed;
@@ -352,10 +356,18 @@
             <main class="content">
                 <h1>Items Module</h1>
                 <p>
-                    Item system with templates, inventory management, stacking,
-                    equipment, and durability. Supports weight/volume
-                    constraints and serialization for save/load.
+                    Item system with ECS-based architecture. Items are first-class entities
+                    with <code>ItemComponent</code> and <code>ItemTemplateComponent</code>,
+                    enabling full integration with physics, rendering, lighting, and all
+                    ECS systems. Supports inventory management, stacking, equipment, and
+                    durability.
                 </p>
+
+                <div class="alert alert-info">
+                    <strong>ECS Integration:</strong> Items are now ECS entities with components.
+                    This enables runtime composition (add BurningComponent, EnchantedComponent, etc.)
+                    and unified identity space using <code>EntityId</code> for everything.
+                </div>
 
                 <h2>ItemCategory</h2>
                 <p>
@@ -403,8 +415,8 @@
 
                 <h2>ItemTemplate</h2>
                 <p>
-                    Blueprint for creating item instances. Templates define the
-                    base properties of an item type.
+                    Blueprint for creating item entities. Templates define the
+                    base properties of an item type and are registered in the ItemManager.
                 </p>
                 <pre><code class="language-typescript">interface ItemTemplate {
     id: string;                    // Unique template identifier
@@ -477,157 +489,121 @@
                     </tbody>
                 </table>
 
-                <h2>Item</h2>
+                <h2>ItemComponent</h2>
                 <p>
-                    Represents an item instance in the game world. Items can
-                    exist on the ground, in inventories, or be equipped.
+                    Runtime state component attached to item entities. Stores
+                    instance-specific data like quantity, durability, and equipment status.
                 </p>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">id</div>
-                        <div class="method-signature">get id(): string</div>
-                    </div>
-                    <div class="method-description">
-                        Unique instance identifier.
-                    </div>
-                    <pre><code class="language-typescript">console.log(item.id);  // "item_1"</code></pre>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">name</div>
-                        <div class="method-signature">get name(): string</div>
-                    </div>
-                    <pre><code class="language-typescript">console.log(item.name);  // "Iron Sword"</code></pre>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">quantity</div>
-                        <div class="method-signature">
-                            get quantity(): number<br />set quantity(value:
-                            number)
-                        </div>
-                    </div>
-                    <div class="method-description">
-                        Number of items in this stack. Emits
-                        <code>item:quantityChanged</code> event on change.
-                    </div>
-                    <pre><code class="language-typescript">item.quantity += 5;  // Add 5 to stack</code></pre>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">weight</div>
-                        <div class="method-signature">get weight(): number</div>
-                    </div>
-                    <div class="method-description">
-                        Total weight including quantity (weight * quantity).
-                    </div>
-                    <pre><code class="language-typescript">console.log(item.weight);  // 3.0 kg for 2 swords at 1.5kg each</code></pre>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">volume</div>
-                        <div class="method-signature">get volume(): number</div>
-                    </div>
-                    <div class="method-description">
-                        Total volume including quantity (volume * quantity).
-                    </div>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">damage()</div>
-                        <div class="method-signature">
-                            damage(amount: number): void
-                        </div>
-                    </div>
-                    <div class="method-description">
-                        Apply damage to item durability. Emits
-                        <code>item:damaged</code> or
-                        <code>item:broken</code> events.
-                    </div>
-                    <pre><code class="language-typescript">item.damage(10);  // Reduce durability by 10
-if (item.durability <= 0) {
-    console.log('Item broke!');
+                <pre><code class="language-typescript">interface ItemComponent extends Component {
+    type: 'item';
+    templateId: string;           // Reference to template
+    quantity: number;             // Stack size
+    durability?: number;          // Current durability
+    maxDurability?: number;       // Max durability
+    quality?: number;             // Quality 1-100
+    stackable: boolean;           // Can stack
+    maxStack: number;             // Max stack size
+    value: number;                // Base value
+    equipped: boolean;            // Currently equipped
+    equippedSlot?: string;        // Equipment slot
 }</code></pre>
-                </div>
 
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">repair()</div>
-                        <div class="method-signature">
-                            repair(amount: number): void
-                        </div>
-                    </div>
-                    <div class="method-description">
-                        Repair item durability. Cannot exceed maxDurability.
-                        Emits <code>item:repaired</code> event.
-                    </div>
-                    <pre><code class="language-typescript">item.repair(25);  // Restore 25 durability</code></pre>
-                </div>
+                <h3>Accessing Item Data</h3>
+                <pre><code class="language-typescript">// Get item component from entity
+const itemComp = entity.getComponent<ItemComponent>('item');
+if (itemComp) {
+    console.log(`Quantity: ${itemComp.quantity}`);
+    console.log(`Durability: ${itemComp.durability}/${itemComp.maxDurability}`);
+}
 
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">isStackable()</div>
-                        <div class="method-signature">
-                            isStackable(): boolean
-                        </div>
-                    </div>
-                    <pre><code class="language-typescript">if (item.isStackable()) {
-    // Can stack with other items
+// Modify durability
+itemComp.durability = Math.max(0, itemComp.durability - 10);
+
+// Update quantity
+itemComp.quantity += 5;</code></pre>
+
+                <h2>ItemTemplateComponent</h2>
+                <p>
+                    Static properties component derived from the item template.
+                    Contains display and physical properties.
+                </p>
+                <pre><code class="language-typescript">interface ItemTemplateComponent extends Component {
+    type: 'item_template';
+    name: string;                 // Display name
+    description: string;          // Flavor text
+    category: ItemCategory;       // Item category
+    weight: number;               // Weight in kg
+    volume: number;               // Volume in liters
+    tags: string[];               // Filter tags
 }</code></pre>
-                </div>
 
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">isEquipped()</div>
-                        <div class="method-signature">
-                            isEquipped(): boolean
-                        </div>
-                    </div>
-                    <pre><code class="language-typescript">if (item.isEquipped()) {
-    console.log(`${item.name} is equipped`);
+                <h3>Calculating Total Weight/Volume</h3>
+                <pre><code class="language-typescript">const itemComp = entity.getComponent<ItemComponent>('item');
+const templateComp = entity.getComponent<ItemTemplateComponent>('item_template');
+
+if (itemComp && templateComp) {
+    const totalWeight = templateComp.weight * itemComp.quantity;
+    const totalVolume = templateComp.volume * itemComp.quantity;
+    console.log(`${templateComp.name}: ${totalWeight}kg, ${totalVolume}L`);
 }</code></pre>
-                </div>
 
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">setEquipped()</div>
-                        <div class="method-signature">
-                            setEquipped(equipped: boolean): void
-                        </div>
-                    </div>
-                    <div class="method-description">
-                        Set equipped status. Emits
-                        <code>item:equippedChanged</code> event.
-                    </div>
-                    <pre><code class="language-typescript">item.setEquipped(true);  // Equip item</code></pre>
-                </div>
+                <h2>ECS Queries</h2>
+                <p>
+                    Predefined query patterns for finding items in the ECS world.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Query</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ITEMS_QUERY</code></td>
+                            <td>All entities with items</td>
+                        </tr>
+                        <tr>
+                            <td><code>EQUIPPED_ITEMS_QUERY</code></td>
+                            <td>Items currently equipped</td>
+                        </tr>
+                        <tr>
+                            <td><code>WORLD_ITEMS_QUERY</code></td>
+                            <td>Items on the ground (have position)</td>
+                        </tr>
+                        <tr>
+                            <td><code>INVENTORY_ITEMS_QUERY</code></td>
+                            <td>Items in inventories (no position)</td>
+                        </tr>
+                        <tr>
+                            <td><code>STACKABLE_WORLD_ITEMS_QUERY</code></td>
+                            <td>Stackable items on ground</td>
+                        </tr>
+                    </tbody>
+                </table>
 
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">canStackWith()</div>
-                        <div class="method-signature">
-                            canStackWith(other: Item): boolean
-                        </div>
-                    </div>
-                    <div class="method-description">
-                        Check if this item can stack with another (same
-                        template, quality).
-                    </div>
-                    <pre><code class="language-typescript">if (itemA.canStackWith(itemB)) {
-    itemA.quantity += itemB.quantity;
-}</code></pre>
-                </div>
+                <h3>Query Examples</h3>
+                <pre><code class="language-typescript">import { WORLD_ITEMS_QUERY, EQUIPPED_ITEMS_QUERY } from './items/queries';
+
+// Find all items on the ground
+const worldItems = ecsWorld.queryEntities(WORLD_ITEMS_QUERY);
+
+// Find equipped items
+const equipped = ecsWorld.queryEntities(EQUIPPED_ITEMS_QUERY);
+
+// Custom query: Find all weapons
+const weapons = ecsWorld.queryEntities({
+    all: ['item', 'item_template'],
+    any: []
+}).filter(entity => {
+    const template = entity.getComponent<ItemTemplateComponent>('item_template');
+    return template?.category === ItemCategory.WEAPON;
+});</code></pre>
 
                 <h2>ItemManager</h2>
                 <p>
-                    Central registry for item templates and active item
-                    instances. Handles item spawning and lifecycle.
+                    Central registry for item templates and factory for creating
+                    item entities. All methods require an ECSWorld parameter.
                 </p>
 
                 <div class="method">
@@ -683,140 +659,120 @@ if (item.durability <= 0) {
                     <div class="method-header">
                         <div class="method-name">spawnItem()</div>
                         <div class="method-signature">
-                            spawnItem(templateId: string, quantity?: number,
-                            location?: Position): Item | null
+                            spawnItem(
+                                ecsWorld: ECSWorld,
+                                templateId: string,
+                                quantity?: number,
+                                position?: Position
+                            ): Entity | null
                         </div>
                     </div>
                     <div class="method-description">
-                        Create a new item instance from a template. Emits
-                        <code>item:spawned</code> event.
+                        Create a new item entity from a template. Returns an Entity
+                        with ItemComponent and ItemTemplateComponent. If position is
+                        provided, also adds PositionComponent and RenderableComponent.
+                        Emits <code>item:spawned</code> event.
                     </div>
                     <pre><code class="language-typescript">// Spawn a sword on the ground at position
-const sword = itemManager.spawnItem('sword_iron', 1, { x: 100, y: 200 });
+const sword = itemManager.spawnItem(
+    ecsWorld,
+    'sword_iron',
+    1,
+    { x: 100, y: 200 }
+);
 
-// Spawn a stack of potions
-const potions = itemManager.spawnItem('potion_health', 5);</code></pre>
+// Spawn a stack of potions (no position = not in world)
+const potions = itemManager.spawnItem(ecsWorld, 'potion_health', 5);
+
+// Access item data
+if (sword) {
+    const itemComp = sword.getComponent<ItemComponent>('item');
+    console.log(`Spawned ${itemComp?.quantity} items`);
+}</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">getItem()</div>
                         <div class="method-signature">
-                            getItem(id: string): Item | undefined
+                            getItem(ecsWorld: ECSWorld, entityId: EntityId): Entity | undefined
                         </div>
                     </div>
-                    <pre><code class="language-typescript">const item = itemManager.getItem('item_1');</code></pre>
+                    <pre><code class="language-typescript">const item = itemManager.getItem(ecsWorld, entityId);</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">removeItem()</div>
                         <div class="method-signature">
-                            removeItem(id: string): boolean
+                            removeItem(ecsWorld: ECSWorld, entityId: EntityId): boolean
                         </div>
                     </div>
                     <div class="method-description">
-                        Remove an item instance. Emits
+                        Remove an item entity from the world. Emits
                         <code>item:removed</code> event.
                     </div>
-                    <pre><code class="language-typescript">itemManager.removeItem('item_1');</code></pre>
+                    <pre><code class="language-typescript">itemManager.removeItem(ecsWorld, entityId);</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">getItemsAt()</div>
                         <div class="method-signature">
-                            getItemsAt(location: Position): Item[]
+                            getItemsAt(ecsWorld: ECSWorld, position: Position): Entity[]
                         </div>
                     </div>
-                    <pre><code class="language-typescript">const items = itemManager.getItemsAt({ x: 100, y: 200 });
+                    <div class="method-description">
+                        Get all item entities at a specific position using ECS query.
+                    </div>
+                    <pre><code class="language-typescript">const items = itemManager.getItemsAt(ecsWorld, { x: 100, y: 200 });
 for (const item of items) {
-    console.log(`Found ${item.name} on ground`);
+    const template = item.getComponent<ItemTemplateComponent>('item_template');
+    console.log(`Found ${template?.name} on ground`);
 }</code></pre>
                 </div>
 
                 <h2>Inventory</h2>
                 <p>
                     Manages items for a container entity with weight/volume
-                    constraints and automatic stacking.
+                    constraints and automatic stacking. Works with ECS entities.
                 </p>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">new Inventory()</div>
                         <div class="method-signature">
-                            constructor(ownerId: EntityId, capacity: number,
-                            volumeCapacity: number, itemManager: ItemManager,
-                            eventBus: EventBus)
+                            constructor(
+                                ownerId: EntityId,
+                                capacity: number,
+                                volumeCapacity: number,
+                                eventBus: EventBus
+                            )
                         </div>
                     </div>
                     <pre><code class="language-typescript">const inventory = new Inventory(
     playerEntity.id,
     50,     // 50kg weight limit
     30,     // 30L volume limit
-    itemManager,
     eventBus
 );</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
-                        <div class="method-name">currentWeight</div>
-                        <div class="method-signature">
-                            get currentWeight(): number
-                        </div>
-                    </div>
-                    <pre><code class="language-typescript">console.log(`${inventory.currentWeight} / ${inventory.weightCapacity} kg`);</code></pre>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">currentVolume</div>
-                        <div class="method-signature">
-                            get currentVolume(): number
-                        </div>
-                    </div>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">remainingWeight</div>
-                        <div class="method-signature">
-                            get remainingWeight(): number
-                        </div>
-                    </div>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">canAddItem()</div>
-                        <div class="method-signature">
-                            canAddItem(item: Item): boolean
-                        </div>
-                    </div>
-                    <div class="method-description">
-                        Check if item can fit in inventory (weight and volume).
-                    </div>
-                    <pre><code class="language-typescript">if (inventory.canAddItem(heavyItem)) {
-    inventory.addItem(heavyItem);
-} else {
-    console.log('Too heavy!');
-}</code></pre>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
                         <div class="method-name">addItem()</div>
                         <div class="method-signature">
-                            addItem(item: Item): boolean
+                            addItem(ecsWorld: ECSWorld, itemEntity: Entity): boolean
                         </div>
                     </div>
                     <div class="method-description">
-                        Add item to inventory. Automatically stacks if possible.
-                        Emits <code>inventory:itemAdded</code> or
+                        Add item entity to inventory. Automatically stacks if possible.
+                        Removes PositionComponent and RenderableComponent from entity
+                        (now in inventory). Emits <code>inventory:itemAdded</code> or
                         <code>inventory:stacked</code> events.
                     </div>
-                    <pre><code class="language-typescript">if (inventory.addItem(sword)) {
+                    <pre><code class="language-typescript">const itemEntity = itemManager.spawnItem(ecsWorld, 'sword_iron', 1);
+if (inventory.addItem(ecsWorld, itemEntity)) {
     console.log('Item added to inventory');
 } else {
     console.log('Inventory full!');
@@ -827,37 +783,44 @@ for (const item of items) {
                     <div class="method-header">
                         <div class="method-name">removeItem()</div>
                         <div class="method-signature">
-                            removeItem(itemId: string): Item | null
+                            removeItem(ecsWorld: ECSWorld, itemId: EntityId): Entity | null
                         </div>
                     </div>
                     <div class="method-description">
-                        Remove item from inventory. Emits
-                        <code>inventory:itemRemoved</code> event.
+                        Remove item from inventory. Returns the entity which can then
+                        be dropped or transferred. Emits <code>inventory:itemRemoved</code> event.
                     </div>
-                    <pre><code class="language-typescript">const item = inventory.removeItem('item_1');</code></pre>
+                    <pre><code class="language-typescript">const item = inventory.removeItem(ecsWorld, entityId);</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">dropItem()</div>
                         <div class="method-signature">
-                            dropItem(itemId: string, location: Position): Item |
-                            null
+                            dropItem(
+                                ecsWorld: ECSWorld,
+                                itemId: EntityId,
+                                location: Position
+                            ): Entity | null
                         </div>
                     </div>
                     <div class="method-description">
-                        Remove item from inventory and place on ground. Emits
-                        <code>inventory:itemDropped</code> event.
+                        Remove item from inventory and place on ground. Adds
+                        PositionComponent and RenderableComponent to the entity.
+                        Emits <code>inventory:itemDropped</code> event.
                     </div>
-                    <pre><code class="language-typescript">const droppedItem = inventory.dropItem('item_1', { x: 100, y: 200 });</code></pre>
+                    <pre><code class="language-typescript">const droppedItem = inventory.dropItem(ecsWorld, entityId, { x: 100, y: 200 });</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">transferItem()</div>
                         <div class="method-signature">
-                            transferItem(itemId: string, targetInventory:
-                            Inventory): boolean
+                            transferItem(
+                                ecsWorld: ECSWorld,
+                                itemId: EntityId,
+                                targetInventory: Inventory
+                            ): boolean
                         </div>
                     </div>
                     <div class="method-description">
@@ -865,48 +828,74 @@ for (const item of items) {
                         <code>inventory:itemTransferred</code> event.
                     </div>
                     <pre><code class="language-typescript">// Give item to another entity
-inventory.transferItem('item_1', otherInventory);</code></pre>
+inventory.transferItem(ecsWorld, entityId, otherInventory);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getItems()</div>
+                        <div class="method-signature">
+                            getItems(ecsWorld: ECSWorld): Entity[]
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Get all item entities in this inventory.
+                    </div>
+                    <pre><code class="language-typescript">const items = inventory.getItems(ecsWorld);
+for (const item of items) {
+    const template = item.getComponent<ItemTemplateComponent>('item_template');
+    console.log(`Has: ${template?.name}`);
+}</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getCurrentWeight()</div>
+                        <div class="method-signature">
+                            getCurrentWeight(ecsWorld: ECSWorld): number
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">console.log(`${inventory.getCurrentWeight(ecsWorld)} / ${capacity} kg`);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getCurrentVolume()</div>
+                        <div class="method-signature">
+                            getCurrentVolume(ecsWorld: ECSWorld): number
+                        </div>
+                    </div>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">equipItem()</div>
                         <div class="method-signature">
-                            equipItem(itemId: string): boolean
+                            equipItem(ecsWorld: ECSWorld, itemId: EntityId): boolean
                         </div>
                     </div>
-                    <pre><code class="language-typescript">inventory.equipItem('item_1');  // Mark item as equipped</code></pre>
+                    <pre><code class="language-typescript">inventory.equipItem(ecsWorld, entityId);</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">unequipItem()</div>
                         <div class="method-signature">
-                            unequipItem(itemId: string): boolean
+                            unequipItem(ecsWorld: ECSWorld, itemId: EntityId): boolean
                         </div>
                     </div>
-                    <pre><code class="language-typescript">inventory.unequipItem('item_1');  // Mark item as unequipped</code></pre>
+                    <pre><code class="language-typescript">inventory.unequipItem(ecsWorld, entityId);</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">getEquippedItems()</div>
                         <div class="method-signature">
-                            getEquippedItems(): Item[]
+                            getEquippedItems(ecsWorld: ECSWorld): Entity[]
                         </div>
                     </div>
-                    <pre><code class="language-typescript">const equipped = inventory.getEquippedItems();
+                    <pre><code class="language-typescript">const equipped = inventory.getEquippedItems(ecsWorld);
 console.log(`Equipped ${equipped.length} items`);</code></pre>
-                </div>
-
-                <div class="method">
-                    <div class="method-header">
-                        <div class="method-name">getItemsByCategory()</div>
-                        <div class="method-signature">
-                            getItemsByCategory(category: ItemCategory): Item[]
-                        </div>
-                    </div>
-                    <pre><code class="language-typescript">const weapons = inventory.getItemsByCategory(ItemCategory.WEAPON);</code></pre>
                 </div>
 
                 <h2>InventoryManager</h2>
@@ -914,10 +903,23 @@ console.log(`Equipped ${equipped.length} items`);</code></pre>
 
                 <div class="method">
                     <div class="method-header">
+                        <div class="method-name">new InventoryManager()</div>
+                        <div class="method-signature">
+                            constructor(eventBus: EventBus)
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">const inventoryManager = new InventoryManager(eventBus);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
                         <div class="method-name">createInventory()</div>
                         <div class="method-signature">
-                            createInventory(ownerId: EntityId, capacity: number,
-                            volumeCapacity: number): Inventory
+                            createInventory(
+                                ownerId: EntityId,
+                                capacity: number,
+                                volumeCapacity: number
+                            ): Inventory
                         </div>
                     </div>
                     <pre><code class="language-typescript">const inv = inventoryManager.createInventory(entity.id, 50, 30);</code></pre>
@@ -927,8 +929,7 @@ console.log(`Equipped ${equipped.length} items`);</code></pre>
                     <div class="method-header">
                         <div class="method-name">getInventory()</div>
                         <div class="method-signature">
-                            getInventory(ownerId: EntityId): Inventory |
-                            undefined
+                            getInventory(ownerId: EntityId): Inventory | undefined
                         </div>
                     </div>
                     <pre><code class="language-typescript">const playerInv = inventoryManager.getInventory(playerEntity.id);</code></pre>
@@ -938,30 +939,61 @@ console.log(`Equipped ${equipped.length} items`);</code></pre>
                     <div class="method-header">
                         <div class="method-name">removeInventory()</div>
                         <div class="method-signature">
-                            removeInventory(ownerId: EntityId): boolean
+                            removeInventory(ecsWorld: ECSWorld, ownerId: EntityId): boolean
                         </div>
                     </div>
-                    <pre><code class="language-typescript">inventoryManager.removeInventory(entity.id);  // Drop all items</code></pre>
+                    <pre><code class="language-typescript">inventoryManager.removeInventory(ecsWorld, entity.id);  // Drop all items</code></pre>
                 </div>
 
                 <div class="method">
                     <div class="method-header">
                         <div class="method-name">transferItem()</div>
                         <div class="method-signature">
-                            transferItem(fromOwnerId: EntityId, toOwnerId:
-                            EntityId, itemId: string): boolean
+                            transferItem(
+                                ecsWorld: ECSWorld,
+                                fromOwnerId: EntityId,
+                                toOwnerId: EntityId,
+                                itemId: EntityId
+                            ): boolean
                         </div>
                     </div>
                     <pre><code class="language-typescript">// Transfer between entities by ID
-inventoryManager.transferItem(player.id, chest.id, 'item_1');</code></pre>
+inventoryManager.transferItem(ecsWorld, player.id, chest.id, itemId);</code></pre>
                 </div>
 
+                <h2>Item Systems</h2>
+                <p>
+                    ECS systems that process items automatically.
+                </p>
+
+                <h3>ItemStackingSystem</h3>
+                <p>
+                    Automatically merges stackable items at the same position in the world.
+                    Runs each update tick.
+                </p>
+                <pre><code class="language-typescript">import { ItemStackingSystem } from './items/systems';
+
+// Register with ECS world
+ecsWorld.addSystem(new ItemStackingSystem());</code></pre>
+
+                <h3>ItemDurabilitySystem</h3>
+                <p>
+                    Processes durability changes and handles broken items.
+                </p>
+
                 <h2>Complete Example</h2>
-                <pre><code class="language-typescript">import { ItemManager, InventoryManager, ItemCategory } from 'ascii-world';
+                <pre><code class="language-typescript">import {
+    ItemManager,
+    InventoryManager,
+    ItemCategory,
+    ItemComponent,
+    ItemTemplateComponent,
+    WORLD_ITEMS_QUERY
+} from 'ascii-world';
 
 // Create managers
 const itemManager = new ItemManager(eventBus);
-const inventoryManager = new InventoryManager(itemManager, eventBus);
+const inventoryManager = new InventoryManager(eventBus);
 
 // Register custom item template
 itemManager.registerTemplate({
@@ -984,27 +1016,78 @@ itemManager.registerTemplate({
 const playerInv = inventoryManager.createInventory(playerEntity.id, 50, 30);
 
 // Spawn and add items
-const sword = itemManager.spawnItem('magic_sword', 1);
-if (playerInv.addItem(sword)) {
-    playerInv.equipItem(sword.id);
-    console.log(`Equipped ${sword.name}!`);
+const sword = itemManager.spawnItem(ecsWorld, 'magic_sword', 1);
+if (sword && playerInv.addItem(ecsWorld, sword)) {
+    playerInv.equipItem(ecsWorld, sword.id);
+    
+    const template = sword.getComponent<ItemTemplateComponent>('item_template');
+    console.log(`Equipped ${template?.name}!`);
 }
 
 // Stackable items
-const arrows = itemManager.spawnItem('arrow', 20, { x: 100, y: 200 });
-if (playerInv.addItem(arrows)) {
-    console.log(`Picked up ${arrows.quantity} arrows`);
+const arrows = itemManager.spawnItem(ecsWorld, 'arrow', 20, { x: 100, y: 200 });
+if (arrows && playerInv.addItem(ecsWorld, arrows)) {
+    const itemComp = arrows.getComponent<ItemComponent>('item');
+    console.log(`Picked up ${itemComp?.quantity} arrows`);
 }
 
 // Check inventory status
-console.log(`Weight: ${playerInv.currentWeight}/${playerInv.weightCapacity} kg`);
-console.log(`Items: ${playerInv.getItemCount()}`);
+console.log(`Weight: ${playerInv.getCurrentWeight(ecsWorld)}/50 kg`);
+console.log(`Items: ${playerInv.getItems(ecsWorld).length}`);
 
-// Get all weapons
-const weapons = playerInv.getItemsByCategory(ItemCategory.WEAPON);
+// Find all weapons using ECS query
+const weapons = ecsWorld.queryEntities({
+    all: ['item', 'item_template']
+}).filter(entity => {
+    const template = entity.getComponent<ItemTemplateComponent>('item_template');
+    const itemComp = entity.getComponent<ItemComponent>('item');
+    return template?.category === ItemCategory.WEAPON && 
+           playerInv.getItems(ecsWorld).includes(entity);
+});
+
 for (const weapon of weapons) {
-    console.log(`Weapon: ${weapon.name} (Durability: ${weapon.durability})`);
+    const template = weapon.getComponent<ItemTemplateComponent>('item_template');
+    const itemComp = weapon.getComponent<ItemComponent>('item');
+    console.log(`Weapon: ${template?.name} (Durability: ${itemComp?.durability})`);
+}
+
+// Damage an item
+const itemComp = sword.getComponent<ItemComponent>('item');
+if (itemComp) {
+    itemComp.durability -= 10;
+    if (itemComp.durability <= 0) {
+        console.log('Weapon broke!');
+        itemManager.removeItem(ecsWorld, sword.id);
+    }
 }</code></pre>
+
+                <h2>InventoryComponent</h2>
+                <p>
+                    For ECS entities that have inventories, use the InventoryComponent
+                    to store inventory data directly on the entity.
+                </p>
+                <pre><code class="language-typescript">interface InventoryComponent extends Component {
+    type: 'inventory';
+    capacity: number;
+    volumeCapacity: number;
+    itemIds: EntityId[];  // IDs of items in inventory
+}
+
+// Create component
+function createInventoryComponent(
+    capacity: number,
+    volumeCapacity: number
+): InventoryComponent {
+    return {
+        type: 'inventory',
+        capacity,
+        volumeCapacity,
+        itemIds: []
+    };
+}
+
+// Add to entity
+playerEntity.addComponent(createInventoryComponent(50, 30));</code></pre>
 
                 <h2>Events</h2>
                 <table>
@@ -1023,55 +1106,27 @@ for (const weapon of weapons) {
                         </tr>
                         <tr>
                             <td><code>item:spawned</code></td>
-                            <td>{ itemId, templateId, quantity, location? }</td>
-                            <td>Item instance created</td>
+                            <td>{ entityId, templateId, quantity }</td>
+                            <td>Item entity created</td>
                         </tr>
                         <tr>
                             <td><code>item:removed</code></td>
-                            <td>{ itemId }</td>
-                            <td>Item instance destroyed</td>
-                        </tr>
-                        <tr>
-                            <td><code>item:quantityChanged</code></td>
-                            <td>{ itemId, oldValue, newValue }</td>
-                            <td>Stack quantity changed</td>
-                        </tr>
-                        <tr>
-                            <td><code>item:damaged</code></td>
-                            <td>{ itemId, damage, remainingDurability }</td>
-                            <td>Item took damage</td>
-                        </tr>
-                        <tr>
-                            <td><code>item:broken</code></td>
-                            <td>{ itemId }</td>
-                            <td>Item durability reached 0</td>
-                        </tr>
-                        <tr>
-                            <td><code>item:repaired</code></td>
-                            <td>{ itemId, amount, durability }</td>
-                            <td>Item was repaired</td>
-                        </tr>
-                        <tr>
-                            <td><code>item:equippedChanged</code></td>
-                            <td>{ itemId, equipped }</td>
-                            <td>Equip status changed</td>
+                            <td>{ entityId }</td>
+                            <td>Item entity destroyed</td>
                         </tr>
                         <tr>
                             <td><code>inventory:itemAdded</code></td>
-                            <td>{ ownerId, itemId, weight, volume }</td>
+                            <td>{ ownerId, itemId, templateId }</td>
                             <td>Item added to inventory</td>
                         </tr>
                         <tr>
                             <td><code>inventory:itemRemoved</code></td>
-                            <td>{ ownerId, itemId, weight, volume }</td>
+                            <td>{ ownerId, itemId }</td>
                             <td>Item removed from inventory</td>
                         </tr>
                         <tr>
                             <td><code>inventory:stacked</code></td>
-                            <td>
-                                { ownerId, targetItemId, sourceItemId, quantity
-                                }
-                            </td>
+                            <td>{ ownerId, targetItemId, sourceItemId, quantity }</td>
                             <td>Items stacked together</td>
                         </tr>
                         <tr>
@@ -1086,6 +1141,28 @@ for (const weapon of weapons) {
                         </tr>
                     </tbody>
                 </table>
+
+                <h2>File Structure</h2>
+                <pre><code class="language-typescript">src/items/
+├── index.ts              # Public exports
+├── types.ts              # ItemCategory, ItemTemplate, ItemProperties
+├── components.ts         # ItemComponent, ItemTemplateComponent
+├── queries.ts            # ECS query definitions
+├── ItemManager.ts        # Template registry and spawning
+├── Inventory.ts          # Inventory management
+├── InventoryManager.ts   # Global coordination
+└── systems.ts            # ItemStackingSystem, ItemDurabilitySystem</code></pre>
+
+                <div class="alert alert-success">
+                    <strong>Benefits of ECS Architecture:</strong>
+                    <ul>
+                        <li>Items participate in all ECS systems (physics, rendering, lighting)</li>
+                        <li>Runtime composition - add any component to items at any time</li>
+                        <li>Unified identity space with EntityId</li>
+                        <li>Efficient spatial queries via ECS</li>
+                        <li>Simplified serialization - items saved as regular entities</li>
+                    </ul>
+                </div>
 
                 <div class="alert alert-info">
                     <strong>Default Templates:</strong> ItemManager

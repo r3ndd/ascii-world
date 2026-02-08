@@ -519,7 +519,13 @@ type ChunkGenerator = (chunk: Chunk, context: GeneratorContext) => void;</code><
     registerTerrain: (definition: TerrainDefinition) => void;
     registerGenerator: (name: string, generator: ChunkGenerator) => void;
     createEntity: (templateId: string, x: number, y: number, ecsWorld: ECSWorld) => Entity | null;
-    spawnItem: (templateId: string, quantity: number, x: number, y: number, itemManager: any) => any;
+    spawnItem: (
+        templateId: string,
+        quantity: number,
+        x: number,
+        y: number,
+        ecsWorld: ECSWorld
+    ) => Entity | null;
 }</code></pre>
 
             <h2>ModLoader</h2>
@@ -562,9 +568,9 @@ modLoader.loadMod(myMod);</code></pre>
             <div class="method">
                 <div class="method-header">
                     <div class="method-name">initializeMods()</div>
-                    <div class="method-signature">initializeMods(itemManager?: any): void</div>
+                    <div class="method-signature">initializeMods(itemManager?: ItemManager): void</div>
                 </div>
-                <div class="method-description">Initialize all loaded mods in dependency order. Must be called after loading mods.</div>
+                <div class="method-description">Initialize all loaded mods in dependency order. Must be called after loading mods. Pass the ItemManager for mods that spawn items.</div>
                 <pre><code class="language-typescript">modLoader.initializeMods(itemManager);</code></pre>
             </div>
 

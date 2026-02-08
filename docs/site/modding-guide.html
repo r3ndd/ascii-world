@@ -761,13 +761,13 @@ modLoader.initializeMods(itemManager);</code></pre>
             <h3>Event-Driven Programming</h3>
             <p>Mods can listen to game events and react accordingly:</p>
             <pre><code class="language-typescript">initialize(api) {
-  // Listen for entity death
+    // Listen for entity death
   api.eventBus.on('entity:died', (data) => {
     const { entityId, killer } = data;
     console.log(`Entity ${entityId} was killed by ${killer}`);
     
     // Spawn loot
-    api.spawnItem('gold_coin', 10, data.x, data.y, itemManager);
+    api.spawnItem('gold_coin', 10, data.x, data.y, ecsWorld);
   });
 
   // Listen for player actions
