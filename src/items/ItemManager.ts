@@ -20,7 +20,6 @@ export class ItemManager {
 
   constructor(eventBus: EventBus) {
     this.eventBus = eventBus;
-    this.registerDefaultTemplates();
   }
 
   /**
@@ -143,9 +142,9 @@ export class ItemManager {
       all: ['item', 'position']
     }).filter(entity => {
       const pos = entity.getComponent<{ type: 'position'; x: number; y: number; z: number }>('position');
-      return pos && 
-             pos.x === position.x && 
-             pos.y === position.y && 
+      return pos &&
+             pos.x === position.x &&
+             pos.y === position.y &&
              pos.z === (position.z ?? 0);
     });
   }
@@ -183,7 +182,6 @@ export class ItemManager {
    */
   clear(): void {
     this.templates.clear();
-    this.registerDefaultTemplates();
   }
 
   /**

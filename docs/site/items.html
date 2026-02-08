@@ -362,13 +362,6 @@
                     ECS systems. Supports inventory management, stacking, equipment, and
                     durability.
                 </p>
-
-                <div class="alert alert-info">
-                    <strong>ECS Integration:</strong> Items are now ECS entities with components.
-                    This enables runtime composition (add BurningComponent, EnchantedComponent, etc.)
-                    and unified identity space using <code>EntityId</code> for everything.
-                </div>
-
                 <h2>ItemCategory</h2>
                 <p>
                     Enumeration of item categories for organization and
@@ -1019,7 +1012,7 @@ const playerInv = inventoryManager.createInventory(playerEntity.id, 50, 30);
 const sword = itemManager.spawnItem(ecsWorld, 'magic_sword', 1);
 if (sword && playerInv.addItem(ecsWorld, sword)) {
     playerInv.equipItem(ecsWorld, sword.id);
-    
+
     const template = sword.getComponent<ItemTemplateComponent>('item_template');
     console.log(`Equipped ${template?.name}!`);
 }
@@ -1041,7 +1034,7 @@ const weapons = ecsWorld.queryEntities({
 }).filter(entity => {
     const template = entity.getComponent<ItemTemplateComponent>('item_template');
     const itemComp = entity.getComponent<ItemComponent>('item');
-    return template?.category === ItemCategory.WEAPON && 
+    return template?.category === ItemCategory.WEAPON &&
            playerInv.getItems(ecsWorld).includes(entity);
 });
 
@@ -1152,23 +1145,6 @@ playerEntity.addComponent(createInventoryComponent(50, 30));</code></pre>
 ├── Inventory.ts          # Inventory management
 ├── InventoryManager.ts   # Global coordination
 └── systems.ts            # ItemStackingSystem, ItemDurabilitySystem</code></pre>
-
-                <div class="alert alert-success">
-                    <strong>Benefits of ECS Architecture:</strong>
-                    <ul>
-                        <li>Items participate in all ECS systems (physics, rendering, lighting)</li>
-                        <li>Runtime composition - add any component to items at any time</li>
-                        <li>Unified identity space with EntityId</li>
-                        <li>Efficient spatial queries via ECS</li>
-                        <li>Simplified serialization - items saved as regular entities</li>
-                    </ul>
-                </div>
-
-                <div class="alert alert-info">
-                    <strong>Default Templates:</strong> ItemManager
-                    automatically registers sword_iron, potion_health,
-                    wood_plank, and backpack templates on initialization.
-                </div>
 
                 <div class="footer">
                     <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
