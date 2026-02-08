@@ -286,7 +286,7 @@ describe('Integration Tests - Phase 4', () => {
   describe('Item Management Workflow', () => {
     it('should handle item pickup and inventory management', () => {
       const itemManager = new ItemManager(eventBus);
-      const inventoryManager = new InventoryManager(itemManager, eventBus);
+      const inventoryManager = new InventoryManager(eventBus);
       
       // Register item template
       const swordTemplate: ItemTemplate = {
@@ -311,17 +311,17 @@ describe('Integration Tests - Phase 4', () => {
       const inventory = inventoryManager.createInventory(player.id, 50, 100); // 50kg, 100L capacity
       
       // Spawn item and add to inventory
-      const sword = itemManager.spawnItem('sword_steel');
+      const sword = itemManager.spawnItem(ecsWorld, 'sword_steel');
       expect(sword).not.toBeNull();
       
       if (sword) {
-        const added = inventory.addItem(sword);
+        const added = inventory.addItem(ecsWorld, sword);
         expect(added).toBe(true);
         expect(inventory.getItemCount()).toBe(1);
-        expect(inventory.currentWeight).toBe(1.5);
+        expect(inventory.getCurrentWeight(ecsWorld)).toBe(1.5);
         
         // Remove item from inventory
-        const removed = inventory.removeItem(sword.id);
+        const removed = inventory.removeItem(ecsWorld, sword.id);
         expect(removed).not.toBeNull();
         expect(inventory.getItemCount()).toBe(0);
       }
@@ -329,7 +329,7 @@ describe('Integration Tests - Phase 4', () => {
 
     it('should prevent adding items exceeding capacity', () => {
       const itemManager = new ItemManager(eventBus);
-      const inventoryManager = new InventoryManager(itemManager, eventBus);
+      const inventoryManager = new InventoryManager(eventBus);
       
       // Create heavy item template
       const anvilTemplate: ItemTemplate = {
@@ -352,11 +352,11 @@ describe('Integration Tests - Phase 4', () => {
       const inventory = inventoryManager.createInventory(player.id, 10, 100); // Only 10kg capacity
       
       // Try to add heavy item
-      const anvil = itemManager.spawnItem('anvil');
+      const anvil = itemManager.spawnItem(ecsWorld, 'anvil');
       expect(anvil).not.toBeNull();
       
       if (anvil) {
-        const added = inventory.addItem(anvil);
+        const added = inventory.addItem(ecsWorld, anvil);
         expect(added).toBe(false);
         expect(inventory.getItemCount()).toBe(0);
       }
@@ -384,26 +384,29 @@ describe('Integration Tests - Phase 4', () => {
       itemManager.registerTemplate(arrowTemplate);
       
       // Spawn multiple arrows
-      const arrows1 = itemManager.spawnItem('arrow', 10);
-      const arrows2 = itemManager.spawnItem('arrow', 8);
+      const arrows1 = itemManager.spawnItem(ecsWorld, 'arrow', 10);
+      const arrows2 = itemManager.spawnItem(ecsWorld, 'arrow', 8);
       
       expect(arrows1).not.toBeNull();
       expect(arrows2).not.toBeNull();
       
       if (arrows1 && arrows2) {
-        const inventoryManager = new InventoryManager(itemManager, eventBus);
+        const inventoryManager = new InventoryManager(eventBus);
         const player = createTestPlayer(ecsWorld);
         const inventory = inventoryManager.createInventory(player.id, 50, 100);
         
-        inventory.addItem(arrows1);
+        inventory.addItem(ecsWorld, arrows1);
         
         // Try to add more (should stack)
-        const added = inventory.addItem(arrows2);
+        const added = inventory.addItem(ecsWorld, arrows2);
         expect(added).toBe(true);
         
         // Check total count - should be merged into one stack
-        const items = inventory.getItems();
-        const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+        const items = inventory.getItems(ecsWorld);
+        const totalQuantity = items.reduce((sum, item) => {
+          const itemComp = item.getComponent<{ type: 'item'; quantity: number }>('item');
+          return sum + (itemComp?.quantity || 0);
+        }, 0);
         expect(totalQuantity).toBe(18);
       }
     });
@@ -425,7 +428,7 @@ describe('Integration Tests - Phase 4', () => {
       world.initialize();
       
       const itemManager = new ItemManager(eventBus);
-      const inventoryManager = new InventoryManager(itemManager, eventBus);
+      const inventoryManager = new InventoryManager(eventBus);
       const physicsSystem = new PhysicsSystem(world, ecsWorld, eventBus);
       const actorSystem = new ActorSystem(ecsWorld, physicsSystem);
       const turnManager = new TurnManager(ecsWorld, eventBus, new SpeedSystem(), actorSystem);
@@ -494,7 +497,7 @@ describe('Integration Tests - Phase 4', () => {
       const world = new World(100, 100, 64, ecsWorld);
       world.initialize();
       const itemManager = new ItemManager(eventBus);
-      const inventoryManager = new InventoryManager(itemManager, eventBus);
+      const inventoryManager = new InventoryManager(eventBus);
       const physicsSystem = new PhysicsSystem(world, ecsWorld, eventBus);
       const actorSystem = new ActorSystem(ecsWorld, physicsSystem);
       const turnManager = new TurnManager(ecsWorld, eventBus, new SpeedSystem(), actorSystem);
@@ -796,7 +799,7 @@ describe('Integration Tests - Phase 4', () => {
       const actorSystem = new ActorSystem(ecsWorld, physics);
       const turnManager = new TurnManager(ecsWorld, eventBus, new SpeedSystem(), actorSystem);
       const itemManager = new ItemManager(eventBus);
-      const inventoryManager = new InventoryManager(itemManager, eventBus);
+      const inventoryManager = new InventoryManager(eventBus);
       
       // Register player actor behavior
       let playerActions: string[] = [];
@@ -874,7 +877,7 @@ describe('Integration Tests - Phase 4', () => {
       }
       
       // Spawn an item at a location
-      const item = itemManager.spawnItem('sword_iron', 1, { x: 12, y: 10 });
+      const item = itemManager.spawnItem(ecsWorld, 'sword_iron', 1, { x: 12, y: 10 });
       expect(item).not.toBeNull();
     });
   });
@@ -947,7 +950,7 @@ describe('Integration Tests - Phase 4', () => {
       
       // Try to load non-existent save
       const itemManager = new ItemManager(eventBus);
-      const inventoryManager = new InventoryManager(itemManager, eventBus);
+      const inventoryManager = new InventoryManager(eventBus);
       
       await expect(
         saveManager.loadSave(999, ecsWorld, itemManager, inventoryManager)

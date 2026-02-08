@@ -941,6 +941,9 @@ export class ModLoader {
         return entity;
       },
       spawnItem: (templateId, quantity, x, y, ecsWorld, itemManager) => {
+        if (!itemManager || typeof itemManager.spawnItem !== 'function') {
+          return null;
+        }
         const item = itemManager.spawnItem(ecsWorld, templateId, quantity, { x, y });
         if (item) {
           this.eventBus.emit('mod:itemSpawned', {

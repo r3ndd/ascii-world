@@ -361,7 +361,7 @@ describe('SaveManager', () => {
     world = new World(50, 50, 16, ecsWorld);
     world.initialize();
     itemManager = new ItemManager(eventBus);
-    inventoryManager = new InventoryManager(itemManager, eventBus);
+    inventoryManager = new InventoryManager(eventBus);
     const speedSystem = new SpeedSystem();
     const actorSystem = new ActorSystem(ecsWorld, {} as PhysicsSystem);
     turnManager = new TurnManager(ecsWorld, eventBus, speedSystem, actorSystem);

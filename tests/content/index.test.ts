@@ -18,6 +18,7 @@ import {
 import { ECSWorld } from '../../src/ecs';
 import { World, TERRAIN } from '../../src/world';
 import { createTestECSWorld } from '../fixtures/world';
+import { ItemManager } from '../../src/items';
 import {
   createTestContentPack,
   createTestItemTemplate,
@@ -1161,58 +1162,76 @@ describe('Content Module', () => {
       });
 
       it('should allow spawning items through API', () => {
-        const mockItemManager = {
-          spawnItem: jest.fn().mockReturnValue({ id: 'item_123' }),
-        };
+        const itemManager = new ItemManager(eventBus);
+        itemManager.registerTemplate({
+          id: 'sword',
+          name: 'Sword',
+          description: 'A sword',
+          category: 'weapon' as any,
+          character: '/',
+          foreground: '#ffffff',
+          properties: { weight: 1, volume: 1 }
+        });
 
         const handler = jest.fn();
         eventBus.on('mod:itemSpawned', handler);
+
+        const ecsWorld = createTestECSWorld(eventBus);
 
         const mod: Mod = {
           id: 'item_mod',
           name: 'Item Mod',
           version: '1.0.0',
           initialize: (api) => {
-            api.spawnItem('sword', 1, 10, 20, mockItemManager);
+            api.spawnItem('sword', 1, 10, 20, ecsWorld, itemManager);
           },
         };
 
         modLoader.loadMod(mod);
-        modLoader.initializeMods(mockItemManager);
+        modLoader.initializeMods(itemManager);
 
-        expect(mockItemManager.spawnItem).toHaveBeenCalledWith('sword', 1, { x: 10, y: 20 });
-        expect(handler).toHaveBeenCalled();
+        expect(handler).toHaveBeenCalledWith(expect.objectContaining({
+          templateId: 'sword',
+          quantity: 1,
+          x: 10,
+          y: 20
+        }));
       });
 
       it('should handle spawnItem with no itemManager', () => {
+        const itemManager = null as any;
+        const ecsWorld = createTestECSWorld(eventBus);
+        let spawnResult: any;
         const mod: Mod = {
           id: 'no_manager_mod',
           name: 'No Manager Mod',
           version: '1.0.0',
           initialize: (api) => {
-            const result = api.spawnItem('sword', 1, 10, 20, null);
-            expect(result).toBeNull();
+            spawnResult = api.spawnItem('sword', 1, 10, 20, ecsWorld, itemManager);
           },
         };
 
         modLoader.loadMod(mod);
         modLoader.initializeMods();
+        expect(spawnResult).toBeNull();
       });
 
       it('should handle spawnItem with itemManager missing spawnItem method', () => {
-        const badItemManager = {};
+        const badItemManager = {} as any;
+        const ecsWorld = createTestECSWorld(eventBus);
+        let spawnResult: any;
         const mod: Mod = {
           id: 'bad_manager_mod',
           name: 'Bad Manager Mod',
           version: '1.0.0',
           initialize: (api) => {
-            const result = api.spawnItem('sword', 1, 10, 20, badItemManager);
-            expect(result).toBeNull();
+            spawnResult = api.spawnItem('sword', 1, 10, 20, ecsWorld, badItemManager);
           },
         };
 
         modLoader.loadMod(mod);
         modLoader.initializeMods(badItemManager);
+        expect(spawnResult).toBeNull();
       });
 
       it('should register items through API', () => {

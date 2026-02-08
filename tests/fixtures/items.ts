@@ -4,6 +4,7 @@
  */
 
 import { ItemManager, Inventory, InventoryManager, ItemCategory } from '../../src/items';
+import { ECSWorld } from '../../src/ecs';
 import { EventBus } from '../../src/core/EventBus';
 import { EntityId } from '../../src/core/Types';
 
@@ -19,36 +20,35 @@ export function createTestItemManager(eventBus: EventBus): ItemManager {
  */
 export function createTestInventory(
   ownerId: EntityId,
-  itemManager: ItemManager,
   eventBus: EventBus,
   capacity: number = 50,
   volumeCapacity: number = 100
 ): Inventory {
-  return new Inventory(ownerId, capacity, volumeCapacity, itemManager, eventBus);
+  return new Inventory(ownerId, capacity, volumeCapacity, eventBus);
 }
 
 /**
  * Create a test inventory manager
  */
 export function createTestInventoryManager(
-  itemManager: ItemManager,
   eventBus: EventBus
 ): InventoryManager {
-  return new InventoryManager(itemManager, eventBus);
+  return new InventoryManager(eventBus);
 }
 
 /**
  * Spawn test items into an inventory
  */
 export function spawnItemsIntoInventory(
+  ecsWorld: ECSWorld,
   inventory: Inventory,
   itemManager: ItemManager,
   itemCounts: Array<{ templateId: string; quantity?: number }>
 ): void {
   for (const { templateId, quantity = 1 } of itemCounts) {
-    const item = itemManager.spawnItem(templateId, quantity);
+    const item = itemManager.spawnItem(ecsWorld, templateId, quantity);
     if (item) {
-      inventory.addItem(item);
+      inventory.addItem(ecsWorld, item);
     }
   }
 }
