@@ -12,6 +12,9 @@ import { MapManager, World } from '../world';
 import { TurnManager, SpeedSystem, ActorSystem } from '../time';
 import { PhysicsSystem, FOVSystem } from '../physics';
 import { Direction } from './Types';
+import { LookMode, DEFAULT_LOOK_MODE_CONFIG } from '../interaction';
+import { LookPanel, CrosshairRenderer } from '../display/ui';
+import { ItemManager } from '../items';
 
 export interface EngineConfig {
   display: DisplayConfig;
@@ -52,7 +55,16 @@ export class Engine {
   // Physics & FOV
   public physicsSystem!: PhysicsSystem;
   public fovSystem!: FOVSystem;
-  
+
+  // Item management
+  public itemManager!: ItemManager;
+
+  // Look mode
+  public lookMode!: LookMode;
+  public lookPanel!: LookPanel;
+  public crosshairRenderer!: CrosshairRenderer;
+  private isInLookMode: boolean = false;
+
   // Configuration
   private engineConfig: EngineConfig;
   private playerEntity: Entity | null = null;
@@ -95,19 +107,49 @@ export class Engine {
     this.physicsSystem = new PhysicsSystem(this.world, this.ecsWorld, this.eventBus);
     this.fovSystem = new FOVSystem(this.world);
     this.renderer.setFOVSystem(this.fovSystem);
-    
+
+    // Setup item management
+    this.itemManager = new ItemManager(this.eventBus);
+
+    // Setup look mode
+    this.lookMode = new LookMode(
+      this.world,
+      this.fovSystem,
+      this.itemManager,
+      this.physicsSystem,
+      this.ecsWorld,
+      this.eventBus,
+      DEFAULT_LOOK_MODE_CONFIG
+    );
+
+    // Setup look mode UI
+    const sidebarWidth = DEFAULT_LOOK_MODE_CONFIG.sidebarWidth;
+    const gameWidth = this.engineConfig.display.width - sidebarWidth;
+    this.lookPanel = new LookPanel(
+      this.lookMode,
+      this.displayManager,
+      this.camera,
+      { sidebarWidth, startX: gameWidth }
+    );
+
+    this.crosshairRenderer = new CrosshairRenderer(
+      this.lookMode,
+      this.displayManager,
+      this.camera
+    );
+
     // Setup turn management
     this.speedSystem = new SpeedSystem();
     this.actorSystem = new ActorSystem(this.ecsWorld, this.physicsSystem);
     this.ecsWorld.addSystem(this.actorSystem);
-    
+
     this.turnManager = new TurnManager(
       this.ecsWorld,
       this.eventBus,
       this.speedSystem,
       this.actorSystem
     );
-    
+
     // Setup default input handler
     this.setupDefaultInputHandler();
     
@@ -119,21 +161,27 @@ export class Engine {
 
   private setupDefaultInputHandler(): void {
     let resolveInput: ((value: { direction?: Direction; wait?: boolean }) => void) | null = null;
-    
+
     // Store current input promise resolver
     this.turnManager.setPlayerInputHandler(() => {
       return new Promise((resolve) => {
         resolveInput = resolve;
       });
     });
-    
+
     // Keyboard handler
     document.addEventListener('keydown', (e) => {
+      // Handle look mode
+      if (this.isInLookMode) {
+        this.handleLookModeInput(e);
+        return;
+      }
+
       if (!resolveInput) return;
-      
+
       let direction: Direction | undefined;
       let wait = false;
-      
+
       switch(e.key) {
         case 'ArrowUp':
         case 'w':
@@ -158,14 +206,139 @@ export class Engine {
         case ' ':
           wait = true;
           break;
+        case 'l':
+        case 'L':
+        case 'x':
+        case 'X':
+          // Enter look mode
+          e.preventDefault();
+          if (this.playerEntity) {
+            this.enterLookMode();
+          }
+          return;
         default:
           return; // Not a game key, ignore
       }
-      
+
       e.preventDefault();
       resolveInput({ direction, wait });
       resolveInput = null;
     });
+  }
+
+  /**
+   * Enter look mode
+   */
+  private enterLookMode(): void {
+    if (!this.playerEntity) return;
+
+    if (this.lookMode.enter(this.playerEntity)) {
+      this.isInLookMode = true;
+      this.render(); // Re-render to show look UI
+    }
+  }
+
+  /**
+   * Exit look mode
+   */
+  private exitLookMode(): void {
+    this.lookMode.exit();
+    this.isInLookMode = false;
+    this.render(); // Re-render to hide look UI
+  }
+
+  /**
+   * Handle keyboard input when in look mode
+   */
+  private handleLookModeInput(e: KeyboardEvent): void {
+    e.preventDefault();
+
+    switch(e.key) {
+      case 'Escape':
+        this.exitLookMode();
+        return;
+      case 'ArrowUp':
+        this.lookMode.moveCursor('north');
+        this.render();
+        return;
+      case 'ArrowDown':
+        this.lookMode.moveCursor('south');
+        this.render();
+        return;
+      case 'ArrowLeft':
+        this.lookMode.moveCursor('west');
+        this.render();
+        return;
+      case 'ArrowRight':
+        this.lookMode.moveCursor('east');
+        this.render();
+        return;
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        // Execute action by number
+        const actionNumber = parseInt(e.key, 10);
+        this.executeLookAction(actionNumber);
+        return;
+      case 'l':
+      case 'L':
+        this.executeLookActionByHotkey('l');
+        return;
+      case 'e':
+      case 'E':
+        this.executeLookActionByHotkey('e');
+        return;
+      case 'g':
+      case 'G':
+        this.executeLookActionByHotkey('g');
+        return;
+      case 'o':
+      case 'O':
+        this.executeLookActionByHotkey('o');
+        return;
+      case 'c':
+      case 'C':
+        this.executeLookActionByHotkey('c');
+        return;
+      case 'u':
+      case 'U':
+        this.executeLookActionByHotkey('u');
+        return;
+      case 'm':
+      case 'M':
+        this.executeLookActionByHotkey('m');
+        return;
+    }
+  }
+
+  /**
+   * Execute a look mode action by its number
+   */
+  private async executeLookAction(actionNumber: number): Promise<void> {
+    const shouldExit = await this.lookMode.executeActionByNumber(actionNumber);
+    if (shouldExit) {
+      this.exitLookMode();
+    } else {
+      this.render();
+    }
+  }
+
+  /**
+   * Execute a look mode action by its hotkey
+   */
+  private async executeLookActionByHotkey(hotkey: string): Promise<void> {
+    const shouldExit = await this.lookMode.executeActionByHotkey(hotkey);
+    if (shouldExit) {
+      this.exitLookMode();
+    } else {
+      this.render();
+    }
   }
 
   createPlayer(options: PlayerOptions = {}): Entity {
@@ -250,17 +423,32 @@ export class Engine {
     // Render entities
     this.renderer.render();
 
+    // Render look mode crosshair if active
+    if (this.isInLookMode) {
+      this.crosshairRenderer.render();
+    }
+
     // Render UI
     this.renderUI();
+
+    // Render look panel if active
+    if (this.isInLookMode) {
+      this.lookPanel.render();
+    }
   }
 
   private renderUI(): void {
+    // Don't render standard UI when in look mode to avoid overlap
+    if (this.isInLookMode) {
+      return;
+    }
+
     const lines: { x: number; y: number; text: string }[] = [];
-    
+
     if (this.uiConfig.showTurnCounter) {
       lines.push({ x: 1, y: 0, text: `Turn: ${this.turnManager.getCurrentTurn()}` });
     }
-    
+
     if (this.uiConfig.showPosition && this.playerEntity) {
       const pos = this.playerEntity.getComponent<{ type: 'position'; x: number; y: number }>('position');
       if (pos) {
@@ -272,7 +460,7 @@ export class Engine {
         }
       }
     }
-    
+
     if (this.uiConfig.showHealth && this.playerEntity) {
       const health = this.playerEntity.getComponent<{ type: 'health'; current: number; max: number }>('health');
       if (health) {
@@ -280,12 +468,15 @@ export class Engine {
         lines.push({ x: 1, y: viewport.height - 1, text: `HP: ${health.current}/${health.max}` });
       }
     }
-    
+
+    // Add look mode hint
+    lines.push({ x: 1, y: 1, text: 'Press L or X to look around' });
+
     // Add custom lines
     if (this.uiConfig.customLines) {
       lines.push(...this.uiConfig.customLines);
     }
-    
+
     // Draw all UI lines
     for (const line of lines) {
       this.displayManager.drawText(line.x, line.y, line.text);
