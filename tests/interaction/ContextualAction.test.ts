@@ -17,7 +17,7 @@ import {
 } from '../../src/interaction/ContextualAction';
 import { ECSWorld, Entity } from '../../src/ecs';
 import { EventBus } from '../../src/core/EventBus';
-import { Position } from '../../src/core/Types';
+
 
 describe('ContextualAction', () => {
   let ecsWorld: ECSWorld;

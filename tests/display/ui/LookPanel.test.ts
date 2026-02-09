@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * Look Panel UI Tests
  * Tests for the look mode sidebar UI component
  */

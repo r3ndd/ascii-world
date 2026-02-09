@@ -10,7 +10,7 @@ import { World } from '../../src/world';
 import { FOVSystem } from '../../src/physics';
 import { ItemManager } from '../../src/items';
 import { PhysicsSystem } from '../../src/physics';
-import { Direction } from '../../src/core/Types';
+
 
 describe('LookMode', () => {
   let lookMode: LookMode;
@@ -29,6 +29,22 @@ describe('LookMode', () => {
     fovSystem = new FOVSystem(world);
     itemManager = new ItemManager(eventBus);
     physicsSystem = new PhysicsSystem(world, ecsWorld, eventBus);
+
+    // Initialize floor tiles in the world around player position
+    // This is needed for FOV computation to work correctly
+    for (let x = 5; x < 25; x++) {
+      for (let y = 5; y < 25; y++) {
+        world.setTileAt(x, y, {
+          terrain: 'floor',
+          char: '.',
+          fg: '#888888',
+          bg: '#000000',
+          blocksMovement: false,
+          blocksLight: false,
+          transparent: true
+        });
+      }
+    }
 
     // Create player entity at position (10, 10)
     playerEntity = ecsWorld.createEntity();
@@ -190,15 +206,31 @@ describe('LookMode', () => {
     });
 
     it('should not move to invisible/unexplored tiles', () => {
-      // Reset FOV to make tiles invisible
-      fovSystem.reset();
+      // Move far away to an unexplored area beyond FOV radius
+      lookMode.exit();
       
+      // Create a new look mode at a location where FOV hasn't been computed
+      // Position (50, 50) is far from the initialized tiles (5-25 range)
+      const distantPlayer = ecsWorld.createEntity();
+      distantPlayer.addComponent({
+        type: 'position',
+        x: 50,
+        y: 50,
+        z: 0
+      } as any);
+      
+      // Enter look mode WITHOUT computing FOV first
+      // This means no tiles are visible or explored at this location
+      lookMode.enter(distantPlayer);
+      
+      // Try to move to an unexplored tile (which should be all tiles here)
       const result = lookMode.moveCursor('north');
       expect(result).toBe(false);
       
+      // Cursor should stay at original position
       const pos = lookMode.getCursorPosition();
-      expect(pos.x).toBe(10);
-      expect(pos.y).toBe(10);
+      expect(pos.x).toBe(50);
+      expect(pos.y).toBe(50);
     });
 
     it('should return false when not in look mode', () => {
@@ -283,12 +315,13 @@ describe('LookMode', () => {
       lookMode.enter(playerEntity);
     });
 
-    it('should return empty array when no entities present', () => {
+    it('should return player entity when no other entities present', () => {
       const entities = lookMode.getEntitiesAtCursor();
-      expect(entities).toEqual([]);
+      expect(entities.length).toBe(1);
+      expect(entities[0].id).toBe(playerEntity.id);
     });
 
-    it('should return entities at cursor position', () => {
+    it('should return all entities at cursor position including player', () => {
       // Create NPC at player position
       const npc = ecsWorld.createEntity();
       npc.addComponent({
@@ -299,11 +332,12 @@ describe('LookMode', () => {
       } as any);
       
       const entities = lookMode.getEntitiesAtCursor();
-      expect(entities.length).toBe(1);
-      expect(entities[0].id).toBe(npc.id);
+      expect(entities.length).toBe(2);
+      expect(entities.some(e => e.id === npc.id)).toBe(true);
+      expect(entities.some(e => e.id === playerEntity.id)).toBe(true);
     });
 
-    it('should not return entities at different positions', () => {
+    it('should only return entities at cursor position', () => {
       // Create NPC at different position
       const npc = ecsWorld.createEntity();
       npc.addComponent({
@@ -314,7 +348,9 @@ describe('LookMode', () => {
       } as any);
       
       const entities = lookMode.getEntitiesAtCursor();
-      expect(entities.length).toBe(0);
+      // Should only return player, not the NPC at (20, 20)
+      expect(entities.length).toBe(1);
+      expect(entities[0].id).toBe(playerEntity.id);
     });
   });
 

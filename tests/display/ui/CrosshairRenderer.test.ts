@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * Crosshair Renderer Tests
  * Tests for the look mode cursor rendering
  */
@@ -127,10 +131,10 @@ describe('CrosshairRenderer', () => {
       fovSystem.computeFOV(10, 10, 10);
       lookMode.enter(playerEntity);
       
-      // Move cursor far away
-      for (let i = 0; i < 100; i++) {
-        lookMode.moveCursor('east');
-      }
+      // Move camera to a different position so cursor is outside viewport
+      // Camera viewport is 60x24, so if we move camera to (50, 50),
+      // cursor at (10, 10) will be outside the viewport
+      camera.setPosition(50, 50);
       
       const drawSpy = jest.spyOn(displayManager, 'draw');
       

@@ -72,11 +72,11 @@ export class LookAction extends BaseContextualAction {
   readonly number = 1;
   readonly cost = 0;
   
-  isAvailable(): boolean {
+  isAvailable(_context: ActionContext): boolean {
     return true;
   }
   
-  execute(): boolean {
+  execute(_context: ActionContext): boolean {
     // Looking is a free action that doesn't end look mode
     return false;
   }
@@ -96,7 +96,7 @@ export class ExamineAction extends BaseContextualAction {
            context.fovSystem.isExplored(context.targetPosition.x, context.targetPosition.y);
   }
   
-  execute(): boolean {
+  execute(_context: ActionContext): boolean {
     // Examining is a free action that doesn't end look mode
     return false;
   }
