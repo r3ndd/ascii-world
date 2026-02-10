@@ -24,15 +24,30 @@ const DIRECTION_OFFSETS: Record<Direction, { x: number; y: number }> = {
 // Physics system for collision and movement
 export class PhysicsSystem {
   private world: World;
+  private ecsWorld: ECSWorld;
   private eventBus: EventBus;
 
-  constructor(world: World, _ecsWorld: ECSWorld, eventBus: EventBus) {
+  constructor(world: World, ecsWorld: ECSWorld, eventBus: EventBus) {
     this.world = world;
+    this.ecsWorld = ecsWorld;
     this.eventBus = eventBus;
   }
 
-  canMoveTo(x: number, y: number, z: number = 0): boolean {
-    return this.world.isValidPosition(x, y, z);
+  canMoveTo(x: number, y: number, z: number = 0, excludeEntity?: Entity): boolean {
+    // Check terrain collision
+    if (!this.world.isValidPosition(x, y, z)) {
+      return false;
+    }
+
+    // Check entity collision
+    const entitiesAtTarget = this.ecsWorld.getEntitiesAtPosition(x, y, z);
+    for (const entity of entitiesAtTarget) {
+      if (entity !== excludeEntity) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   moveEntity(entity: Entity, direction: Direction): boolean {
@@ -45,7 +60,7 @@ export class PhysicsSystem {
     const newY = position.y + offset.y;
     const currentZ = position.z;
 
-    if (!this.canMoveTo(newX, newY, currentZ)) {
+    if (!this.canMoveTo(newX, newY, currentZ, entity)) {
       this.eventBus.emit('physics:movementBlocked', {
         entityId: entity.id,
         from: { x: position.x, y: position.y, z: currentZ },
@@ -74,7 +89,7 @@ export class PhysicsSystem {
 
     const targetZ = z ?? position.z;
 
-    if (!this.canMoveTo(x, y, targetZ)) return false;
+    if (!this.canMoveTo(x, y, targetZ, entity)) return false;
 
     const oldX = position.x;
     const oldY = position.y;

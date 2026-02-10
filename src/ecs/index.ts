@@ -115,6 +115,17 @@ export class ECSWorld {
     return Array.from(this.entities.values());
   }
 
+  getEntitiesAtPosition(x: number, y: number, z: number = 0): Entity[] {
+    const results: Entity[] = [];
+    for (const entity of this.entities.values()) {
+      const position = entity.getComponent<PositionComponent>('position');
+      if (position && position.x === x && position.y === y && position.z === z) {
+        results.push(entity);
+      }
+    }
+    return results;
+  }
+
   queryEntities(query: Query): Entity[] {
     const cacheKey = this.queryToCacheKey(query);
     if (this.entityQueryCache.has(cacheKey)) {
