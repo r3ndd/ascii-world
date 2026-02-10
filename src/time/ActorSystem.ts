@@ -33,7 +33,7 @@ export class PlayerBehavior implements ActorBehavior {
     }
 
     const input = await this.inputHandler();
-    
+
     if (input.direction) {
       physics.moveEntity(entity, input.direction);
     }
@@ -58,11 +58,9 @@ export class NPCBehavior implements ActorBehavior {
         break;
       case 'hostile':
         // Placeholder for hostile AI
-        this.randomMovement(entity, physics);
         break;
       case 'neutral':
         // Placeholder for neutral AI
-        this.randomMovement(entity, physics);
         break;
       default:
         this.randomMovement(entity, physics);
