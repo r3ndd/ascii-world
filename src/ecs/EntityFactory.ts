@@ -29,6 +29,11 @@ export interface NPCOptions {
   aiType?: 'random' | 'hostile' | 'neutral';
 }
 
+export interface TreeOptions {
+  position: Position;
+  treeType?: 'oak' | 'pine' | 'birch';
+}
+
 // Component factory functions (duplicated here to avoid circular imports)
 function createPosition(x: number, y: number, z: number = 0) {
   return { type: 'position' as const, x, y, z };
@@ -50,6 +55,14 @@ function createSpeed(value: number) {
   return { type: 'speed' as const, value };
 }
 
+function createTree(treeType: 'oak' | 'pine' | 'birch' = 'oak') {
+  return { type: 'tree' as const, treeType, passable: false };
+}
+
+function createBlocking() {
+  return { type: 'blocking' as const };
+}
+
 export class EntityFactory {
   static createPlayer(ecsWorld: ECSWorld, options: PlayerOptions = {}): Entity {
     const entity = ecsWorld.createEntity();
@@ -66,11 +79,12 @@ export class EntityFactory {
       .addComponent(createRenderable(char, fg, bg))
       .addComponent(createActor(true))
       .addComponent(createHealth(maxHealth, maxHealth))
-      .addComponent(createSpeed(speed));
-    
+      .addComponent(createSpeed(speed))
+      .addComponent(createBlocking());
+
     return entity;
   }
-  
+
   static createNPC(ecsWorld: ECSWorld, options: NPCOptions = {}): Entity {
     const entity = ecsWorld.createEntity();
     
@@ -87,14 +101,37 @@ export class EntityFactory {
       .addComponent(createRenderable(char, fg, bg))
       .addComponent(createActor(false))
       .addComponent(createHealth(maxHealth, maxHealth))
-      .addComponent(createSpeed(speed));
-    
+      .addComponent(createSpeed(speed))
+      .addComponent(createBlocking());
+
     // Store AI type as a component data extension
     const actor = entity.getComponent<{ type: 'actor'; isPlayer: boolean }>('actor');
     if (actor) {
       (actor as any).aiType = aiType;
     }
-    
+
+    return entity;
+  }
+
+  static createTree(ecsWorld: ECSWorld, options: TreeOptions): Entity {
+    const entity = ecsWorld.createEntity();
+
+    const pos = options.position;
+    const treeType = options.treeType ?? 'oak';
+
+    // Tree colors based on type
+    const colors: Record<string, string> = {
+      oak: '#00aa00',
+      pine: '#006600',
+      birch: '#88aa88'
+    };
+
+    entity
+      .addComponent(createPosition(pos.x, pos.y, pos.z ?? 0))
+      .addComponent(createRenderable('T', colors[treeType] ?? '#00aa00'))
+      .addComponent(createTree(treeType))
+      .addComponent(createBlocking());
+
     return entity;
   }
 }

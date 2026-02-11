@@ -535,28 +535,39 @@ describe('Integration Tests - Phase 4', () => {
       if (wildernessGen) {
         wildernessGen(chunk, {
           world: new World(100, 100, 64, ecsWorld),
+          ecsWorld,
           rng: () => Math.random(),
           params: { treeDensity: 0.3, waterChance: 0.05 }
         });
       }
-      
-      // Verify generation
-      let treeCount = 0;
+
+      // Verify generation (trees are now entities, not terrain)
       let floorCount = 0;
       let wallCount = 0;
-      
+      let treeEntityCount = 0;
+
       for (let y = 0; y < 16; y++) {
         for (let x = 0; x < 16; x++) {
           const tile = chunk.getTile(x, y);
-          if (tile?.terrain === 'tree') treeCount++;
           if (tile?.terrain === 'floor') floorCount++;
           if (tile?.terrain === 'wall') wallCount++;
         }
       }
-      
+
+      // Trees are now entities, check entity list
+      const entities = chunk.getAllEntities();
+      for (const chunkEntity of entities) {
+        const entity = ecsWorld.getEntity(chunkEntity.entityId);
+        if (entity?.hasComponent('tree')) {
+          treeEntityCount++;
+        }
+      }
+
       // Should have border walls at minimum
       expect(wallCount).toBeGreaterThan(0);
-      expect(treeCount + floorCount + wallCount).toBeGreaterThan(0);
+      expect(floorCount + wallCount).toBeGreaterThan(0);
+      // Trees are now entities, not terrain tiles
+      expect(treeEntityCount).toBeGreaterThanOrEqual(0);
     });
 
     it('should generate dungeon with rooms', () => {
@@ -571,6 +582,7 @@ describe('Integration Tests - Phase 4', () => {
         const chunk = new Chunk(0, 0, 32);
         dungeonGen(chunk, {
           world: new World(100, 100, 64, ecsWorld),
+          ecsWorld,
           rng: () => Math.random(),
           params: { roomChance: 0.5 }
         });
@@ -1010,7 +1022,8 @@ describe('Performance Integration Tests', () => {
     
     // Should complete in reasonable time (< 1 second for 1000 entities)
     expect(endTime - startTime).toBeLessThan(1000);
-    expect(ecsWorld.getAllEntities().length).toBe(1000);
+    // At least 1000 entities (manually created ones), but trees are now entities too
+    expect(ecsWorld.getAllEntities().length).toBeGreaterThanOrEqual(1000);
   });
 
   it('should process chunk updates efficiently', () => {

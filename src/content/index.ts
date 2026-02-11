@@ -8,6 +8,7 @@ import { ItemTemplate, ItemManager } from '../items';
 import { MapMetadata, World, TERRAIN, TerrainType } from '../world';
 import { ECSWorld, Entity } from '../ecs';
 import { createPosition, createHealth, createSpeed, createRenderable } from '../ecs';
+import { EntityFactory } from '../ecs/EntityFactory';
 
 // ============================================================================
 // Content Types and Interfaces
@@ -482,6 +483,7 @@ export class MapLoader {
 
 export interface GeneratorContext {
   world: World;
+  ecsWorld: ECSWorld;
   rng: () => number;
   params: Record<string, unknown>;
 }
@@ -534,11 +536,12 @@ export class WorldGenerator {
 
     const context: GeneratorContext = {
       world,
+      ecsWorld: world.getECSWorld(),
       rng,
       params
     };
 
-    this.eventBus.emit('generation:started', { 
+    this.eventBus.emit('generation:started', {
       generator: generatorName,
       seed: params.seed || 'default'
     });
@@ -584,11 +587,12 @@ export class WorldGenerator {
 
     const context: GeneratorContext = {
       world,
+      ecsWorld: world.getECSWorld(),
       rng,
       params
     };
 
-    this.eventBus.emit('generation:layerStarted', { 
+    this.eventBus.emit('generation:layerStarted', {
       generator: generatorName,
       layer: z,
       seed: params.seed || 'default'
@@ -610,11 +614,18 @@ export class WorldGenerator {
       for (let y = 0; y < chunk.size; y++) {
         for (let x = 0; x < chunk.size; x++) {
           const rand = context.rng();
-          
+
           if (rand < waterChance) {
             chunk.setTile(x, y, TERRAIN.water);
           } else if (rand < waterChance + treeDensity) {
-            chunk.setTile(x, y, TERRAIN.tree);
+            // Spawn tree as entity instead of terrain
+            const worldPos = chunk.toWorldPosition(x, y);
+            const treeType = context.rng() < 0.7 ? 'oak' : 'pine';
+            const treeEntity = EntityFactory.createTree(context.ecsWorld, {
+              position: { x: worldPos.x, y: worldPos.y, z: 0 },
+              treeType
+            });
+            chunk.addEntity(treeEntity.id, x, y);
           } else {
             chunk.setTile(x, y, TERRAIN.floor);
           }
@@ -817,11 +828,17 @@ export class WorldGenerator {
         }
       }
 
-      // Add some trees
+      // Add some trees as entities
       for (let y = 0; y < chunk.size; y += 2) {
         for (let x = 0; x < chunk.size; x += 2) {
           if (chunk.getTile(x, y)?.terrain === 'floor' && context.rng() < 0.1) {
-            chunk.setTile(x, y, TERRAIN.tree);
+            const worldPos = chunk.toWorldPosition(x, y);
+            const treeType = context.rng() < 0.6 ? 'oak' : 'birch';
+            const treeEntity = EntityFactory.createTree(context.ecsWorld, {
+              position: { x: worldPos.x, y: worldPos.y, z: 0 },
+              treeType
+            });
+            chunk.addEntity(treeEntity.id, x, y);
           }
         }
       }

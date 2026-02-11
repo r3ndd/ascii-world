@@ -39,15 +39,20 @@ export class PhysicsSystem {
       return false;
     }
 
-    // Check entity collision
+    // Check entity collision - only block if entity has blocking component (e.g., tree)
     const entitiesAtTarget = this.ecsWorld.getEntitiesAtPosition(x, y, z);
     for (const entity of entitiesAtTarget) {
-      if (entity !== excludeEntity) {
+      if (entity !== excludeEntity && this.entityBlocksMovement(entity)) {
         return false;
       }
     }
 
     return true;
+  }
+
+  private entityBlocksMovement(entity: Entity): boolean {
+    // Entities with 'blocking' component block movement
+    return entity.hasComponent('blocking');
   }
 
   moveEntity(entity: Entity, direction: Direction): boolean {

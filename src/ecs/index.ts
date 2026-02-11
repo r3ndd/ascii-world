@@ -272,6 +272,16 @@ export interface RenderableComponent extends Component {
   bg?: string;
 }
 
+export interface TreeComponent extends Component {
+  type: 'tree';
+  treeType: 'oak' | 'pine' | 'birch';
+  passable: boolean;
+}
+
+export interface BlockingComponent extends Component {
+  type: 'blocking';
+}
+
 // Component factories
 export function createPosition(x: number, y: number, z: number = 0): PositionComponent {
   return { type: 'position', x, y, z };
@@ -295,6 +305,14 @@ export function createActor(isPlayer: boolean = false): ActorComponent {
 
 export function createRenderable(char: string, fg: string, bg?: string): RenderableComponent {
   return { type: 'renderable', char, fg, bg };
+}
+
+export function createTree(treeType: 'oak' | 'pine' | 'birch' = 'oak'): TreeComponent {
+  return { type: 'tree', treeType, passable: false };
+}
+
+export function createBlocking(): BlockingComponent {
+  return { type: 'blocking' };
 }
 
 // Re-export entity factory

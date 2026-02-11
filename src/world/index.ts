@@ -6,6 +6,7 @@
 import { Position, ChunkCoord } from '../core/Types';
 import { WORLD_DEFAULTS, CourseUpdateLevel } from '../config/WorldDefaults';
 import { Entity, EntityId, ECSWorld } from '../ecs';
+import { EntityFactory } from '../ecs/EntityFactory';
 
 // Terrain types
 type TerrainType = 'floor' | 'wall' | 'water' | 'tree' | 'door' | 'stairs_up' | 'stairs_down';
@@ -310,8 +311,13 @@ export class ChunkManager {
         if (x === 0 || x === chunk.size - 1 || y === 0 || y === chunk.size - 1) {
           chunk.setTile(x, y, TERRAIN.wall);
         } else if (rng() < 0.05) {
-          // Random trees (deterministic based on chunk position)
-          chunk.setTile(x, y, TERRAIN.tree);
+          // Random trees (deterministic based on chunk position) - now as entities
+          const worldPos = chunk.toWorldPosition(x, y);
+          const treeEntity = EntityFactory.createTree(this.ecsWorld, {
+            position: { x: worldPos.x, y: worldPos.y, z: 0 },
+            treeType: rng() < 0.7 ? 'oak' : 'pine'
+          });
+          chunk.addEntity(treeEntity.id, x, y);
         }
       }
     }
@@ -542,6 +548,10 @@ export class World {
   getHeight(z: number = this.defaultLayer): number {
     const config = this.layers.get(z);
     return config ? config.height : 0;
+  }
+
+  getECSWorld(): ECSWorld {
+    return this.ecsWorld;
   }
 
   getUpdateScheduler(): UpdateScheduler {
