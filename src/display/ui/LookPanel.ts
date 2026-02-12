@@ -8,6 +8,7 @@ import { LookMode } from '../../interaction/LookMode';
 import { DisplayManager } from '../index';
 import { Camera } from '../index';
 import { Entity } from '../../ecs';
+import { EventBus } from '../../core/EventBus';
 
 export interface LookPanelConfig {
   sidebarWidth: number;
@@ -34,17 +35,77 @@ export class LookPanel {
   private displayManager: DisplayManager;
   private camera: Camera;
   private config: LookPanelConfig;
+  private lastExaminedDescription: string | null = null;
 
   constructor(
     lookMode: LookMode,
     displayManager: DisplayManager,
     camera: Camera,
+    eventBus: EventBus,
     config: Partial<LookPanelConfig> = {}
   ) {
     this.lookMode = lookMode;
     this.displayManager = displayManager;
     this.camera = camera;
     this.config = { ...DEFAULT_LOOK_PANEL_CONFIG, ...config };
+
+    // Listen for examine events
+    eventBus.on('look:examine', (data: { position: { x: number; y: number; z: number }; entities: Entity[]; items: Entity[]; tile: unknown }) => {
+      this.handleExamine(data);
+    });
+  }
+
+  /**
+   * Handle examine event and build description
+   */
+  private handleExamine(data: { position: { x: number; y: number; z: number }; entities: Entity[]; items: Entity[]; tile: unknown }): void {
+    const descriptions: string[] = [];
+
+    // Get descriptions from entities
+    for (const entity of data.entities) {
+      const desc = entity.getComponent<{ type: 'description'; text: string; dynamic?: (entity: unknown) => string }>('description');
+      if (desc) {
+        let text = desc.text;
+        if (desc.dynamic) {
+          text = desc.dynamic(entity);
+        }
+        descriptions.push(text);
+      } else {
+        // Fallback to entity name
+        const renderable = entity.getComponent<{ type: 'renderable'; name?: string }>('renderable');
+        const name = renderable?.name ?? 'Unknown entity';
+        descriptions.push(`${name}.`);
+      }
+    }
+
+    // Get descriptions from items
+    for (const item of data.items) {
+      const desc = item.getComponent<{ type: 'description'; text: string; dynamic?: (entity: unknown) => string }>('description');
+      if (desc) {
+        let text = desc.text;
+        if (desc.dynamic) {
+          text = desc.dynamic(item);
+        }
+        descriptions.push(text);
+      } else {
+        // Fallback to item name
+        const itemTemplate = item.getComponent<{ type: 'item_template'; name: string }>('item_template');
+        const name = itemTemplate?.name ?? 'Unknown item';
+        descriptions.push(`A ${name}.`);
+      }
+    }
+
+    if (descriptions.length > 0) {
+      this.lastExaminedDescription = descriptions.join(' ');
+    } else {
+      // Get terrain description
+      const tile = data.tile as { terrain?: string; description?: string } | null;
+      if (tile?.terrain) {
+        this.lastExaminedDescription = `${tile.terrain}.`;
+      } else {
+        this.lastExaminedDescription = 'Nothing of interest here.';
+      }
+    }
   }
 
   /**
@@ -132,6 +193,33 @@ export class LookPanel {
     currentY++;
     this.drawText(currentY++, '─'.repeat(sidebarWidth - 2), borderColor);
     currentY++;
+
+    // Draw examined description
+    if (this.lastExaminedDescription) {
+      this.drawText(currentY++, 'Description:', highlightColor);
+      
+      // Wrap description text to fit sidebar
+      const maxLen = sidebarWidth - 2;
+      const words = this.lastExaminedDescription.split(' ');
+      let line = '';
+      
+      for (const word of words) {
+        if ((line + word).length > maxLen) {
+          this.drawText(currentY++, line.trim(), textColor);
+          line = word + ' ';
+        } else {
+          line += word + ' ';
+        }
+      }
+      if (line.trim()) {
+        this.drawText(currentY++, line.trim(), textColor);
+      }
+      currentY++;
+      
+      // Draw separator after description
+      this.drawText(currentY++, '─'.repeat(sidebarWidth - 2), borderColor);
+      currentY++;
+    }
 
     // Draw available actions
     const actions = this.lookMode.getAvailableActions();

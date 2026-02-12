@@ -4,7 +4,6 @@
  */
 
 import {
-  LookAction,
   ExamineAction,
   GrabAction,
   OpenAction,
@@ -17,18 +16,24 @@ import {
 } from '../../src/interaction/ContextualAction';
 import { ECSWorld, Entity } from '../../src/ecs';
 import { EventBus } from '../../src/core/EventBus';
+import { Pathfinding } from '../../src/physics';
+import { World } from '../../src/world';
 
 
 describe('ContextualAction', () => {
   let ecsWorld: ECSWorld;
   let eventBus: EventBus;
+  let world: World;
+  let pathfinding: Pathfinding;
   let playerEntity: Entity;
   let mockContext: ActionContext;
 
   beforeEach(() => {
     eventBus = new EventBus();
     ecsWorld = new ECSWorld(eventBus);
-    
+    world = new World(100, 100, 64, ecsWorld);
+    pathfinding = new Pathfinding(world);
+
     // Create player entity
     playerEntity = ecsWorld.createEntity();
     playerEntity.addComponent({
@@ -67,7 +72,9 @@ describe('ContextualAction', () => {
       },
       physicsSystem: {
         moveEntity: jest.fn().mockReturnValue(true)
-      }
+      },
+      pathfinding,
+      eventBus
     };
   });
 
@@ -79,34 +86,13 @@ describe('ContextualAction', () => {
     ecsWorld.clear();
   });
 
-  describe('LookAction', () => {
-    it('should have correct properties', () => {
-      const action = new LookAction();
-      expect(action.id).toBe('look');
-      expect(action.label).toBe('Look');
-      expect(action.hotkey).toBe('l');
-      expect(action.number).toBe(1);
-      expect(action.cost).toBe(0);
-    });
-
-    it('should always be available', () => {
-      const action = new LookAction();
-      expect(action.isAvailable(mockContext)).toBe(true);
-    });
-
-    it('should return false (not end look mode)', () => {
-      const action = new LookAction();
-      expect(action.execute(mockContext)).toBe(false);
-    });
-  });
-
   describe('ExamineAction', () => {
     it('should have correct properties', () => {
       const action = new ExamineAction();
       expect(action.id).toBe('examine');
       expect(action.label).toBe('Examine');
       expect(action.hotkey).toBe('e');
-      expect(action.number).toBe(2);
+      expect(action.number).toBe(1);
       expect(action.cost).toBe(0);
     });
 
@@ -130,6 +116,13 @@ describe('ContextualAction', () => {
       expect(action.isAvailable(mockContext)).toBe(false);
     });
 
+    it('should emit examine event when executed', () => {
+      const emitSpy = jest.spyOn(eventBus, 'emit');
+      const action = new ExamineAction();
+      action.execute(mockContext);
+      expect(emitSpy).toHaveBeenCalledWith('look:examine', expect.any(Object));
+    });
+
     it('should return false (not end look mode)', () => {
       const action = new ExamineAction();
       expect(action.execute(mockContext)).toBe(false);
@@ -142,7 +135,7 @@ describe('ContextualAction', () => {
       expect(action.id).toBe('grab');
       expect(action.label).toBe('Grab');
       expect(action.hotkey).toBe('g');
-      expect(action.number).toBe(3);
+      expect(action.number).toBe(2);
       expect(action.cost).toBe(50);
     });
 
@@ -206,7 +199,7 @@ describe('ContextualAction', () => {
       expect(action.id).toBe('open');
       expect(action.label).toBe('Open');
       expect(action.hotkey).toBe('o');
-      expect(action.number).toBe(4);
+      expect(action.number).toBe(3);
       expect(action.cost).toBe(100);
     });
 
@@ -244,7 +237,7 @@ describe('ContextualAction', () => {
       expect(action.id).toBe('close');
       expect(action.label).toBe('Close');
       expect(action.hotkey).toBe('c');
-      expect(action.number).toBe(5);
+      expect(action.number).toBe(4);
       expect(action.cost).toBe(100);
     });
 
@@ -260,7 +253,7 @@ describe('ContextualAction', () => {
       expect(action.id).toBe('use');
       expect(action.label).toBe('Use');
       expect(action.hotkey).toBe('u');
-      expect(action.number).toBe(6);
+      expect(action.number).toBe(5);
       expect(action.cost).toBe(100);
     });
 
@@ -309,7 +302,7 @@ describe('ContextualAction', () => {
       expect(action.id).toBe('move_to');
       expect(action.label).toBe('Move to');
       expect(action.hotkey).toBe('m');
-      expect(action.number).toBe(7);
+      expect(action.number).toBe(6);
       expect(action.cost).toBe(0);
     });
 
@@ -357,9 +350,27 @@ describe('ContextualAction', () => {
       expect(action.isAvailable(mockContext)).toBe(false);
     });
 
-    it('should return true (end look mode)', () => {
+    it('should move player one step towards target', () => {
+      mockContext.targetPosition = { x: 12, y: 10, z: 0 };
+      mockContext.fovSystem.isVisible = jest.fn().mockReturnValue(true);
+      mockContext.world.getTileAt = jest.fn().mockReturnValue({
+        terrain: 'floor',
+        blocksMovement: false
+      });
+
+      // Mock pathfinding to return a path
+      mockContext.pathfinding = {
+        findPath: jest.fn().mockReturnValue([
+          { x: 10, y: 10 }, // Current position
+          { x: 11, y: 10 }  // Next step
+        ])
+      } as any;
+
       const action = new MoveToAction();
-      expect(action.execute(mockContext)).toBe(true);
+      const result = action.execute(mockContext);
+
+      expect(mockContext.physicsSystem.moveEntity).toHaveBeenCalled();
+      expect(result).toBe(true);
     });
   });
 
@@ -367,7 +378,6 @@ describe('ContextualAction', () => {
     it('should return all available actions', () => {
       const actions = getAvailableActions(mockContext);
       expect(actions.length).toBeGreaterThan(0);
-      expect(actions.some(a => a.id === 'look')).toBe(true);
       expect(actions.some(a => a.id === 'examine')).toBe(true);
     });
 
@@ -383,8 +393,7 @@ describe('ContextualAction', () => {
 
   describe('CONTEXTUAL_ACTIONS registry', () => {
     it('should contain all action types', () => {
-      expect(CONTEXTUAL_ACTIONS.length).toBe(7);
-      expect(CONTEXTUAL_ACTIONS.some(a => a.id === 'look')).toBe(true);
+      expect(CONTEXTUAL_ACTIONS.length).toBe(6);
       expect(CONTEXTUAL_ACTIONS.some(a => a.id === 'examine')).toBe(true);
       expect(CONTEXTUAL_ACTIONS.some(a => a.id === 'grab')).toBe(true);
       expect(CONTEXTUAL_ACTIONS.some(a => a.id === 'open')).toBe(true);

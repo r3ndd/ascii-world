@@ -10,7 +10,6 @@ import {
   ContextualAction,
   ActionContext,
   BaseContextualAction,
-  LookAction,
   ExamineAction,
   GrabAction,
   OpenAction,
@@ -64,7 +63,6 @@ describe('Interaction Module Exports', () => {
   });
 
   it('should export all action classes', () => {
-    expect(LookAction).toBeDefined();
     expect(ExamineAction).toBeDefined();
     expect(GrabAction).toBeDefined();
     expect(OpenAction).toBeDefined();
@@ -76,7 +74,7 @@ describe('Interaction Module Exports', () => {
   it('should export CONTEXTUAL_ACTIONS registry', () => {
     expect(CONTEXTUAL_ACTIONS).toBeDefined();
     expect(Array.isArray(CONTEXTUAL_ACTIONS)).toBe(true);
-    expect(CONTEXTUAL_ACTIONS.length).toBe(7);
+    expect(CONTEXTUAL_ACTIONS.length).toBe(6);
   });
 
   it('should export getAvailableActions function', () => {
@@ -86,12 +84,6 @@ describe('Interaction Module Exports', () => {
 });
 
 describe('Action Classes Instantiation', () => {
-  it('should instantiate LookAction', () => {
-    const action = new LookAction();
-    expect(action.id).toBe('look');
-    expect(action.label).toBe('Look');
-  });
-
   it('should instantiate ExamineAction', () => {
     const action = new ExamineAction();
     expect(action.id).toBe('examine');

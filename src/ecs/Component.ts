@@ -59,6 +59,12 @@ export interface BlockingComponent extends Component {
   type: 'blocking';
 }
 
+export interface DescriptionComponent extends Component {
+  type: 'description';
+  text: string;
+  dynamic?: (entity: unknown) => string;
+}
+
 // Component factories
 export function createPosition(x: number, y: number, z: number = 0): PositionComponent {
   return { type: 'position', x, y, z };
@@ -90,4 +96,8 @@ export function createTree(treeType: 'oak' | 'pine' | 'birch' = 'oak'): TreeComp
 
 export function createBlocking(): BlockingComponent {
   return { type: 'blocking' };
+}
+
+export function createDescription(text: string, dynamic?: (entity: unknown) => string): DescriptionComponent {
+  return { type: 'description', text, dynamic };
 }

@@ -10,7 +10,7 @@ import { EntityFactory, PlayerOptions, NPCOptions } from '../ecs/EntityFactory';
 import { DisplayManager, DisplayConfig, Camera, Renderer } from '../display';
 import { MapManager, World } from '../world';
 import { TurnManager, SpeedSystem, ActorSystem } from '../time';
-import { PhysicsSystem, FOVSystem } from '../physics';
+import { PhysicsSystem, FOVSystem, Pathfinding } from '../physics';
 import { Direction } from './Types';
 import { LookMode, DEFAULT_LOOK_MODE_CONFIG } from '../interaction';
 import { LookPanel, CrosshairRenderer } from '../display/ui';
@@ -55,6 +55,7 @@ export class Engine {
   // Physics & FOV
   public physicsSystem!: PhysicsSystem;
   public fovSystem!: FOVSystem;
+  public pathfinding!: Pathfinding;
 
   // Item management
   public itemManager!: ItemManager;
@@ -108,6 +109,9 @@ export class Engine {
     this.fovSystem = new FOVSystem(this.world);
     this.renderer.setFOVSystem(this.fovSystem);
 
+    // Setup pathfinding
+    this.pathfinding = new Pathfinding(this.world);
+
     // Setup item management
     this.itemManager = new ItemManager(this.eventBus);
 
@@ -119,6 +123,7 @@ export class Engine {
       this.physicsSystem,
       this.ecsWorld,
       this.eventBus,
+      this.pathfinding,
       DEFAULT_LOOK_MODE_CONFIG
     );
 
@@ -129,6 +134,7 @@ export class Engine {
       this.lookMode,
       this.displayManager,
       this.camera,
+      this.eventBus,
       { sidebarWidth, startX: gameWidth }
     );
 

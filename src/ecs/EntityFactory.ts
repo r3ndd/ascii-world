@@ -16,6 +16,7 @@ export interface PlayerOptions {
   maxHealth?: number;
   speed?: number;
   name?: string;
+  description?: string;
 }
 
 export interface NPCOptions {
@@ -27,11 +28,13 @@ export interface NPCOptions {
   speed?: number;
   name?: string;
   aiType?: 'random' | 'hostile' | 'neutral';
+  description?: string;
 }
 
 export interface TreeOptions {
   position: Position;
   treeType?: 'oak' | 'pine' | 'birch';
+  description?: string;
 }
 
 // Component factory functions (duplicated here to avoid circular imports)
@@ -63,6 +66,10 @@ function createBlocking() {
   return { type: 'blocking' as const };
 }
 
+function createDescription(text: string) {
+  return { type: 'description' as const, text };
+}
+
 export class EntityFactory {
   static createPlayer(ecsWorld: ECSWorld, options: PlayerOptions = {}): Entity {
     const entity = ecsWorld.createEntity();
@@ -82,6 +89,10 @@ export class EntityFactory {
       .addComponent(createHealth(maxHealth, maxHealth))
       .addComponent(createSpeed(speed))
       .addComponent(createBlocking());
+
+    if (options.description) {
+      entity.addComponent(createDescription(options.description));
+    }
 
     return entity;
   }
@@ -105,6 +116,10 @@ export class EntityFactory {
       .addComponent(createHealth(maxHealth, maxHealth))
       .addComponent(createSpeed(speed))
       .addComponent(createBlocking());
+
+    if (options.description) {
+      entity.addComponent(createDescription(options.description));
+    }
 
     // Store AI type as a component data extension
     const actor = entity.getComponent<{ type: 'actor'; isPlayer: boolean }>('actor');
@@ -134,6 +149,15 @@ export class EntityFactory {
       .addComponent(createRenderable('T', colors[treeType] ?? '#00aa00', undefined, treeName))
       .addComponent(createTree(treeType))
       .addComponent(createBlocking());
+
+    // Add default description based on tree type
+    const treeDescriptions: Record<string, string> = {
+      oak: 'A sturdy oak tree with broad branches.',
+      pine: 'A tall pine tree with needle-like leaves.',
+      birch: 'A slender birch tree with white bark.'
+    };
+    const description = options.description ?? treeDescriptions[treeType] ?? 'A tree.';
+    entity.addComponent(createDescription(description));
 
     return entity;
   }

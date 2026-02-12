@@ -5,6 +5,7 @@
 
 import { Entity, ECSWorld } from '../ecs';
 import { Position } from '../core/Types';
+import { Pathfinding } from '../physics';
 
 export interface ActionContext {
   targetPosition: Position;
@@ -22,6 +23,10 @@ export interface ActionContext {
   };
   physicsSystem: {
     moveEntity(entity: Entity, direction: string): boolean;
+  };
+  pathfinding: Pathfinding;
+  eventBus: {
+    emit(event: string, data: unknown): void;
   };
 }
 
@@ -64,39 +69,44 @@ export abstract class BaseContextualAction implements ContextualAction {
   }
 }
 
-// Look action - always available, just examines the tile
-export class LookAction extends BaseContextualAction {
-  readonly id = 'look';
-  readonly label = 'Look';
-  readonly hotkey = 'l';
-  readonly number = 1;
-  readonly cost = 0;
-  
-  isAvailable(_context: ActionContext): boolean {
-    return true;
-  }
-  
-  execute(_context: ActionContext): boolean {
-    // Looking is a free action that doesn't end look mode
-    return false;
-  }
-}
-
 // Examine action - provides detailed information
 export class ExamineAction extends BaseContextualAction {
   readonly id = 'examine';
   readonly label = 'Examine';
   readonly hotkey = 'e';
-  readonly number = 2;
+  readonly number = 1;
   readonly cost = 0;
-  
+
   isAvailable(context: ActionContext): boolean {
     // Can examine visible tiles or explored tiles
     return context.fovSystem.isVisible(context.targetPosition.x, context.targetPosition.y) ||
            context.fovSystem.isExplored(context.targetPosition.x, context.targetPosition.y);
   }
-  
-  execute(_context: ActionContext): boolean {
+
+  execute(context: ActionContext): boolean {
+    // Get entities at cursor position
+    const entities = context.ecsWorld.queryEntities({ all: ['position'] }).filter(entity => {
+      const pos = entity.getComponent<{ type: 'position'; x: number; y: number; z: number }>('position');
+      return pos &&
+             pos.x === context.targetPosition.x &&
+             pos.y === context.targetPosition.y &&
+             pos.z === context.targetPosition.z;
+    });
+
+    // Get items at cursor position
+    const items = context.itemManager.getItemsAt(context.ecsWorld, context.targetPosition);
+
+    // Get tile info
+    const tile = context.world.getTileAt(context.targetPosition.x, context.targetPosition.y);
+
+    // Emit examine event with all information
+    context.eventBus.emit('look:examine', {
+      position: context.targetPosition,
+      entities,
+      items,
+      tile
+    });
+
     // Examining is a free action that doesn't end look mode
     return false;
   }
@@ -112,7 +122,7 @@ export class GrabAction extends BaseContextualAction {
   readonly id = 'grab';
   readonly label = 'Grab';
   readonly hotkey = 'g';
-  readonly number = 3;
+  readonly number = 2;
   readonly cost = 50; // Same as PICKUP cost
   
   isAvailable(context: ActionContext): boolean {
@@ -151,7 +161,7 @@ export class OpenAction extends BaseContextualAction {
   readonly id = 'open';
   readonly label = 'Open';
   readonly hotkey = 'o';
-  readonly number = 4;
+  readonly number = 3;
   readonly cost = 100;
 
   isAvailable(context: ActionContext): boolean {
@@ -179,7 +189,7 @@ export class CloseAction extends BaseContextualAction {
   readonly id = 'close';
   readonly label = 'Close';
   readonly hotkey = 'c';
-  readonly number = 5;
+  readonly number = 4;
   readonly cost = 100;
 
   isAvailable(context: ActionContext): boolean {
@@ -207,7 +217,7 @@ export class UseAction extends BaseContextualAction {
   readonly id = 'use';
   readonly label = 'Use';
   readonly hotkey = 'u';
-  readonly number = 6;
+  readonly number = 5;
   readonly cost = 100;
 
   isAvailable(context: ActionContext): boolean {
@@ -236,7 +246,7 @@ export class MoveToAction extends BaseContextualAction {
   readonly id = 'move_to';
   readonly label = 'Move to';
   readonly hotkey = 'm';
-  readonly number = 7;
+  readonly number = 6;
   readonly cost = 0; // Cost depends on distance
 
   isAvailable(context: ActionContext): boolean {
@@ -257,15 +267,59 @@ export class MoveToAction extends BaseContextualAction {
   }
 
   execute(context: ActionContext): boolean {
-    console.log(`Moving to (${context.targetPosition.x}, ${context.targetPosition.y})`);
-    // TODO: Implement pathfinding and movement
+    // Find path to target
+    const playerPos = context.playerEntity.getComponent<{ type: 'position'; x: number; y: number }>('position');
+    if (!playerPos) return true;
+
+    const path = context.pathfinding.findPath(
+      playerPos.x,
+      playerPos.y,
+      context.targetPosition.x,
+      context.targetPosition.y
+    );
+
+    if (!path || path.length < 2) {
+      // No path found or already at destination
+      return true;
+    }
+
+    // Get the next step (index 1, since index 0 is current position)
+    const nextStep = path[1];
+    const dx = nextStep.x - playerPos.x;
+    const dy = nextStep.y - playerPos.y;
+
+    // Determine direction
+    let direction: string;
+    if (dx === 0 && dy === -1) direction = 'north';
+    else if (dx === 0 && dy === 1) direction = 'south';
+    else if (dx === -1 && dy === 0) direction = 'west';
+    else if (dx === 1 && dy === 0) direction = 'east';
+    else if (dx === 1 && dy === -1) direction = 'northeast';
+    else if (dx === -1 && dy === -1) direction = 'northwest';
+    else if (dx === 1 && dy === 1) direction = 'southeast';
+    else if (dx === -1 && dy === 1) direction = 'southwest';
+    else {
+      // Unexpected direction
+      return true;
+    }
+
+    // Move the player one step
+    context.physicsSystem.moveEntity(context.playerEntity, direction);
+
+    // Emit path preview for potential UI display
+    context.eventBus.emit('look:moveToPath', {
+      path: path,
+      target: context.targetPosition
+    });
+
+    // Return true to close look mode after first step
+    // Player can continue moving manually or re-enter look mode
     return true;
   }
 }
 
 // Registry of all available contextual actions
 export const CONTEXTUAL_ACTIONS: ContextualAction[] = [
-  new LookAction(),
   new ExamineAction(),
   new GrabAction(),
   new OpenAction(),

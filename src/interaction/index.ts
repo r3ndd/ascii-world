@@ -13,7 +13,6 @@ export {
   ContextualAction,
   ActionContext,
   BaseContextualAction,
-  LookAction,
   ExamineAction,
   GrabAction,
   OpenAction,

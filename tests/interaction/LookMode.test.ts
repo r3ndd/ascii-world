@@ -7,7 +7,7 @@ import { LookMode } from '../../src/interaction/LookMode';
 import { ECSWorld, Entity } from '../../src/ecs';
 import { EventBus } from '../../src/core/EventBus';
 import { World } from '../../src/world';
-import { FOVSystem } from '../../src/physics';
+import { FOVSystem, Pathfinding } from '../../src/physics';
 import { ItemManager } from '../../src/items';
 import { PhysicsSystem } from '../../src/physics';
 
@@ -20,6 +20,7 @@ describe('LookMode', () => {
   let fovSystem: FOVSystem;
   let itemManager: ItemManager;
   let physicsSystem: PhysicsSystem;
+  let pathfinding: Pathfinding;
   let playerEntity: Entity;
 
   beforeEach(() => {
@@ -29,6 +30,7 @@ describe('LookMode', () => {
     fovSystem = new FOVSystem(world);
     itemManager = new ItemManager(eventBus);
     physicsSystem = new PhysicsSystem(world, ecsWorld, eventBus);
+    pathfinding = new Pathfinding(world);
 
     // Initialize floor tiles in the world around player position
     // This is needed for FOV computation to work correctly
@@ -65,7 +67,8 @@ describe('LookMode', () => {
       itemManager,
       physicsSystem,
       ecsWorld,
-      eventBus
+      eventBus,
+      pathfinding
     );
   });
 
@@ -140,9 +143,10 @@ describe('LookMode', () => {
     });
 
     it('should clear available actions on exit', () => {
+      fovSystem.computeFOV(10, 10, 10);
       lookMode.enter(playerEntity);
       expect(lookMode.getAvailableActions().length).toBeGreaterThan(0);
-      
+
       lookMode.exit();
       expect(lookMode.getAvailableActions().length).toBe(0);
     });
@@ -384,11 +388,6 @@ describe('LookMode', () => {
       expect(actions.length).toBeGreaterThan(0);
     });
 
-    it('should include Look action', () => {
-      const actions = lookMode.getAvailableActions();
-      expect(actions.some(a => a.id === 'look')).toBe(true);
-    });
-
     it('should include Examine action', () => {
       const actions = lookMode.getAvailableActions();
       expect(actions.some(a => a.id === 'examine')).toBe(true);
@@ -404,12 +403,12 @@ describe('LookMode', () => {
     it('should execute action and emit event', async () => {
       const handler = jest.fn();
       eventBus.on('look:actionExecuted', handler);
-      
-      await lookMode.executeActionByHotkey('l'); // Look action
-      
+
+      await lookMode.executeActionByHotkey('e'); // Examine action
+
       expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-        actionId: 'look',
-        hotkey: 'l'
+        actionId: 'examine',
+        hotkey: 'e'
       }));
     });
 
@@ -420,7 +419,7 @@ describe('LookMode', () => {
 
     it('should return false when not in look mode', async () => {
       lookMode.exit();
-      const result = await lookMode.executeActionByHotkey('l');
+      const result = await lookMode.executeActionByHotkey('e');
       expect(result).toBe(false);
     });
   });
@@ -434,11 +433,11 @@ describe('LookMode', () => {
     it('should execute action and emit event', async () => {
       const handler = jest.fn();
       eventBus.on('look:actionExecuted', handler);
-      
-      await lookMode.executeActionByNumber(1); // Look action
-      
+
+      await lookMode.executeActionByNumber(1); // Examine action
+
       expect(handler).toHaveBeenCalledWith(expect.objectContaining({
-        actionId: 'look',
+        actionId: 'examine',
         number: 1
       }));
     });
@@ -457,9 +456,9 @@ describe('LookMode', () => {
 
     it('should return description for action', () => {
       const actions = lookMode.getAvailableActions();
-      const lookAction = actions.find(a => a.id === 'look')!;
-      
-      const description = lookMode.getActionDescription(lookAction);
+      const examineAction = actions.find(a => a.id === 'examine')!;
+
+      const description = lookMode.getActionDescription(examineAction);
       expect(description).toBeDefined();
     });
   });

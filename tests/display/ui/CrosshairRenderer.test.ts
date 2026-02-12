@@ -14,7 +14,7 @@ import { Camera } from '../../../src/display';
 import { ECSWorld, Entity } from '../../../src/ecs';
 import { EventBus } from '../../../src/core/EventBus';
 import { World } from '../../../src/world';
-import { FOVSystem } from '../../../src/physics';
+import { FOVSystem, Pathfinding } from '../../../src/physics';
 import { ItemManager } from '../../../src/items';
 import { PhysicsSystem } from '../../../src/physics';
 
@@ -29,6 +29,7 @@ describe('CrosshairRenderer', () => {
   let fovSystem: FOVSystem;
   let itemManager: ItemManager;
   let physicsSystem: PhysicsSystem;
+  let pathfinding: Pathfinding;
   let playerEntity: Entity;
 
   beforeEach(() => {
@@ -38,6 +39,7 @@ describe('CrosshairRenderer', () => {
     fovSystem = new FOVSystem(world);
     itemManager = new ItemManager(eventBus);
     physicsSystem = new PhysicsSystem(world, ecsWorld, eventBus);
+    pathfinding = new Pathfinding(world);
 
     // Setup display
     displayManager = new DisplayManager({
@@ -66,7 +68,8 @@ describe('CrosshairRenderer', () => {
       itemManager,
       physicsSystem,
       ecsWorld,
-      eventBus
+      eventBus,
+      pathfinding
     );
 
     crosshairRenderer = new CrosshairRenderer(

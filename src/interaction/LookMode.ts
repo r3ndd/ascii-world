@@ -8,7 +8,7 @@ import { EventBus } from '../core/EventBus';
 import { Position, Direction } from '../core/Types';
 import { Entity } from '../ecs';
 import { World } from '../world';
-import { FOVSystem } from '../physics';
+import { FOVSystem, Pathfinding } from '../physics';
 import { ContextualAction, ActionContext, getAvailableActions } from './ContextualAction';
 import { ItemManager } from '../items/ItemManager';
 import { PhysicsSystem } from '../physics';
@@ -32,8 +32,9 @@ export class LookMode {
   private physicsSystem: PhysicsSystem;
   private ecsWorld: ECSWorld;
   private eventBus: EventBus;
+  private pathfinding: Pathfinding;
   private config: LookModeConfig;
-  
+
   private availableActions: ContextualAction[] = [];
   private lastContext: ActionContext | null = null;
 
@@ -44,6 +45,7 @@ export class LookMode {
     physicsSystem: PhysicsSystem,
     ecsWorld: ECSWorld,
     eventBus: EventBus,
+    pathfinding: Pathfinding,
     config: LookModeConfig = DEFAULT_LOOK_MODE_CONFIG
   ) {
     this.world = world;
@@ -52,6 +54,7 @@ export class LookMode {
     this.physicsSystem = physicsSystem;
     this.ecsWorld = ecsWorld;
     this.eventBus = eventBus;
+    this.pathfinding = pathfinding;
     this.config = config;
   }
 
@@ -243,7 +246,9 @@ export class LookMode {
       world: this.world,
       itemManager: this.itemManager,
       fovSystem: this.fovSystem,
-      physicsSystem: this.physicsSystem
+      physicsSystem: this.physicsSystem,
+      pathfinding: this.pathfinding,
+      eventBus: this.eventBus
     };
     
     this.lastContext = context;
