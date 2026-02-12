@@ -81,9 +81,9 @@ export class LookPanel {
 
     // Draw visibility status
     const visibility = this.lookMode.getVisibilityStatus();
-    const visibilityText = visibility === 'visible' ? 'Visible' : 
+    const visibilityText = visibility === 'visible' ? 'Visible' :
                           visibility === 'explored' ? 'Explored (dark)' : 'Unknown';
-    const visibilityColor = visibility === 'visible' ? '#00ff00' : 
+    const visibilityColor = visibility === 'visible' ? '#00ff00' :
                            visibility === 'explored' ? dimColor : '#ff0000';
     this.drawText(currentY++, visibilityText, visibilityColor);
     currentY++;
@@ -92,9 +92,9 @@ export class LookPanel {
     const tileInfo = this.lookMode.getTileInfo();
     if (tileInfo) {
       this.drawText(currentY++, 'Terrain:', highlightColor);
-      
+
       // Show tile character
-      const charDisplay = visibility === 'visible' ? tileInfo.char : 
+      const charDisplay = visibility === 'visible' ? tileInfo.char :
                          visibility === 'explored' ? tileInfo.char : '?';
       this.drawText(currentY++, `  ${charDisplay} ${tileInfo.name}`, textColor);
       currentY++;
@@ -138,21 +138,21 @@ export class LookPanel {
     if (actions.length > 0) {
       this.drawText(currentY++, 'Actions:', highlightColor);
       currentY++;
-      
+
       for (const action of actions) {
         if (currentY >= viewportHeight - 3) break; // Leave room for help text
-        
+
         const description = this.lookMode.getActionDescription(action);
-        const actionText = description 
+        const actionText = description
           ? `${action.number})${action.hotkey} ${action.label}: ${description}`
           : `${action.number})${action.hotkey} ${action.label}`;
-        
+
         // Truncate if too long
         const maxLen = sidebarWidth - 2;
-        const displayText = actionText.length > maxLen 
+        const displayText = actionText.length > maxLen
           ? actionText.substring(0, maxLen - 3) + '...'
           : actionText;
-        
+
         this.drawText(currentY++, displayText, textColor);
       }
     }
@@ -169,18 +169,18 @@ export class LookPanel {
   private drawText(y: number, text: string, color: string): void {
     const { startX, sidebarWidth } = this.config;
     const maxLen = sidebarWidth - 2;
-    
+
     // Truncate if too long
     const displayText = text.length > maxLen ? text.substring(0, maxLen) : text;
-    
+
     // Center in sidebar if it's a header
     let x = startX + 1;
     if (text.startsWith('─') || text.startsWith(' LOOK')) {
       x = startX + Math.floor((sidebarWidth - displayText.length) / 2);
     }
-    
+
     this.displayManager.drawText(x, y, displayText, maxLen);
-    
+
     // Redraw with proper colors - drawText doesn't support color per character
     // So we draw character by character for colored text
     for (let i = 0; i < displayText.length && i < maxLen; i++) {
@@ -193,22 +193,23 @@ export class LookPanel {
    */
   private getEntityDisplayName(entity: Entity): string {
     // Check for renderable component for character
-    const renderable = entity.getComponent<{ type: 'renderable'; char: string }>('renderable');
+    const renderable = entity.getComponent<{ type: 'renderable'; char: string; name?: string }>('renderable');
     const char = renderable?.char ?? '?';
+    const name = renderable?.name ?? 'Unknown';
 
     // Try to get name from various components
     const health = entity.getComponent<{ type: 'health'; current: number; max: number }>('health');
     const actor = entity.getComponent<{ type: 'actor'; isPlayer: boolean }>('actor');
-    
+
     if (actor?.isPlayer) {
       return `${char} You`;
     }
-    
+
     if (health) {
-      return `${char} Creature (${health.current}/${health.max})`;
+      return `${char} ${name} (${health.current}/${health.max})`;
     }
-    
-    return `${char} Unknown`;
+
+    return `${char} ${name}`;
   }
 
   /**
@@ -218,11 +219,11 @@ export class LookPanel {
     const itemTemplate = item.getComponent<{ type: 'item_template'; name: string }>('item_template');
     const itemComponent = item.getComponent<{ type: 'item'; quantity: number }>('item');
     const renderable = item.getComponent<{ type: 'renderable'; char: string }>('renderable');
-    
+
     const char = renderable?.char ?? '?';
     const name = itemTemplate?.name ?? 'Unknown';
     const qty = itemComponent?.quantity ?? 1;
-    
+
     if (qty > 1) {
       return `${char} ${name} (x${qty})`;
     }

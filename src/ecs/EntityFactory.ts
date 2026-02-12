@@ -1,6 +1,6 @@
 /**
  * Entity factories for creating common game entities
- * 
+ *
  * Note: This file must not import from './index' to avoid circular dependencies.
  * Import directly from the source files or use type imports.
  */
@@ -39,8 +39,8 @@ function createPosition(x: number, y: number, z: number = 0) {
   return { type: 'position' as const, x, y, z };
 }
 
-function createRenderable(char: string, fg: string, bg?: string) {
-  return { type: 'renderable' as const, char, fg, bg };
+function createRenderable(char: string, fg: string, bg?: string, name?: string) {
+  return { type: 'renderable' as const, char, fg, bg, name };
 }
 
 function createActor(isPlayer: boolean = false) {
@@ -66,17 +66,18 @@ function createBlocking() {
 export class EntityFactory {
   static createPlayer(ecsWorld: ECSWorld, options: PlayerOptions = {}): Entity {
     const entity = ecsWorld.createEntity();
-    
+
     const pos = options.position ?? { x: 500, y: 500, z: 0 };
     const char = options.char ?? '@';
     const fg = options.fg ?? '#ffff00';
     const bg = options.bg;
+    const name = options.name;
     const maxHealth = options.maxHealth ?? 100;
     const speed = options.speed ?? 100;
-    
+
     entity
       .addComponent(createPosition(pos.x, pos.y, pos.z))
-      .addComponent(createRenderable(char, fg, bg))
+      .addComponent(createRenderable(char, fg, bg, name))
       .addComponent(createActor(true))
       .addComponent(createHealth(maxHealth, maxHealth))
       .addComponent(createSpeed(speed))
@@ -87,18 +88,19 @@ export class EntityFactory {
 
   static createNPC(ecsWorld: ECSWorld, options: NPCOptions = {}): Entity {
     const entity = ecsWorld.createEntity();
-    
+
     const pos = options.position ?? { x: 500, y: 500, z: 0 };
     const char = options.char ?? 'n';
     const fg = options.fg ?? '#ff0000';
     const bg = options.bg;
+    const name = options.name;
     const maxHealth = options.maxHealth ?? 50;
     const speed = options.speed ?? 80;
     const aiType = options.aiType ?? 'random';
-    
+
     entity
       .addComponent(createPosition(pos.x, pos.y, pos.z))
-      .addComponent(createRenderable(char, fg, bg))
+      .addComponent(createRenderable(char, fg, bg, name))
       .addComponent(createActor(false))
       .addComponent(createHealth(maxHealth, maxHealth))
       .addComponent(createSpeed(speed))
@@ -118,6 +120,7 @@ export class EntityFactory {
 
     const pos = options.position;
     const treeType = options.treeType ?? 'oak';
+    const treeName = `${treeType.charAt(0).toUpperCase() + treeType.slice(1)} Tree`;
 
     // Tree colors based on type
     const colors: Record<string, string> = {
@@ -128,7 +131,7 @@ export class EntityFactory {
 
     entity
       .addComponent(createPosition(pos.x, pos.y, pos.z ?? 0))
-      .addComponent(createRenderable('T', colors[treeType] ?? '#00aa00'))
+      .addComponent(createRenderable('T', colors[treeType] ?? '#00aa00', undefined, treeName))
       .addComponent(createTree(treeType))
       .addComponent(createBlocking());
 
