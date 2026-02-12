@@ -85,20 +85,25 @@ ascii-world/
 │   │   ├── CatchUpCalculator.ts    # Missed effect simulation
 │   │   └── PostHocUpdateQueue.ts   # Deferred processing queue
 │   ├── ecs/                      # Entity Component System
-│   │   ├── World.ts                # ECS world
+│   │   ├── World.ts                # ECS world (includes system management)
 │   │   ├── Entity.ts               # Entity definition
-│   │   ├── Component.ts            # Base component
+│   │   ├── Component.ts            # Base component & factories
 │   │   ├── System.ts               # Base system
-│   │   └── SystemManager.ts        # System execution
+│   │   └── EntityFactory.ts        # Entity creation helpers
 │   ├── physics/                  # Physics & interactions
 │   │   ├── PhysicsSystem.ts        # Collision, movement
 │   │   ├── FOVSystem.ts            # Field of view (rot.js)
 │   │   ├── LightingSystem.ts       # Dynamic lighting
-│   │   └── Pathfinding.ts          # A* / Dijkstra
+│   │   ├── Pathfinding.ts          # A* / Dijkstra
+│   │   └── StairsSystem.ts         # Multi-layer stair connections
 │   ├── items/                    # Item system
-│   │   ├── Item.ts
-│   │   ├── ItemManager.ts
-│   │   └── Inventory.ts
+│   │   ├── types.ts                # Item type definitions
+│   │   ├── ItemManager.ts          # Item template management
+│   │   ├── Inventory.ts            # Inventory component
+│   │   ├── InventoryManager.ts     # Inventory coordination
+│   │   ├── components.ts           # Item ECS components
+│   │   ├── systems.ts              # Item systems
+│   │   └── queries.ts              # Item queries
 │   ├── crafting/                 # Crafting & construction
 │   │   ├── Recipe.ts
 │   │   ├── CraftingSystem.ts
@@ -108,13 +113,19 @@ ascii-world/
 │   │   ├── BehaviorTree.ts
 │   │   └── FactionSystem.ts
 │   ├── save/                     # Save/load system
-│   │   ├── SaveManager.ts
-│   │   ├── WorldSerializer.ts
-│   │   └── EntitySerializer.ts
+│   │   ├── SaveManager.ts          # Save slot management
+│   │   ├── StorageProvider.ts      # Storage abstraction
+│   │   ├── WorldSerializer.ts      # World state serialization
+│   │   ├── EntitySerializer.ts     # Entity serialization
+│   │   ├── SaveMetadata.ts         # Save metadata types
+│   │   ├── SerializedData.ts       # Serialized data structures
+│   │   └── SaveCompressor.ts       # Save compression utility
 │   └── content/                  # Content loading
-│       ├── ContentLoader.ts
-│       ├── ModLoader.ts
-│       └── ContentManager.ts
+│       ├── ContentLoader.ts        # JSON content pack loading
+│       ├── MapLoader.ts            # Map definition loading
+│       ├── WorldGenerator.ts       # World generation tools
+│       ├── ModLoader.ts            # Mod system
+│       └── ContentManager.ts       # Content management facade
 ├── content/
 │   ├── maps/                     # Pre-created worlds
 │   │   ├── world_default/        # Default 1000x1000
