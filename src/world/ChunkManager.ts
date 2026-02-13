@@ -9,6 +9,7 @@ import { EntityFactory } from '../ecs/EntityFactory';
 import { Chunk } from './Chunk';
 import { UpdateScheduler } from './UpdateScheduler';
 import { Tile, TERRAIN } from './WorldConfig';
+import { GeneratorContext, ChunkGenerator } from '../content/WorldGenerator';
 
 export class ChunkManager {
   private chunks: Map<string, Chunk> = new Map();
@@ -18,6 +19,8 @@ export class ChunkManager {
   private playerChunkX: number = Infinity;
   private playerChunkY: number = Infinity;
   private ecsWorld: ECSWorld;
+  private terrainGenerator?: ChunkGenerator;
+  private generatorContext?: GeneratorContext;
 
   constructor(
     chunkSize: number = WORLD_DEFAULTS.chunkSize,
@@ -27,6 +30,14 @@ export class ChunkManager {
     this.chunkSize = chunkSize;
     this.updateScheduler = updateScheduler;
     this.ecsWorld = ecsWorld;
+  }
+
+  /**
+   * Set the terrain generator for this chunk manager
+   */
+  setTerrainGenerator(generator: ChunkGenerator, context: GeneratorContext): void {
+    this.terrainGenerator = generator;
+    this.generatorContext = context;
   }
 
   private getChunkKey(chunkX: number, chunkY: number): string {
@@ -55,6 +66,13 @@ export class ChunkManager {
   }
 
   private generateTerrain(chunk: Chunk): void {
+    // If a terrain generator is set, use it
+    if (this.terrainGenerator && this.generatorContext) {
+      this.terrainGenerator(chunk, this.generatorContext);
+      return;
+    }
+
+    // Fallback to placeholder generation
     // Use a deterministic RNG seeded by chunk coordinates
     // This ensures the same chunk always generates the same terrain
     let seed = chunk.chunkX * 374761 + chunk.chunkY * 668265; // Large primes for better distribution

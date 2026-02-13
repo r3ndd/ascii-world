@@ -7,6 +7,7 @@ import { ECSWorld, Entity } from '../ecs';
 import { ChunkManager } from './ChunkManager';
 import { UpdateScheduler } from './UpdateScheduler';
 import { LayerConfig, Tile } from './WorldConfig';
+import { GeneratorContext, ChunkGenerator } from '../content/WorldGenerator';
 
 export class World {
   private layers: Map<number, LayerConfig> = new Map();
@@ -36,6 +37,16 @@ export class World {
   addLayer(z: number, width: number, height: number): void {
     this.layers.set(z, { width, height });
     this.chunkManagers.set(z, new ChunkManager(this.chunkSize, this.updateScheduler, this.ecsWorld));
+  }
+
+  /**
+   * Configure the terrain generator for a layer
+   */
+  configureGenerator(z: number, generator: ChunkGenerator, context: GeneratorContext): void {
+    const chunkManager = this.chunkManagers.get(z);
+    if (chunkManager) {
+      chunkManager.setTerrainGenerator(generator, context);
+    }
   }
 
   /**

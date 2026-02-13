@@ -8,7 +8,8 @@ import { Config } from './Config';
 import { ECSWorld, Entity } from '../ecs';
 import { EntityFactory, PlayerOptions, NPCOptions } from '../ecs/EntityFactory';
 import { DisplayManager, DisplayConfig, Camera, Renderer } from '../display';
-import { MapManager, World } from '../world';
+import { MapManager, World, WorldGeneratorConfig } from '../world';
+import { WorldGenerator } from '../content/WorldGenerator';
 import { TurnManager, SpeedSystem, ActorSystem } from '../time';
 import { PhysicsSystem, FOVSystem, Pathfinding } from '../physics';
 import { Direction } from './Types';
@@ -61,6 +62,9 @@ export class Engine {
   public itemManager!: ItemManager;
   public inventoryManager!: InventoryManager;
 
+  // World generation
+  public worldGenerator!: WorldGenerator;
+
   // Look mode
   public lookMode!: LookMode;
   public lookPanel!: LookPanel;
@@ -95,9 +99,19 @@ export class Engine {
     // Setup display
     this.displayManager = new DisplayManager(this.engineConfig.display);
     
-    // Setup world
-    this.mapManager = new MapManager(this.ecsWorld);
-    this.world = this.mapManager.createDefaultWorld();
+    // Setup world generation
+    this.worldGenerator = new WorldGenerator(this.eventBus);
+    this.mapManager = new MapManager(this.ecsWorld, this.worldGenerator);
+    
+    // Create world with wilderness generator
+    const generatorConfig: WorldGeneratorConfig = {
+      generatorName: 'wilderness',
+      params: {
+        treeDensity: 0.3,
+        waterChance: 0.05
+      }
+    };
+    this.world = this.mapManager.createDefaultWorld(generatorConfig);
     
     // Setup camera
     this.camera = new Camera(
