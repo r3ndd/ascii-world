@@ -41,6 +41,22 @@ describe('LookPanel', () => {
     physicsSystem = new PhysicsSystem(world, ecsWorld, eventBus);
     pathfinding = new Pathfinding(world);
 
+    // Initialize floor tiles in the world around player position
+    // This is needed for FOV computation and cursor movement to work correctly
+    for (let x = 5; x < 25; x++) {
+      for (let y = 5; y < 25; y++) {
+        world.setTileAt(x, y, {
+          terrain: 'floor',
+          char: '.',
+          fg: '#888888',
+          bg: '#000000',
+          blocksMovement: false,
+          blocksLight: false,
+          transparent: true
+        });
+      }
+    }
+
     // Setup display (mock)
     displayManager = new DisplayManager({
       width: 80,
@@ -337,6 +353,90 @@ describe('LookPanel', () => {
       
       // Should not throw
       expect(() => lookPanel.render()).not.toThrow();
+    });
+
+    it('should show description instead of actions when examine is triggered', () => {
+      fovSystem.computeFOV(10, 10, 10);
+      lookMode.enter(playerEntity);
+
+      // Trigger examine event
+      eventBus.emit('look:examine', {
+        position: { x: 10, y: 10, z: 0 },
+        entities: [],
+        items: [],
+        tile: { terrain: 'floor' }
+      });
+
+      const drawTextSpy = jest.spyOn(displayManager, 'drawText');
+      lookPanel.render();
+
+      // Should show "Description:" header
+      const descriptionCalls = drawTextSpy.mock.calls.filter(call => 
+        typeof call[2] === 'string' && call[2].includes('Description:')
+      );
+      expect(descriptionCalls.length).toBeGreaterThan(0);
+    });
+
+    it('should clear description when cursor moves', () => {
+      fovSystem.computeFOV(10, 10, 10);
+      lookMode.enter(playerEntity);
+
+      // Trigger examine event with a description
+      eventBus.emit('look:examine', {
+        position: { x: 10, y: 10, z: 0 },
+        entities: [],
+        items: [],
+        tile: { terrain: 'floor', description: 'A stone floor.' }
+      });
+
+      // Verify description was set
+      const drawTextSpy1 = jest.spyOn(displayManager, 'drawText');
+      lookPanel.render();
+      const descriptionCallsBefore = drawTextSpy1.mock.calls.filter(call => 
+        typeof call[2] === 'string' && call[2].includes('Description:')
+      );
+      expect(descriptionCallsBefore.length).toBeGreaterThan(0);
+      drawTextSpy1.mockClear();
+
+      // Move cursor - should clear description
+      lookMode.moveCursor('north');
+
+      const drawTextSpy2 = jest.spyOn(displayManager, 'drawText');
+      lookPanel.render();
+
+      // Should NOT show "Description:" header after cursor moves
+      const descriptionCallsAfter = drawTextSpy2.mock.calls.filter(call => 
+        typeof call[2] === 'string' && call[2].includes('Description:')
+      );
+      expect(descriptionCallsAfter.length).toBe(0);
+    });
+
+    it('should clear description when look mode exits', () => {
+      fovSystem.computeFOV(10, 10, 10);
+      lookMode.enter(playerEntity);
+
+      // Trigger examine event
+      eventBus.emit('look:examine', {
+        position: { x: 10, y: 10, z: 0 },
+        entities: [],
+        items: [],
+        tile: { terrain: 'floor' }
+      });
+
+      // Exit look mode - should clear description
+      lookMode.exit();
+
+      // Re-enter to check state
+      lookMode.enter(playerEntity);
+
+      const drawTextSpy = jest.spyOn(displayManager, 'drawText');
+      lookPanel.render();
+
+      // Should show "Actions:" header, not "Description:"
+      const actionCalls = drawTextSpy.mock.calls.filter(call => 
+        typeof call[2] === 'string' && call[2].includes('Actions:')
+      );
+      expect(actionCalls.length).toBeGreaterThan(0);
     });
   });
 });

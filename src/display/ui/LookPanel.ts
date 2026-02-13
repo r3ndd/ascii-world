@@ -53,6 +53,23 @@ export class LookPanel {
     eventBus.on('look:examine', (data: { position: { x: number; y: number; z: number }; entities: Entity[]; items: Entity[]; tile: unknown }) => {
       this.handleExamine(data);
     });
+
+    // Clear description when cursor moves
+    eventBus.on('look:cursorMoved', () => {
+      this.clearExaminedDescription();
+    });
+
+    // Clear description when exiting look mode
+    eventBus.on('look:modeExited', () => {
+      this.clearExaminedDescription();
+    });
+  }
+
+  /**
+   * Clear the examined description to show actions again
+   */
+  private clearExaminedDescription(): void {
+    this.lastExaminedDescription = null;
   }
 
   /**
@@ -194,9 +211,11 @@ export class LookPanel {
     this.drawText(currentY++, '─'.repeat(sidebarWidth - 2), borderColor);
     currentY++;
 
-    // Draw examined description
+    // Draw examined description OR available actions (not both)
     if (this.lastExaminedDescription) {
+      // Show description, replacing the action list
       this.drawText(currentY++, 'Description:', highlightColor);
+      currentY++;
       
       // Wrap description text to fit sidebar
       const maxLen = sidebarWidth - 2;
@@ -204,6 +223,8 @@ export class LookPanel {
       let line = '';
       
       for (const word of words) {
+        if (currentY >= viewportHeight - 3) break; // Leave room for help text
+        
         if ((line + word).length > maxLen) {
           this.drawText(currentY++, line.trim(), textColor);
           line = word + ' ';
@@ -211,37 +232,32 @@ export class LookPanel {
           line += word + ' ';
         }
       }
-      if (line.trim()) {
+      if (line.trim() && currentY < viewportHeight - 3) {
         this.drawText(currentY++, line.trim(), textColor);
       }
-      currentY++;
-      
-      // Draw separator after description
-      this.drawText(currentY++, '─'.repeat(sidebarWidth - 2), borderColor);
-      currentY++;
-    }
+    } else {
+      // Show available actions
+      const actions = this.lookMode.getAvailableActions();
+      if (actions.length > 0) {
+        this.drawText(currentY++, 'Actions:', highlightColor);
+        currentY++;
 
-    // Draw available actions
-    const actions = this.lookMode.getAvailableActions();
-    if (actions.length > 0) {
-      this.drawText(currentY++, 'Actions:', highlightColor);
-      currentY++;
+        for (const action of actions) {
+          if (currentY >= viewportHeight - 3) break; // Leave room for help text
 
-      for (const action of actions) {
-        if (currentY >= viewportHeight - 3) break; // Leave room for help text
+          const description = this.lookMode.getActionDescription(action);
+          const actionText = description
+            ? `${action.number})${action.hotkey} ${action.label}: ${description}`
+            : `${action.number})${action.hotkey} ${action.label}`;
 
-        const description = this.lookMode.getActionDescription(action);
-        const actionText = description
-          ? `${action.number})${action.hotkey} ${action.label}: ${description}`
-          : `${action.number})${action.hotkey} ${action.label}`;
+          // Truncate if too long
+          const maxLen = sidebarWidth - 2;
+          const displayText = actionText.length > maxLen
+            ? actionText.substring(0, maxLen - 3) + '...'
+            : actionText;
 
-        // Truncate if too long
-        const maxLen = sidebarWidth - 2;
-        const displayText = actionText.length > maxLen
-          ? actionText.substring(0, maxLen - 3) + '...'
-          : actionText;
-
-        this.drawText(currentY++, displayText, textColor);
+          this.drawText(currentY++, displayText, textColor);
+        }
       }
     }
 
