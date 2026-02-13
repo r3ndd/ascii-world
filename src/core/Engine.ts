@@ -160,7 +160,11 @@ export class Engine {
     this.crosshairRenderer = new CrosshairRenderer(
       this.lookMode,
       this.displayManager,
-      this.camera
+      this.camera,
+      this.world,
+      this.ecsWorld,
+      this.fovSystem,
+      this.itemManager
     );
 
     // Setup inventory panel
