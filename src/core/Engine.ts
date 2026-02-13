@@ -13,8 +13,8 @@ import { TurnManager, SpeedSystem, ActorSystem } from '../time';
 import { PhysicsSystem, FOVSystem, Pathfinding } from '../physics';
 import { Direction } from './Types';
 import { LookMode, DEFAULT_LOOK_MODE_CONFIG } from '../interaction';
-import { LookPanel, CrosshairRenderer } from '../display/ui';
-import { ItemManager } from '../items';
+import { LookPanel, CrosshairRenderer, InventoryPanel } from '../display/ui';
+import { ItemManager, InventoryManager } from '../items';
 
 export interface EngineConfig {
   display: DisplayConfig;
@@ -59,12 +59,16 @@ export class Engine {
 
   // Item management
   public itemManager!: ItemManager;
+  public inventoryManager!: InventoryManager;
 
   // Look mode
   public lookMode!: LookMode;
   public lookPanel!: LookPanel;
   public crosshairRenderer!: CrosshairRenderer;
   private isInLookMode: boolean = false;
+
+  // Inventory panel
+  public inventoryPanel!: InventoryPanel;
 
   // Configuration
   private engineConfig: EngineConfig;
@@ -114,6 +118,7 @@ export class Engine {
 
     // Setup item management
     this.itemManager = new ItemManager(this.eventBus);
+    this.inventoryManager = new InventoryManager(this.eventBus);
 
     // Setup look mode
     this.lookMode = new LookMode(
@@ -142,6 +147,17 @@ export class Engine {
       this.lookMode,
       this.displayManager,
       this.camera
+    );
+
+    // Setup inventory panel
+    const inventorySidebarWidth = 20;
+    const inventoryStartX = this.engineConfig.display.width - inventorySidebarWidth;
+    this.inventoryPanel = new InventoryPanel(
+      this.displayManager,
+      this.camera,
+      this.ecsWorld,
+      this.eventBus,
+      { sidebarWidth: inventorySidebarWidth, startX: inventoryStartX }
     );
 
     // Setup turn management
@@ -359,6 +375,14 @@ export class Engine {
     
     this.playerEntity = EntityFactory.createPlayer(this.ecsWorld, options);
     
+    // Create inventory for the player
+    const playerInventory = this.inventoryManager.createInventory(
+      this.playerEntity.id,
+      50,    // 50 kg capacity
+      100    // 100 L volume capacity
+    );
+    this.inventoryPanel.setPlayerInventory(playerInventory);
+    
     // Register with turn manager
     this.turnManager.scanForNewActors();
     
@@ -487,6 +511,9 @@ export class Engine {
     for (const line of lines) {
       this.displayManager.drawText(line.x, line.y, line.text);
     }
+
+    // Render inventory panel
+    this.inventoryPanel.render();
   }
 
   getContainer(): HTMLElement | null {

@@ -101,6 +101,37 @@
                 aiType: 'random'
             });
 
+            // Add test items to player's inventory
+            const player = engine.getPlayerEntity();
+            const playerInventory = engine.inventoryManager.getInventory(player.id);
+            
+            if (playerInventory) {
+                // Spawn an iron sword and equip it
+                const sword = engine.itemManager.spawnItem(engine.ecsWorld, 'sword_iron', 1);
+                if (sword) {
+                    playerInventory.addItem(engine.ecsWorld, sword);
+                    playerInventory.equipItem(engine.ecsWorld, sword.id);
+                }
+                
+                // Spawn some health potions (stackable)
+                const potions = engine.itemManager.spawnItem(engine.ecsWorld, 'potion_health', 5);
+                if (potions) {
+                    playerInventory.addItem(engine.ecsWorld, potions);
+                }
+                
+                // Spawn wooden planks (stackable)
+                const planks = engine.itemManager.spawnItem(engine.ecsWorld, 'wood_plank', 3);
+                if (planks) {
+                    playerInventory.addItem(engine.ecsWorld, planks);
+                }
+                
+                // Spawn a backpack
+                const backpack = engine.itemManager.spawnItem(engine.ecsWorld, 'backpack', 1);
+                if (backpack) {
+                    playerInventory.addItem(engine.ecsWorld, backpack);
+                }
+            }
+
             // Configure UI
             engine.setUIConfig({
                 showTurnCounter: true,
