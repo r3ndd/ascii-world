@@ -62,6 +62,9 @@ describe('CrosshairRenderer', () => {
       z: 0
     } as any);
 
+    // Initialize world with player position to generate chunks
+    world.setPlayerPosition(10, 10);
+
     lookMode = new LookMode(
       world,
       fovSystem,
@@ -75,7 +78,11 @@ describe('CrosshairRenderer', () => {
     crosshairRenderer = new CrosshairRenderer(
       lookMode,
       displayManager,
-      camera
+      camera,
+      world,
+      ecsWorld,
+      fovSystem,
+      itemManager
     );
   });
 
@@ -86,10 +93,7 @@ describe('CrosshairRenderer', () => {
   describe('initialization', () => {
     it('should have default config', () => {
       const config = crosshairRenderer.getConfig();
-      expect(config.fgColor).toBe('#ffff00');
-      expect(config.bgColor).toBe('#444444');
-      expect(config.boxChars.topLeft).toBe('┌');
-      expect(config.boxChars.bottomRight).toBe('┘');
+      expect(config.highlightBgColor).toBe('#444400');
     });
 
     it('should accept custom config', () => {
@@ -97,27 +101,29 @@ describe('CrosshairRenderer', () => {
         lookMode,
         displayManager,
         camera,
-        { fgColor: '#ff0000', bgColor: '#000000' }
+        world,
+        ecsWorld,
+        fovSystem,
+        itemManager,
+        { highlightBgColor: '#660000' }
       );
       
       const config = customRenderer.getConfig();
-      expect(config.fgColor).toBe('#ff0000');
-      expect(config.bgColor).toBe('#000000');
+      expect(config.highlightBgColor).toBe('#660000');
     });
   });
 
   describe('config updates', () => {
     it('should update config', () => {
-      crosshairRenderer.setConfig({ fgColor: '#00ff00' });
+      crosshairRenderer.setConfig({ highlightBgColor: '#006600' });
       const config = crosshairRenderer.getConfig();
-      expect(config.fgColor).toBe('#00ff00');
+      expect(config.highlightBgColor).toBe('#006600');
     });
 
     it('should merge config updates', () => {
-      crosshairRenderer.setConfig({ bgColor: '#111111' });
+      crosshairRenderer.setConfig({ highlightBgColor: '#000066' });
       const config = crosshairRenderer.getConfig();
-      expect(config.bgColor).toBe('#111111');
-      expect(config.fgColor).toBe('#ffff00'); // Unchanged
+      expect(config.highlightBgColor).toBe('#000066');
     });
   });
 
@@ -131,12 +137,11 @@ describe('CrosshairRenderer', () => {
     });
 
     it('should not render when cursor is outside viewport', () => {
+      // Compute FOV at player position so tiles are visible
       fovSystem.computeFOV(10, 10, 10);
       lookMode.enter(playerEntity);
       
       // Move camera to a different position so cursor is outside viewport
-      // Camera viewport is 60x24, so if we move camera to (50, 50),
-      // cursor at (10, 10) will be outside the viewport
       camera.setPosition(50, 50);
       
       const drawSpy = jest.spyOn(displayManager, 'draw');
@@ -147,6 +152,7 @@ describe('CrosshairRenderer', () => {
     });
 
     it('should render when look mode is enabled and cursor in viewport', () => {
+      // Compute FOV at player position so tiles are visible
       fovSystem.computeFOV(10, 10, 10);
       lookMode.enter(playerEntity);
       
@@ -157,7 +163,8 @@ describe('CrosshairRenderer', () => {
       expect(drawSpy).toHaveBeenCalled();
     });
 
-    it('should render box corners', () => {
+    it('should render highlight around cursor', () => {
+      // Compute FOV at player position so tiles are visible
       fovSystem.computeFOV(10, 10, 10);
       lookMode.enter(playerEntity);
       
@@ -165,52 +172,17 @@ describe('CrosshairRenderer', () => {
       
       crosshairRenderer.render();
       
-      // Check that corner characters are drawn
-      const corners = ['┌', '┐', '└', '┘'];
-      corners.forEach(corner => {
-        const cornerCall = drawSpy.mock.calls.find(call => call[2] === corner);
-        expect(cornerCall).toBeDefined();
-      });
-    });
-
-    it('should render box edges', () => {
-      fovSystem.computeFOV(10, 10, 10);
-      lookMode.enter(playerEntity);
-      
-      const drawSpy = jest.spyOn(displayManager, 'draw');
-      
-      crosshairRenderer.render();
-      
-      // Check that edge characters are drawn
-      const edges = ['─', '│'];
-      edges.forEach(edge => {
-        const edgeCall = drawSpy.mock.calls.find(call => call[2] === edge);
-        expect(edgeCall).toBeDefined();
-      });
-    });
-
-    it('should render center highlight', () => {
-      fovSystem.computeFOV(10, 10, 10);
-      lookMode.enter(playerEntity);
-      
-      const drawSpy = jest.spyOn(displayManager, 'draw');
-      
-      crosshairRenderer.render();
-      
-      // Center should be drawn with different colors
-      const centerCall = drawSpy.mock.calls.find(call =>
-        call[3] === '#ffffff' && call[4] === '#666666'
-      );
-      expect(centerCall).toBeDefined();
+      // Should have called draw for surrounding tiles (8 positions)
+      expect(drawSpy.mock.calls.length).toBeGreaterThanOrEqual(8);
     });
 
     it('should render at cursor position', () => {
+      // Compute FOV at player position so tiles are visible
       fovSystem.computeFOV(10, 10, 10);
       lookMode.enter(playerEntity);
       
-      // Move cursor
+      // Move cursor (must stay within visible area)
       lookMode.moveCursor('east');
-      lookMode.moveCursor('south');
       
       const drawSpy = jest.spyOn(displayManager, 'draw');
       
@@ -222,10 +194,10 @@ describe('CrosshairRenderer', () => {
 
     it('should use configured colors', () => {
       crosshairRenderer.setConfig({
-        fgColor: '#ff0000',
-        bgColor: '#00ff00'
+        highlightBgColor: '#ff0000'
       });
       
+      // Compute FOV at player position so tiles are visible
       fovSystem.computeFOV(10, 10, 10);
       lookMode.enter(playerEntity);
       
@@ -233,9 +205,9 @@ describe('CrosshairRenderer', () => {
       
       crosshairRenderer.render();
       
-      // Check that configured colors are used
+      // Check that configured colors are used in draw calls
       const coloredCall = drawSpy.mock.calls.find(call =>
-        call[3] === '#ff0000' && call[4] === '#00ff00'
+        call[4] === '#ff0000'  // bg color is 5th argument
       );
       expect(coloredCall).toBeDefined();
     });
