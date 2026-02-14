@@ -5,6 +5,7 @@
 
 import { Entity, ECSWorld, System } from '../ecs';
 import { PhysicsSystem } from '../physics';
+import { AISystem } from '../ai';
 import { Direction } from '../core/Types';
 
 // Actor behavior interface
@@ -43,24 +44,47 @@ export class PlayerBehavior implements ActorBehavior {
 
 // NPC behavior with different AI types
 export class NPCBehavior implements ActorBehavior {
+  private aiSystem?: AISystem;
+
+  constructor(aiSystem?: AISystem) {
+    this.aiSystem = aiSystem;
+  }
+
   getSpeed(entity: Entity): number {
     const speed = entity.getComponent<{ type: 'speed'; value: number }>('speed');
     return speed?.value ?? 100;
   }
 
   act(entity: Entity, physics: PhysicsSystem): void {
-    const actor = entity.getComponent<{ type: 'actor'; aiType?: string }>('actor');
-    const aiType = actor?.aiType ?? 'random';
+    // Check if entity has AI component with behavior tree
+    const ai = entity.getComponent<{ type: 'ai'; behaviorType?: string }>('ai');
+    
+    if (ai && this.aiSystem) {
+      // Use behavior tree from AI system
+      const behaviorTree = this.aiSystem.getMemorySystem(entity);
+      if (behaviorTree) {
+        // Behavior tree was ticked by AISystem, now we need to execute actions
+        // For now, fall through to simple behavior
+      }
+    }
+
+    // Fallback to simple behavior types
+    const aiType = ai?.behaviorType ?? 'random';
 
     switch (aiType) {
       case 'random':
         this.randomMovement(entity, physics);
         break;
       case 'hostile':
-        // Placeholder for hostile AI
+        // Hostile AI - would seek and attack targets
+        // For now, use random movement as placeholder
+        this.randomMovement(entity, physics);
         break;
       case 'neutral':
-        // Placeholder for neutral AI
+        // Neutral entities might wander less frequently
+        if (Math.random() < 0.5) {
+          this.randomMovement(entity, physics);
+        }
         break;
       default:
         this.randomMovement(entity, physics);
@@ -84,11 +108,11 @@ export class ActorSystem implements System {
   private physicsSystem: PhysicsSystem;
   private playerBehavior: PlayerBehavior;
   private npcBehavior: NPCBehavior;
-  constructor(ecsWorld: ECSWorld, physicsSystem: PhysicsSystem) {
+  constructor(ecsWorld: ECSWorld, physicsSystem: PhysicsSystem, aiSystem?: AISystem) {
     this.ecsWorld = ecsWorld;
     this.physicsSystem = physicsSystem;
     this.playerBehavior = new PlayerBehavior();
-    this.npcBehavior = new NPCBehavior();
+    this.npcBehavior = new NPCBehavior(aiSystem);
   }
 
   setPlayerInputHandler(handler: () => Promise<{ direction?: Direction; wait?: boolean }>): void {

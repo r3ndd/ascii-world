@@ -4,7 +4,6 @@
  */
 
 import { ECSWorld, Entity, createPosition, createHealth, createSpeed, createActor, createRenderable } from '../../src/ecs';
-import { EventBus } from '../../src/core/EventBus';
 
 /**
  * Create a basic test entity in the given world

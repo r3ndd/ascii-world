@@ -1,8 +1,9 @@
 /**
  * AI module
- * AI behaviors and factions
+ * AI behaviors, memory, and decision-making systems
  */
 
 export * from './AISystem';
 export * from './BehaviorTree';
-export * from './FactionSystem';
+export * from './MemorySystem';
+export * from './AIBehaviors';

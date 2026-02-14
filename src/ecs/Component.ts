@@ -65,6 +65,36 @@ export interface DescriptionComponent extends Component {
   dynamic?: (entity: unknown) => string;
 }
 
+// AI-related components
+export interface AIComponent extends Component {
+  type: 'ai';
+  behaviorType?: string;  // 'wander', 'hunt', 'patrol', etc.
+  memorySystemId?: string;
+}
+
+export interface PatrolComponent extends Component {
+  type: 'patrol';
+  waypoints: Array<{ x: number; y: number }>;
+  currentIndex: number;
+  direction: 1 | -1;  // 1 = forward, -1 = backward (ping-pong)
+  isLoop: boolean;    // true = loop, false = ping-pong
+}
+
+export interface DetectionComponent extends Component {
+  type: 'detection';
+  visionRange: number;
+  hearingRange: number;
+  lastScanTurn: number;
+}
+
+export interface CombatComponent extends Component {
+  type: 'combat';
+  targetId?: number;
+  attackCooldown: number;
+  preferredRange: number;  // 0 = melee, >0 = preferred distance
+  aggression: number;      // 0-1, likelihood to engage
+}
+
 // Component factories
 export function createPosition(x: number, y: number, z: number = 0): PositionComponent {
   return { type: 'position', x, y, z };
@@ -100,4 +130,46 @@ export function createBlocking(): BlockingComponent {
 
 export function createDescription(text: string, dynamic?: (entity: unknown) => string): DescriptionComponent {
   return { type: 'description', text, dynamic };
+}
+
+// AI component factories
+export function createAI(behaviorType?: string): AIComponent {
+  return { type: 'ai', behaviorType };
+}
+
+export function createPatrol(
+  waypoints: Array<{ x: number; y: number }>,
+  isLoop: boolean = true
+): PatrolComponent {
+  return {
+    type: 'patrol',
+    waypoints,
+    currentIndex: 0,
+    direction: 1,
+    isLoop,
+  };
+}
+
+export function createDetection(
+  visionRange: number = 8,
+  hearingRange: number = 12
+): DetectionComponent {
+  return {
+    type: 'detection',
+    visionRange,
+    hearingRange,
+    lastScanTurn: 0,
+  };
+}
+
+export function createCombat(
+  preferredRange: number = 0,
+  aggression: number = 0.5
+): CombatComponent {
+  return {
+    type: 'combat',
+    attackCooldown: 0,
+    preferredRange,
+    aggression,
+  };
 }
