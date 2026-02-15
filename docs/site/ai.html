@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AI Module - ASCII World Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-twilight.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+        <style>
+            :root {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #eaeaea;
+                --text-secondary: #a0a0a0;
+                --accent: #e94560;
+                --accent-hover: #ff6b6b;
+                --code-bg: #0d1117;
+                --border: #30363d;
+                --success: #238636;
+                --warning: #f0883e;
+                --info: #58a6ff;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "Segoe UI", system-ui, sans-serif;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                line-height: 1.6;
+            }
+            .container {
+                display: flex;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 280px;
+                background-color: var(--bg-secondary);
+                border-right: 1px solid var(--border);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                padding: 20px 0;
+            }
+            .sidebar-header {
+                padding: 0 20px 20px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 20px;
+            }
+            .sidebar-header h1 {
+                font-size: 1.4rem;
+                color: var(--accent);
+                margin-bottom: 5px;
+            }
+            .sidebar-header .version {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+            }
+            .nav-section {
+                margin-bottom: 15px;
+            }
+            .nav-section-title {
+                padding: 10px 20px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+            .nav-link {
+                display: block;
+                padding: 8px 20px;
+                color: var(--text-primary);
+                text-decoration: none;
+                transition: all 0.2s ease;
+                font-size: 0.95rem;
+            }
+            .nav-link:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--accent-hover);
+            }
+            .nav-link.active {
+                background-color: var(--bg-tertiary);
+                border-left: 3px solid var(--accent);
+            }
+            .content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 40px;
+                max-width: 900px;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--text-primary);
+            }
+            h2 {
+                font-size: 1.8rem;
+                margin: 40px 0 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+            h3 {
+                font-size: 1.4rem;
+                margin: 30px 0 15px;
+                color: var(--accent);
+            }
+            h4 {
+                font-size: 1.1rem;
+                margin: 25px 0 10px;
+                color: var(--text-primary);
+            }
+            p {
+                margin-bottom: 15px;
+                color: var(--text-primary);
+            }
+            a {
+                color: var(--info);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            pre {
+                background-color: var(--code-bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 20px;
+                overflow-x: auto;
+                margin: 20px 0;
+            }
+            code {
+                font-family: "Fira Code", "Consolas", monospace;
+                font-size: 0.9rem;
+                color: #e6edf3;
+            }
+            code.inline {
+                background-color: var(--code-bg);
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            th,
+            td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            th {
+                background-color: var(--bg-tertiary);
+                font-weight: 600;
+                color: var(--accent);
+            }
+            tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            ul,
+            ol {
+                margin: 15px 0;
+                padding-left: 30px;
+            }
+            li {
+                margin-bottom: 8px;
+            }
+            .method {
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                border-left: 4px solid var(--accent);
+            }
+            .method-header {
+                margin-bottom: 15px;
+            }
+            .method-name {
+                font-family: "Fira Code", monospace;
+                font-size: 1.2rem;
+                color: var(--accent);
+                font-weight: 600;
+            }
+            .method-signature {
+                font-family: "Fira Code", monospace;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                margin-top: 5px;
+            }
+            .method-description {
+                margin-bottom: 15px;
+            }
+            .parameters,
+            .returns {
+                margin: 15px 0;
+            }
+            .parameters h4,
+            .returns h4 {
+                color: var(--info);
+                margin-bottom: 10px;
+            }
+            .alert {
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border-left: 4px solid;
+            }
+            .alert-info {
+                background-color: rgba(88, 166, 255, 0.1);
+                border-color: var(--info);
+            }
+            .alert-warning {
+                background-color: rgba(240, 136, 62, 0.1);
+                border-color: var(--warning);
+            }
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+
+            /* Page TOC - Right side navigation */
+            .page-toc {
+                position: fixed;
+                right: 20px;
+                top: 100px;
+                width: 220px;
+                max-height: calc(100vh - 140px);
+                overflow-y: auto;
+                background: var(--bg-secondary);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 15px;
+                z-index: 100;
+            }
+
+            .page-toc h3 {
+                margin: 0 0 12px 0;
+                font-size: 0.85rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                font-weight: 600;
+            }
+
+            .page-toc ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .page-toc li {
+                margin: 0;
+            }
+
+            .page-toc a {
+                display: block;
+                padding: 6px 0;
+                color: var(--text-secondary);
+                text-decoration: none;
+                font-size: 0.85rem;
+                border-left: 2px solid transparent;
+                padding-left: 10px;
+                margin-left: -12px;
+                transition: all 0.2s ease;
+            }
+
+            .page-toc a:hover {
+                color: var(--accent-hover);
+                border-left-color: var(--accent);
+            }
+
+            .page-toc a.active {
+                color: var(--accent);
+                border-left-color: var(--accent);
+                font-weight: 600;
+            }
+
+            @media (max-width: 1400px) {
+                .page-toc {
+                    display: none;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .sidebar {
+                    width: 100%;
+                    position: relative;
+                    height: auto;
+                    border-right: none;
+                    border-bottom: 1px solid var(--border);
+                }
+                .content {
+                    margin-left: 0;
+                    padding: 20px;
+                }
+                .container {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h1>ASCII World</h1>
+                    <div class="version">v0.1.0</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Getting Started</div>
+                    <a href="index.html" class="nav-link">Overview</a>
+                    <a href="getting-started.html" class="nav-link">Quick Start</a>
+                    <a href="examples.html" class="nav-link">Examples</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">API Reference</div>
+                    <a href="core.html" class="nav-link">Core</a>
+                    <a href="ecs.html" class="nav-link">ECS</a>
+                    <a href="ai.html" class="nav-link active">AI</a>
+                    <a href="display.html" class="nav-link">Display</a>
+                    <a href="world.html" class="nav-link">World</a>
+                    <a href="time.html" class="nav-link">Time</a>
+                    <a href="physics.html" class="nav-link">Physics</a>
+                    <a href="items.html" class="nav-link">Items</a>
+                    <a href="content.html" class="nav-link">Content</a>
+                    <a href="config.html" class="nav-link">Configuration</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Guides</div>
+                    <a href="modding-guide.html" class="nav-link">Modding Guide</a>
+                </div>
+            </nav>
+
+            <main class="content">
+                <h1>AI Module</h1>
+                <p>
+                    The AI system provides intelligent behavior for NPCs using behavior trees, 
+                    memory management, and sensory systems. Designed with extensibility in mind, 
+                    it supports future integration with GOAP (Goal-Oriented Action Planning).
+                </p>
+
+                <h2>AISystem</h2>
+                <p>
+                    The main ECS system that coordinates AI processing. Manages behavior trees, 
+                    memory systems, and integrates with the physics and pathfinding systems.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">new AISystem()</div>
+                        <div class="method-signature">
+                            constructor(ecsWorld, physicsSystem, pathfinding, eventBus)
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">import { AISystem } from 'ascii-world';
+
+const aiSystem = new AISystem(
+    ecsWorld,
+    physicsSystem,
+    pathfinding,
+    eventBus
+);
+
+ecsWorld.addSystem(aiSystem);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">registerBehavior()</div>
+                        <div class="method-signature">
+                            registerBehavior(name: string, factory: BehaviorTreeFactory): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Registers a behavior tree factory that can be assigned to entities by name.
+                    </div>
+                    <pre><code class="language-typescript">aiSystem.registerBehavior('hunter', (entity) => {
+    return new BehaviorTree(createHunterTree(), entity);
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">assignBehavior()</div>
+                        <div class="method-signature">
+                            assignBehavior(entity: Entity, behaviorName: string): boolean
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Assigns a registered behavior to an entity. Returns true if successful.
+                    </div>
+                    <pre><code class="language-typescript">const goblin = ecsWorld.createEntity();
+goblin.addComponent(createAI());
+aiSystem.assignBehavior(goblin, 'hunter');</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">setBehaviorTree()</div>
+                        <div class="method-signature">
+                            setBehaviorTree(entity: Entity, tree: BehaviorTree): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Sets a custom behavior tree directly on an entity without registering.
+                    </div>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getMemorySystem()</div>
+                        <div class="method-signature">
+                            getMemorySystem(entity: Entity): MemorySystem | undefined
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Retrieves the memory system for an entity, creating one if it doesn't exist.
+                    </div>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">rememberEntity()</div>
+                        <div class="method-signature">
+                            rememberEntity(observer, targetId, relationship, options)
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Creates or updates a memory of another entity for the observer.
+                    </div>
+                    <pre><code class="language-typescript">aiSystem.rememberEntity(goblin, player.id, RelationshipType.HOSTILE, {
+    position: { x: 10, y: 20 },
+    health: 100
+});</code></pre>
+                </div>
+
+                <h3>Behavior Presets</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Preset</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>BehaviorPresets.WANDER</code></td>
+                            <td>Moves randomly around the world</td>
+                        </tr>
+                        <tr>
+                            <td><code>BehaviorPresets.HUNTER</code></td>
+                            <td>Seeks and attacks hostile targets</td>
+                        </tr>
+                        <tr>
+                            <td><code>BehaviorPresets.PATROL</code></td>
+                            <td>Follows predefined patrol points</td>
+                        </tr>
+                        <tr>
+                            <td><code>BehaviorPresets.COWARD</code></td>
+                            <td>Flees from threats</td>
+                        </tr>
+                        <tr>
+                            <td><code>BehaviorPresets.NEUTRAL</code></td>
+                            <td>Wanders and avoids combat</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Behavior Trees</h2>
+                <p>
+                    Behavior trees provide a hierarchical structure for AI decision-making. 
+                    The system is designed for GOAP compatibility, allowing future integration 
+                    with goal-oriented planning.
+                </p>
+
+                <h3>Node Status</h3>
+                <pre><code class="language-typescript">enum NodeStatus {
+    SUCCESS = 'success',   // Node completed successfully
+    FAILURE = 'failure',   // Node failed
+    RUNNING = 'running'    // Node is still executing
+}</code></pre>
+
+                <h3>Blackboard</h3>
+                <p>
+                    Shared memory storage for behavior tree nodes. Provides type-safe key-value 
+                    storage and world state checking for GOAP compatibility.
+                </p>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">Blackboard</div>
+                        <div class="method-signature">
+                            new Blackboard(entity: Entity)
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">const blackboard = new Blackboard(entity);
+blackboard.set('targetEntity', player);
+blackboard.set('inCombat', true);
+
+const target = blackboard.get&lt;Entity&gt;('targetEntity');
+const isCombat = blackboard.getOrDefault('inCombat', false);</code></pre>
+                </div>
+
+                <h3>Composite Nodes</h3>
+
+                <h4>Sequence</h4>
+                <p>Executes children in order until one fails. Succeeds only if all children succeed.</p>
+                <pre><code class="language-typescript">const patrolSequence = new Sequence()
+    .addChild(new HasTarget())
+    .addChild(new MoveToTarget(pathfinding))
+    .addChild(new AttackTarget());</code></pre>
+
+                <h4>Selector</h4>
+                <p>Executes children in order until one succeeds. Fails only if all children fail.</p>
+                <pre><code class="language-typescript">const combatSelector = new Selector()
+    .addChild(new CanAttackTarget())
+    .addChild(new MoveToTarget(pathfinding));</code></pre>
+
+                <h4>Parallel</h4>
+                <p>Executes all children simultaneously with configurable success/failure policies.</p>
+                <pre><code class="language-typescript">const parallel = new Parallel(
+    ParallelPolicy.REQUIRE_ONE_SUCCESS,
+    ParallelPolicy.REQUIRE_ONE_FAILURE
+)
+    .addChild(new ScanForEntities(8))
+    .addChild(new UpdateTargetFromMemory(RelationshipType.HOSTILE));</code></pre>
+
+                <h3>Decorator Nodes</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Decorator</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Inverter</code></td>
+                            <td>Inverts child's result (SUCCESS ↔ FAILURE)</td>
+                        </tr>
+                        <tr>
+                            <td><code>Succeeder</code></td>
+                            <td>Always returns SUCCESS</td>
+                        </tr>
+                        <tr>
+                            <td><code>Failer</code></td>
+                            <td>Always returns FAILURE</td>
+                        </tr>
+                        <tr>
+                            <td><code>Repeater</code></td>
+                            <td>Repeats child N times (or indefinitely)</td>
+                        </tr>
+                        <tr>
+                            <td><code>UntilFail</code></td>
+                            <td>Repeats until child fails</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Building a Behavior Tree</h3>
+                <pre><code class="language-typescript">import { BehaviorTree, Sequence, Selector } from 'ascii-world';
+
+function createHunterTree(): BehaviorTree {
+    const tree = new Selector();
+    
+    // Combat branch
+    const combat = new Sequence()
+        .addChild(new CanSeeHostile())
+        .addChild(new UpdateTargetFromMemory(RelationshipType.HOSTILE))
+        .addChild(new Selector()
+            .addChild(new CanAttackTarget())
+            .addChild(new MoveToTarget(pathfinding))
+        )
+        .addChild(new AttackTarget());
+    
+    // Flee branch
+    const flee = new Sequence()
+        .addChild(new IsHealthLow(0.3))
+        .addChild(new SetBlackboardValue(BBKeys.SHOULD_FLEE, true))
+        .addChild(new MoveAway());
+    
+    // Wander branch
+    const wander = new Repeater(-1)
+        .setChild(new MoveRandom());
+    
+    tree
+        .addChild(combat)
+        .addChild(flee)
+        .addChild(wander);
+    
+    return tree;
+}</code></pre>
+
+                <h2>AI Behaviors</h2>
+                <p>
+                    Pre-built action and condition nodes for common game behaviors.
+                </p>
+
+                <h3>Movement Actions</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>MoveRandom</code></td>
+                            <td>Moves in a random direction</td>
+                        </tr>
+                        <tr>
+                            <td><code>MoveToTarget</code></td>
+                            <td>Pathfinds to target position from blackboard</td>
+                        </tr>
+                        <tr>
+                            <td><code>Patrol</code></td>
+                            <td>Follows patrol points with ping-pong behavior</td>
+                        </tr>
+                        <tr>
+                            <td><code>MoveAway</code></td>
+                            <td>Flees from threat position</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Combat Actions</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action/Condition</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>AttackTarget</code></td>
+                            <td>Attacks entity in blackboard (range check included)</td>
+                        </tr>
+                        <tr>
+                            <td><code>CanAttackTarget</code></td>
+                            <td>Condition: checks if target is in melee range</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Sensory Conditions</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Condition</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>CanSeeHostile</code></td>
+                            <td>Checks if any hostile entity is visible in memory</td>
+                        </tr>
+                        <tr>
+                            <td><code>IsHealthLow</code></td>
+                            <td>Checks if health is below threshold (default 30%)</td>
+                        </tr>
+                        <tr>
+                            <td><code>HasTarget</code></td>
+                            <td>Checks if target entity exists in blackboard</td>
+                        </tr>
+                        <tr>
+                            <td><code>IsAtTarget</code></td>
+                            <td>Checks if at target position</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Blackboard Keys</h3>
+                <pre><code class="language-typescript">const BBKeys = {
+    // Targeting
+    TARGET_ENTITY: 'targetEntity',
+    TARGET_POSITION: 'targetPosition',
+    LAST_KNOWN_TARGET_POS: 'lastKnownTargetPos',
+    
+    // Combat
+    IN_COMBAT: 'inCombat',
+    SHOULD_FLEE: 'shouldFlee',
+    ATTACK_COOLDOWN: 'attackCooldown',
+    
+    // Movement
+    CURRENT_PATH: 'currentPath',
+    PATH_INDEX: 'pathIndex',
+    WANDER_TARGET: 'wanderTarget',
+    
+    // Memory
+    MEMORY_SYSTEM: 'memorySystem',
+    
+    // Sensing
+    NEARBY_ENTITIES: 'nearbyEntities',
+    VISIBLE_THREATS: 'visibleThreats',
+    VISIBLE_ALLIES: 'visibleAllies',
+    
+    // Patrol
+    PATROL_POINTS: 'patrolPoints',
+    PATROL_INDEX: 'patrolIndex',
+    PATROL_DIRECTION: 'patrolDirection'
+};</code></pre>
+
+                <h2>Memory System</h2>
+                <p>
+                    Tracks memories for AI entities including entity memories, locations, events, 
+                    and items. Memories decay over time based on importance and can be reinforced.
+                </p>
+
+                <h3>Memory Types</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>MemoryType.ENTITY</code></td>
+                            <td>Another actor in the world</td>
+                        </tr>
+                        <tr>
+                            <td><code>MemoryType.LOCATION</code></td>
+                            <td>A point of interest</td>
+                        </tr>
+                        <tr>
+                            <td><code>MemoryType.EVENT</code></td>
+                            <td>Something that happened (combat, trade, etc.)</td>
+                        </tr>
+                        <tr>
+                            <td><code>MemoryType.ITEM</code></td>
+                            <td>An item seen or obtained</td>
+                        </tr>
+                        <tr>
+                            <td><code>MemoryType.TERRAIN</code></td>
+                            <td>A terrain feature</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Relationship Types</h3>
+                <pre><code class="language-typescript">enum RelationshipType {
+    HOSTILE = 'hostile',
+    FRIENDLY = 'friendly',
+    NEUTRAL = 'neutral',
+    AFRAID = 'afraid',
+    CURIOUS = 'curious',
+    ALLIED = 'allied'
+}</code></pre>
+
+                <h3>Memory Importance</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Level</th>
+                            <th>Value</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>TRIVIAL</td>
+                            <td>1</td>
+                            <td>Will forget quickly</td>
+                        </tr>
+                        <tr>
+                            <td>LOW</td>
+                            <td>2</td>
+                            <td>Short-term memory</td>
+                        </tr>
+                        <tr>
+                            <td>NORMAL</td>
+                            <td>3</td>
+                            <td>Standard memory duration</td>
+                        </tr>
+                        <tr>
+                            <td>HIGH</td>
+                            <td>5</td>
+                            <td>Significant event, longer retention</td>
+                        </tr>
+                        <tr>
+                            <td>CRITICAL</td>
+                            <td>10</td>
+                            <td>Life-threatening, never forget</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>MemorySystem API</h3>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">rememberEntity()</div>
+                        <div class="method-signature">
+                            rememberEntity(entityId, relationship, options)
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Creates or updates a memory of another entity.
+                    </div>
+                    <pre><code class="language-typescript">const memorySystem = aiSystem.getMemorySystem(goblin);
+
+memorySystem.rememberEntity(player.id, RelationshipType.HOSTILE, {
+    position: { x: 10, y: 20 },
+    health: 80,
+    threatLevel: 0.8,
+    importance: MemoryImportance.HIGH
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">rememberLocation()</div>
+                        <div class="method-signature">
+                            rememberLocation(x, y, description, options)
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">memorySystem.rememberLocation(100, 200, 'Treasure room', {
+    tags: ['loot', 'dangerous'],
+    importance: MemoryImportance.HIGH
+});</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">getMemoriesByRelationship()</div>
+                        <div class="method-signature">
+                            getMemoriesByRelationship(relationship: RelationshipType): EntityMemory[]
+                        </div>
+                    </div>
+                    <pre><code class="language-typescript">const hostiles = memorySystem.getMemoriesByRelationship(RelationshipType.HOSTILE);
+const friends = memorySystem.getMemoriesByRelationship(RelationshipType.FRIENDLY);</code></pre>
+                </div>
+
+                <div class="method">
+                    <div class="method-header">
+                        <div class="method-name">processDecay()</div>
+                        <div class="method-signature">
+                            processDecay(): void
+                        </div>
+                    </div>
+                    <div class="method-description">
+                        Applies memory decay based on age and importance. Should be called each turn.
+                    </div>
+                </div>
+
+                <h2>Creating Custom Behaviors</h2>
+
+                <h3>Custom Action</h3>
+                <pre><code class="language-typescript">import { Action, NodeStatus, BehaviorContext } from 'ascii-world';
+
+class HealSelf extends Action {
+    tick(context: BehaviorContext): NodeStatus {
+        const health = context.entity.getComponent&lt;HealthComponent&gt;('health');
+        
+        if (!health || health.current >= health.max) {
+            return NodeStatus.FAILURE;
+        }
+        
+        // Restore health
+        health.current = Math.min(health.max, health.current + 20);
+        
+        return NodeStatus.SUCCESS;
+    }
+    
+    getCost(): number {
+        return 2; // Higher cost for GOAP planning
+    }
+}</code></pre>
+
+                <h3>Custom Condition</h3>
+                <pre><code class="language-typescript">import { Condition, BehaviorContext } from 'ascii-world';
+
+class IsNightTime extends Condition {
+    check(context: BehaviorContext): boolean {
+        // Check world state through blackboard
+        const worldTime = context.blackboard.get&lt;number&gt;('worldTime');
+        return worldTime !== undefined && (worldTime < 600 || worldTime > 1800);
+    }
+}</code></pre>
+
+                <h2>Events</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Data</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ai:entityAdded</code></td>
+                            <td><code>{ entityId }</code></td>
+                            <td>AI entity added to system</td>
+                        </tr>
+                        <tr>
+                            <td><code>ai:entityRemoved</code></td>
+                            <td><code>{ entityId }</code></td>
+                            <td>AI entity removed from system</td>
+                        </tr>
+                        <tr>
+                            <td><code>ai:tick</code></td>
+                            <td><code>{ entityId, status }</code></td>
+                            <td>Behavior tree ticked (for debugging)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-info">
+                    <strong>GOAP Compatibility:</strong> The AI system is designed with future 
+                    GOAP integration in mind. Behavior trees can be replaced with GOAP planners, 
+                    and the blackboard system supports world state checking required for planning.
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>Performance Tip:</strong> Behavior trees are ticked every frame for 
+                    active entities. Keep tree logic lightweight and use conditions to avoid 
+                    expensive operations when not needed.
+                </div>
+
+                <div class="footer">
+                    <p>ASCII World Engine v0.1.0 | Built with rot.js</p>
+                </div>
+
+                <nav class="page-toc">
+                    <h3>On This Page</h3>
+                    <ul id="toc-list"></ul>
+                </nav>
+            </main>
+        </div>
+
+        <script>
+            (function() {
+                const h2s = document.querySelectorAll('main.content h2');
+                const tocList = document.getElementById('toc-list');
+
+                h2s.forEach((h2, index) => {
+                    const id = h2.textContent.toLowerCase().replace(/[^\w]+/g, '-').replace(/^-|-$/g, '') || 'section-' + index;
+                    h2.id = id;
+
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#' + id;
+                    a.textContent = h2.textContent;
+                    li.appendChild(a);
+                    tocList.appendChild(li);
+                });
+
+                const tocLinks = document.querySelectorAll('.page-toc a');
+                const sections = Array.from(h2s);
+
+                function updateActiveToc() {
+                    const scrollPos = window.scrollY + 150;
+
+                    sections.forEach((section, index) => {
+                        const sectionTop = section.offsetTop;
+                        const sectionBottom = sectionTop + section.offsetHeight;
+
+                        if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+                            tocLinks.forEach(link => link.classList.remove('active'));
+                            if (tocLinks[index]) tocLinks[index].classList.add('active');
+                        }
+                    });
+                }
+
+                window.addEventListener('scroll', updateActiveToc);
+                updateActiveToc();
+            })();
+        </script>
+    </body>
+</html>
