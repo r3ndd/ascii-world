@@ -7,6 +7,7 @@
   "scripts": {
     "build": "rollup -c",
     "build:watch": "rollup -c -w",
+    "compile": "tsc -p tsconfig.json",
     "dev": "rollup -c -w",
     "start": "rollup -c && serve .",
     "test": "jest",
