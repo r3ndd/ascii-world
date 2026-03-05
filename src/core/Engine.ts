@@ -71,6 +71,9 @@ export class Engine {
   public crosshairRenderer!: CrosshairRenderer;
   private isInLookMode: boolean = false;
 
+  // Input control
+  private inputPaused: boolean = false;
+
   // Inventory panel
   public inventoryPanel!: InventoryPanel;
 
@@ -216,6 +219,9 @@ export class Engine {
         this.handleLookModeInput(e);
         return;
       }
+
+      // Don't process game input when paused (e.g., console is open)
+      if (this.inputPaused) return;
 
       if (!resolveInput) return;
 
@@ -569,5 +575,19 @@ export class Engine {
 
   getPlayerEntity(): Entity | null {
     return this.playerEntity;
+  }
+
+  /**
+   * Pause input handling (for when console or other overlay is open)
+   */
+  pauseInput(): void {
+    this.inputPaused = true;
+  }
+
+  /**
+   * Resume input handling
+   */
+  resumeInput(): void {
+    this.inputPaused = false;
   }
 }
