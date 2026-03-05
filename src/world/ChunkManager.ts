@@ -235,4 +235,14 @@ export class ChunkManager {
     const tile = this.getTileAt(worldX, worldY);
     return tile !== null && !tile.blocksMovement;
   }
+
+  /**
+   * Clear all chunks - used when switching worlds
+   */
+  clearChunks(): void {
+    this.chunks.clear();
+    this.activeChunks.clear();
+    this.playerChunkX = Infinity;
+    this.playerChunkY = Infinity;
+  }
 }

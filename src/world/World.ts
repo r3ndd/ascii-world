@@ -145,6 +145,15 @@ export class World {
     this.getChunkManager(z).setPlayerPosition(x, y);
   }
 
+  /**
+   * Clear all chunks from all layers - used when switching worlds
+   */
+  clearChunks(): void {
+    for (const chunkManager of this.chunkManagers.values()) {
+      chunkManager.clearChunks();
+    }
+  }
+
   getEntitiesAt(x: number, y: number, z: number = this.defaultLayer): Entity[] {
     const chunkManager = this.getChunkManager(z);
     const { chunkX, chunkY } = chunkManager.worldToChunk(x, y);
