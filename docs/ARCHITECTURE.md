@@ -1,10 +1,9 @@
 # ASCII World Game Engine Architecture
 
-**Project**: 2D ASCII Game Engine using rot.js  
-**Goal**: Open-world survival game engine (CDDA-style)  
-**Technology**: TypeScript + rot.js  
-**Last Updated**: 2026-02-03  
-**Phase**: 4 of 4 (Complete)
+- **Project**: 2D ASCII Game Engine using rot.js
+- **Goal**: Open-world survival game engine (CDDA-style)
+- **Technology**: TypeScript + rot.js
+- **Last Updated**: 2026-02-03
 
 ---
 
@@ -241,96 +240,6 @@ Load:
 
 ---
 
-## Implementation Phases
-
-### Phase 1: Foundation ✓ Complete
-- [x] TypeScript project setup (2026-02-03)
-  - `package.json` with rot.js and TypeScript dependencies
-  - `tsconfig.json` with strict mode configuration
-  - All npm packages installed (npm install)
-  - TypeScript compiles without errors (`npm run typecheck` ✓)
-- [x] Basic file structure (2026-02-03)
-  - 11 source directories created (`src/core`, `src/world`, `src/time`, etc.)
-  - 17 TypeScript source files with module stubs
-  - `content/` directory structure for maps/mods
-  - Configuration files: `WorldDefaults.ts`, `ActionCosts.ts`
-
-### Phase 2: Core Systems ✓ Complete (2026-02-03)
-- [x] rot.js integration
-  - Display wrapper with `DisplayManager` class
-  - Camera/viewport management
-  - Renderer with `Renderable` interface
-  - TypeScript definitions verified
-- [x] ECS framework
-  - Entity class with component management
-  - ECSWorld for entity and system coordination
-  - BaseSystem class for system implementations
-  - Query system with `all`/`any`/`none` filters
-  - Standard components (Position, Health, Speed, Actor, Renderable)
-- [x] World and chunk management
-  - Chunk class (64x64 tiles)
-  - ChunkManager with distance-based activation
-  - World container with bounds checking
-  - UpdateScheduler with distance-based update frequencies
-  - Terrain definitions (floor, wall, water, tree, door, stairs)
-  - MapManager for multiple map support
-- [x] Turn system with speed
-  - Speed-based scheduler using rot.js `Scheduler.Speed`
-  - TurnManager with async turn processing
-  - Actor interface for turn participants
-  - SpeedSystem for action cost calculation
-  - Action factory methods (move, attack, craft, wait, etc.)
-- [x] Basic movement/interaction
-  - PhysicsSystem with collision detection
-  - Direction-based movement with 8 directions
-  - Event-driven movement notifications
-  - FOVSystem using rot.js FOV
-  - LightingSystem with dynamic light sources
-  - Pathfinding with A* and Dijkstra algorithms
-
-### Phase 3: Advanced Features ✓ Complete (2026-02-03)
-- [x] Post-hoc update system (implemented in Phase 2)
-- [x] FOV and lighting (implemented in Phase 2)
-- [x] Item system
-  - Item class with properties (weight, volume, durability, stackable)
-  - ItemManager for template registry and instance spawning
-  - Inventory class with weight/volume capacity management
-  - InventoryManager for container coordination
-  - Stackable items support
-  - Equippable items support
-  - Item damage/repair system
-- [x] Save/load system
-  - SaveManager with slot management and metadata tracking
-  - LocalStorageProvider for persistence
-  - WorldSerializer for world state serialization
-  - EntitySerializer for ECS entity/component serialization
-  - Item and inventory serialization
-  - Checksum validation for save integrity
-
-### Phase 4: Content ✓ Complete (2026-02-03)
-- [x] Content loading pipeline
-  - ContentPack interface for bundling items, creatures, recipes, terrains
-  - ContentLoader for loading JSON content packs with dependency checking
-  - Terrain override system
-  - Recipe definitions with ingredients, results, and requirements
-- [x] Multiple maps support
-  - MapDefinition interface with predefined chunks and spawn points
-  - MapLoader for loading map JSON and creating worlds
-  - Map metadata for UI map selection
-- [x] Mod system
-  - Mod interface with initialize() and cleanup() lifecycle
-  - ModLoader with dependency resolution and loading order
-  - ModAPI for content registration (items, creatures, recipes, terrains, generators)
-  - Entity and item spawning through mod API
-- [x] World generation tools
-  - WorldGenerator with pluggable chunk generators
-  - Built-in generators: wilderness, dungeon, cave, city
-  - Cellular automata cave generation
-  - Room-based dungeon generation with corridors
-  - City grid generation with building blocks
-
----
-
 ## Content Format Examples
 
 ### Content Pack (JSON)
@@ -500,9 +409,9 @@ Load:
 
 ## Quick Reference
 
-**World Size**: 1000x1000 tiles (16x16 chunks of 64x64)  
-**Active Update Range**: 3x3 chunks around player  
-**Post-Hoc Catch-Up**: Calculated when chunks reactivate  
-**Turn Type**: Speed-based strict turn-based  
-**Content**: JSON data + JS behavior extensions  
-**Save Format**: JSON with optional compression
+- **World Size**: 1000x1000 tiles (16x16 chunks of 64x64)
+- **Active Update Range**: 3x3 chunks around player
+- **Post-Hoc Catch-Up**: Calculated when chunks reactivate
+- **Turn Type**: Speed-based strict turn-based
+- **Content**: JSON data + JS behavior extensions
+- **Save Format**: JSON with optional compression
